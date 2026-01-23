@@ -1,40 +1,10 @@
-import {
-  createRootRouteWithContext,
-  createRoute,
-  createRouter,
-  Outlet,
-  redirect,
-} from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import MainLayout from '@/app/layouts/main-layout';
-import { CMSService } from '@/services/cmsService';
-import { ContentItem, UserRole } from '@/shared/types';
+import { createRoute, createRouter, redirect } from '@tanstack/react-router';
+import { rootRoute, type RouterContext } from './_root';
 import { auditRoute } from './audit';
 import { contentRoute } from './content';
 import { createContentRoute } from './create';
 import { dashboardRoute } from './dashboard';
 import { detailRoute } from './detail.$contentId';
-
-// Define the router context type
-export interface RouterContext {
-  items: ContentItem[];
-  categories: string[];
-  tags: string[];
-  service: CMSService;
-  currentUser: { name: string; role: UserRole };
-  setCurrentUser: (user: { name: string; role: UserRole }) => void;
-  refreshData: () => void;
-}
-
-// Create the root route with context
-const rootRoute = createRootRouteWithContext<RouterContext>()({
-  component: () => (
-    <MainLayout>
-      <Outlet />
-      <TanStackRouterDevtools />
-    </MainLayout>
-  ),
-});
 
 // Create index route - redirect to dashboard
 const indexRoute = createRoute({
@@ -67,5 +37,5 @@ export function createAppRouter(context: RouterContext) {
 // Type for the router
 export type AppRouter = ReturnType<typeof createAppRouter>;
 
-// Export root route for route registration
-export { rootRoute };
+// Export root route and types for route registration
+export { rootRoute, type RouterContext };

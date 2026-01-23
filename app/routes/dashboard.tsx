@@ -1,23 +1,9 @@
 import { createRoute } from '@tanstack/react-router';
-import { Dashboard } from '@/features/dashboard';
-import { rootRoute } from './root-layout';
+import { DashboardPageComponent } from '@/features/dashboard';
+import { rootRoute } from './_root';
 
 export const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/dashboard',
-  component: DashboardPage,
+  component: DashboardPageComponent,
 });
-
-function DashboardPage() {
-  const navigate = dashboardRoute.useNavigate();
-  const { items } = dashboardRoute.useRouteContext();
-
-  const handleNavigate = (filter: { status?: string; source?: string }) => {
-    navigate({
-      to: '/content',
-      search: filter,
-    });
-  };
-
-  return <Dashboard items={items} onNavigate={handleNavigate} />;
-}

@@ -5,4 +5,6 @@
  */
 
 // Components
-export { default as Dashboard } from './components/Dashboard';
+export * from './components';
+// Pages
+export { default as DashboardPageComponent } from './pages/dashboard-page';
