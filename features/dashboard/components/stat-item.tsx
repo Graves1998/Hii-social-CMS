@@ -1,8 +1,14 @@
+import { Typography } from '@/shared/ui';
+
 function StatItem({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex flex-col font-mono">
-      <span className="mb-1 text-[10px] text-zinc-500 uppercase">{label}</span>
-      <span className="text-xl font-medium text-white">{value}</span>
+    <div className="flex flex-col gap-1 font-mono">
+      <Typography variant="tiny" className="text-zinc-500 uppercase">
+        {label}
+      </Typography>
+      <Typography variant="small" className="font-medium text-white">
+        {value}
+      </Typography>
     </div>
   );
 }

@@ -85,6 +85,11 @@
 
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
+
+  --text-tiny: 0.625rem;
+  --text-tiny-leading: 0.9375rem;
+  --text-caption: 0.5625rem;
+  --text-caption-leading: 0.75rem;
 }
 
 body {
@@ -147,45 +152,6 @@ body {
   flex: 1;
   overflow-y: auto;
   padding-bottom: 20px;
-}
-
-.queue-item {
-  display: flex;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-}
-
-.queue-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.queue-item.active {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.queue-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-}
-
-.queue-thumb {
-  width: 48px;
-  height: 64px;
-  /* Vertical aspect */
-  background: #111;
-  border: 1px solid var(--border-bright);
-  object-fit: cover;
-  flex-shrink: 0;
 }
 
 .queue-info {
@@ -362,31 +328,6 @@ body {
   gap: 1px;
   background: var(--border-bright);
   border: 1px solid var(--border-bright);
-}
-
-.btn-kinetic {
-  background: var(--bg);
-  border: none;
-  color: var(--accent);
-  padding: 16px;
-  font-family: var(--font-main);
-  font-weight: 900;
-  font-size: 11px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: background 0.2s;
-  text-transform: uppercase;
-}
-
-.btn-kinetic:hover {
-  background: var(--accent);
-  color: var(--bg);
-}
-
-.btn-reject:hover {
-  background: var(--danger);
-  color: var(--accent);
 }
 
 .btn-kinetic::after {

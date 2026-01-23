@@ -1,9 +1,9 @@
 import { createRoute } from '@tanstack/react-router';
 import ContentPageComponent from '@/features/content/pages/content-page';
-import { rootRoute } from './_root';
+import { mainLayoutRoute } from './_main';
 
 export const contentRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => mainLayoutRoute,
   path: '/content',
   component: ContentPageComponent,
   validateSearch: (search: Record<string, unknown>) => {

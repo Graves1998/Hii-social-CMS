@@ -1,9 +1,9 @@
 import { DetailPageComponent } from '@/features/content';
 import { createRoute } from '@tanstack/react-router';
-import { rootRoute } from './_root';
+import { mainLayoutRoute } from './_main';
 
 export const detailRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => mainLayoutRoute,
   path: '/detail/$contentId',
   component: DetailPageComponent,
 });

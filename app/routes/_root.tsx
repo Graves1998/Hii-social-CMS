@@ -1,8 +1,7 @@
-import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { MainLayout } from '@/app/layouts';
 import { CMSService } from '@/services/cmsService';
 import { ContentItem, UserRole } from '@/shared/types';
+import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 
 // Define the router context type
 export interface RouterContext {
@@ -18,9 +17,9 @@ export interface RouterContext {
 // Create the root route with context
 export const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: () => (
-    <MainLayout>
+    <>
       <Outlet />
       <TanStackRouterDevtools />
-    </MainLayout>
+    </>
   ),
 });

@@ -4,7 +4,7 @@ import { RouterProvider } from '@tanstack/react-router';
 import React, { useState } from 'react';
 import { INITIAL_CONTENT, MOCK_CATEGORIES, MOCK_TAGS } from '@/shared';
 import { queryClient } from '@/lib/query-client';
-import { createAppRouter, RouterContext } from '@/app/routes/root-layout';
+import { createAppRouter, RouterContext } from '@/app/layouts/root-layout';
 import { CMSService } from '@/services/cmsService';
 import { UserRole } from '@/shared/types';
 

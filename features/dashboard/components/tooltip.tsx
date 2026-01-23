@@ -1,9 +1,15 @@
+import { Typography } from '@/shared/ui';
+
 function Tooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     return (
-      <div className="border border-white/10 bg-black p-2 shadow-none">
-        <div className="mb-1 font-mono text-[10px] text-zinc-500 uppercase">{label}</div>
-        <div className="font-mono text-sm text-white">{payload[0].value} ĐƠN VỊ</div>
+      <div className="flex flex-col gap-1 border border-white/10 bg-black p-2 shadow-none">
+        <Typography variant="tiny" className="text-zinc-500 uppercase">
+          {label}
+        </Typography>
+        <Typography variant="small" className="text-foreground font-mono">
+          {payload[0].value} ĐƠN VỊ
+        </Typography>
       </div>
     );
   }

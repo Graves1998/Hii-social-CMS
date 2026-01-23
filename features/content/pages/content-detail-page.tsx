@@ -1,10 +1,10 @@
 import { STATUS_LABELS } from '@/shared';
 import { ContentStatus, MediaType } from '@/shared/types';
-import { Button, Textarea } from '@/shared/ui';
+import { Badge, Button, Textarea, Typography } from '@/shared/ui';
 import { AlertTriangle, FileText, Globe, ListVideo, X } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams, useRouteContext } from '@tanstack/react-router';
-import { ActivityLogModal, RejectConfirmationModal } from '../components';
+import { ActivityLogModal, Queue, RejectConfirmationModal, WorkflowSteps } from '../components';
 
 function DetailPageComponent() {
   const { contentId } = useParams({ strict: false });
@@ -78,40 +78,7 @@ function DetailPageComponent() {
     <div className="detail-layout animate-in fade-in duration-300">
       {/* LEFT: QUEUE SIDEBAR */}
       <aside className="queue-sidebar">
-        <div className="queue-header flex items-center gap-2">
-          <ListVideo size={12} />
-          <span>HÀNG ĐỢI // {STATUS_LABELS[item.status as ContentStatus]}</span>
-          <span className="ml-auto opacity-50">{queueItems.length}</span>
-        </div>
-        <div className="queue-list custom-scrollbar">
-          {queueItems.map((qItem: any) => (
-            <div
-              key={qItem.content_id}
-              className={`queue-item ${qItem.content_id === item.content_id ? 'active' : ''}`}
-              onClick={() =>
-                navigate({
-                  to: '/detail/$contentId',
-                  params: { contentId: qItem.content_id },
-                })
-              }
-            >
-              <img
-                src={`https://picsum.photos/seed/${qItem.content_id}/200/300`}
-                className="queue-thumb"
-                alt="thumb"
-              />
-              <div className="queue-info">
-                <div className="line-clamp-2 text-[11px] leading-tight font-bold text-white">
-                  {qItem.title}
-                </div>
-                <div className="font-mono text-[9px] text-zinc-500">{qItem.content_id}</div>
-                <div className="mt-1 font-mono text-[9px] text-zinc-600 uppercase">
-                  {qItem.category}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <Queue queueItems={queueItems} item={item} />
       </aside>
 
       {/* CENTER: VIEWPORT SECTION */}
@@ -166,8 +133,10 @@ function DetailPageComponent() {
       {/* RIGHT: INSPECTOR SECTION */}
       <aside className="inspector">
         {/* DESCRIPTION */}
-        <div className="meta-group">
-          <span className="label">NHẬT_KÝ_PHIÊN_DỊCH</span>
+        <div className="flex flex-col gap-2">
+          <Typography variant="tiny" className="text-muted-foreground font-medium">
+            NHẬT KÝ PHIÊN DỊCH
+          </Typography>
           {isEditable ? (
             <Textarea
               value={item.short_description}
@@ -189,113 +158,61 @@ function DetailPageComponent() {
         </div>
 
         {/* DISTRIBUTION NETWORKS */}
-        <div className="meta-group">
-          <span className="label">MẠNG_LƯỚI_PHÂN_PHỐI</span>
-          <div className="tag-container">
+        <div className="flex flex-col gap-2">
+          <Typography variant="tiny" className="text-muted-foreground font-medium">
+            MẠNG LƯỚI PHÂN PHỐI
+          </Typography>
+          <div className="flex flex-wrap gap-1.5">
             {item.target_platforms?.map((platform: any) => (
-              <div
-                key={platform}
-                className="tag flex items-center gap-2 border-zinc-700 bg-zinc-900/50 text-zinc-300"
-              >
+              <Badge key={platform} variant="outline">
                 <Globe size={10} />
                 {platform}
-              </div>
+              </Badge>
             ))}
           </div>
         </div>
 
         {/* TAGS */}
-        <div className="meta-group">
-          <span className="label">THẺ_PHÂN_LOẠI</span>
-          <div className="tag-container">
-            <div className="tag border-white text-white">{item.category}</div>
+        <div className="flex flex-col gap-2">
+          <Typography variant="tiny" className="text-muted-foreground font-medium">
+            THẺ PHÂN LOẠI
+          </Typography>
+          <div className="flex flex-wrap gap-1.5">
+            <Badge variant="outline">#{item.category}</Badge>
             {item.tags.map((tag: any) => (
-              <div key={tag} className="tag">
+              <Badge key={tag} variant="outline">
                 #{tag}
-              </div>
+              </Badge>
             ))}
           </div>
         </div>
 
         {/* WORKFLOW STATUS PROGRESS */}
-        <div className="meta-group mt-6">
-          <span className="label">TRẠNG_THÁI // QUY_TRÌNH</span>
-
-          {isRejected && (
-            <div className="mb-2 border border-red-500/50 bg-red-950/20 p-2 font-mono text-[10px] text-red-400 uppercase">
-              ⚠ Nội dung bị từ chối: {item.moderation_notes || 'Phát hiện vi phạm'}
-            </div>
-          )}
-
-          <div className="relative mt-4 mb-2 select-none">
-            <div className="relative z-10 flex items-center justify-between">
-              {workflowSteps.map((step, index) => {
-                let stateClass = 'bg-[#1a1a1a] border-zinc-700 text-zinc-600';
-                if (index < activeIndex) stateClass = 'bg-white border-white text-white';
-                if (index === activeIndex) {
-                  if (isRejected)
-                    stateClass =
-                      'bg-red-500 border-red-500 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]';
-                  else
-                    stateClass =
-                      'bg-[#00ff66] border-[#00ff66] text-[#00ff66] shadow-[0_0_10px_rgba(0,255,102,0.5)]';
-                }
-                if (isRejected && index === 1)
-                  stateClass = 'bg-red-500 border-red-500 text-red-500';
-
-                return (
-                  <div key={step.id} className="flex flex-col items-center gap-2">
-                    <div
-                      className={`h-2 w-2 rotate-45 transform border transition-colors duration-500 ${
-                        stateClass.split(' ')[0]
-                      } ${stateClass.split(' ')[1]}`}
-                    />
-                    <span
-                      className={`font-mono text-[9px] font-bold tracking-widest transition-colors duration-500 ${
-                        index <= activeIndex
-                          ? isRejected && index === activeIndex
-                            ? 'text-red-500'
-                            : 'text-white'
-                          : 'text-zinc-700'
-                      }`}
-                    >
-                      {step.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="absolute top-1 left-0 -z-0 h-[1px] w-full bg-[#1a1a1a]" />
-            <div
-              className={`absolute top-1 left-0 -z-0 h-[1px] transition-all duration-700 ${
-                isRejected ? 'bg-red-900' : 'bg-white'
-              }`}
-              style={{ width: `${(activeIndex / (workflowSteps.length - 1)) * 100}%` }}
-            />
-          </div>
-        </div>
+        <WorkflowSteps
+          isRejected={isRejected}
+          item={item}
+          workflowSteps={workflowSteps}
+          activeIndex={activeIndex}
+        />
 
         {/* ACTIONS */}
         <div className="actions">
-          <button
-            type="button"
+          <Button
+            variant="destructive"
             onClick={() => handleUpdateStatus(item.content_id, ContentStatus.REJECTED)}
-            className="btn-kinetic btn-reject"
             disabled={isRejected}
           >
             TỪ CHỐI
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="default"
             onClick={() => handleUpdateStatus(item.content_id, ContentStatus.APPROVED)}
-            className="btn-kinetic"
             disabled={
               item.status === ContentStatus.APPROVED || item.status === ContentStatus.PUBLISHED
             }
           >
             DUYỆT
-          </button>
+          </Button>
         </div>
       </aside>
 

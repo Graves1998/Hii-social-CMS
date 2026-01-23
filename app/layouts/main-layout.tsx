@@ -1,6 +1,5 @@
-import { Link, Outlet, useRouterState } from '@tanstack/react-router';
+import { Outlet } from '@tanstack/react-router';
 import React from 'react';
-import { UserRole } from '@/shared/types';
 import Sidebar from './sidebar';
 
 interface MainLayoutProps {

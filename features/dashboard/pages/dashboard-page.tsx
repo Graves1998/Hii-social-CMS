@@ -1,5 +1,5 @@
 import { ContentItem, ContentStatus } from '@/shared/types';
-import { Button } from '@/shared/ui';
+import { Button, Typography } from '@/shared/ui';
 import { useNavigate, useRouteContext } from '@tanstack/react-router';
 import { ArrowUpRight, Zap } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -69,15 +69,17 @@ function DashboardPage() {
     <div className="animate-in fade-in duration-700">
       {/* Header Section */}
       <div className="mb-20 flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
-        <div>
-          <div className="mb-4 font-mono text-[10px] tracking-[0.3em] text-zinc-500 uppercase">
-            KHÔNG GIAN LÀM VIỆC ALPHA
-          </div>
-          <h1 className="text-6xl leading-[0.9] font-black tracking-tighter text-white uppercase md:text-7xl">
+        <div className="flex flex-col gap-2">
+          <Typography variant="tiny">KHÔNG GIAN LÀM VIỆC ALPHA</Typography>
+
+          <Typography
+            variant="h1"
+            className="text-foreground font-mono font-black tracking-tighter uppercase"
+          >
             Luồng
             <br />
             Nội Dung.
-          </h1>
+          </Typography>
         </div>
 
         <div className="flex gap-12 border-b border-transparent pb-2 lg:border-none">
@@ -94,9 +96,13 @@ function DashboardPage() {
           <div className="absolute top-0 left-0 h-[1px] w-full origin-left scale-x-0 transform bg-white transition-transform duration-500 group-hover:scale-x-100" />
 
           <div className="mb-6 flex items-start justify-between">
-            <div>
-              <h3 className="mb-1 text-xl font-bold text-white">Tốc Độ Xử Lý</h3>
-              <p className="font-mono text-sm text-zinc-500">ĐÃ XUẤT BẢN / 7 NGÀY</p>
+            <div className="flex flex-col gap-1">
+              <Typography variant="h3" size="xlarge" className="text-white">
+                Tốc Độ Xử Lý
+              </Typography>
+              <Typography variant="small" className="font-mono text-zinc-500">
+                ĐÃ XUẤT BẢN / 7 NGÀY
+              </Typography>
             </div>
             <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20">
               <ArrowUpRight className="h-4 w-4 text-white" />
@@ -131,22 +137,27 @@ function DashboardPage() {
         </div>
 
         {/* Alert Card */}
-        <div className="group relative overflow-hidden bg-black p-8 transition-colors hover:bg-[#111]">
+        <div className="group hover:bg-background relative overflow-hidden bg-black p-8 transition-colors">
           <div className="absolute top-0 left-0 h-[1px] w-full origin-left scale-x-0 transform bg-white transition-transform duration-500 group-hover:scale-x-100" />
 
           <div className="mb-12 flex items-start justify-between">
-            <div className="font-mono text-[10px] text-zinc-500 uppercase">CHỜ DUYỆT</div>
+            <Typography variant="tiny" className="text-zinc-500 uppercase">
+              CHỜ DUYỆT
+            </Typography>
             <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
           </div>
-
-          <div className="mb-4 text-5xl font-bold text-white">{kpiData.pending}</div>
-          <p className="mb-8 text-xs leading-relaxed text-zinc-500">
+          <Typography variant="h3" size="xxxlarge" className="mb-4 text-white">
+            {kpiData.pending}
+          </Typography>
+          <Typography variant="small" className="mb-8 leading-relaxed text-zinc-500" as="p">
             Nội dung đang chờ quy trình phê duyệt. Cần hành động ngay để duy trì tốc độ luồng.
-          </p>
+          </Typography>
 
           <Button
+            fullWidth
             onClick={() => handleNavigate({ status: ContentStatus.PENDING_REVIEW })}
-            className="w-full border border-white/20 bg-transparent hover:bg-white hover:text-black"
+            variant="outline"
+            // className="w-full border border-white/20 bg-transparent hover:bg-white hover:text-black"
           >
             TIẾN HÀNH DUYỆT
           </Button>
@@ -182,12 +193,18 @@ function DashboardPage() {
         {/* Create New Action */}
         <div className="group relative flex cursor-pointer flex-col justify-between overflow-hidden bg-white p-8 transition-colors hover:bg-zinc-200">
           <div className="flex items-start justify-between">
-            <div className="font-mono text-[10px] text-black uppercase">THAO TÁC</div>
+            <Typography variant="tiny" className="text-black uppercase">
+              THAO TÁC
+            </Typography>
             <Zap className="h-4 w-4 text-black" />
           </div>
           <div onClick={() => navigate({ to: '/create' })}>
-            <h3 className="mb-1 text-xl font-bold text-black">Tạo Mới</h3>
-            <p className="font-mono text-xs text-zinc-600 uppercase">THỦ CÔNG</p>
+            <Typography variant="h3" size="xlarge" className="mb-1 text-black">
+              Tạo Mới
+            </Typography>
+            <Typography size="xsmall" className="font-mono text-zinc-600 uppercase">
+              THỦ CÔNG
+            </Typography>
           </div>
         </div>
       </div>

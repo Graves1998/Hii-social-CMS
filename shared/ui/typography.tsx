@@ -18,6 +18,17 @@ const typographyVariants = cva('', {
       large: 'text-lg font-semibold',
       small: 'text-sm font-medium leading-none',
       muted: 'text-sm text-muted-foreground',
+      tiny: 'text-tiny text-muted-foreground font-mono',
+    },
+    size: {
+      tiny: 'text-tiny',
+      xsmall: 'text-xs',
+      small: 'text-sm',
+      medium: 'text-base',
+      large: 'text-lg',
+      xlarge: 'text-xl',
+      xxlarge: 'text-2xl',
+      xxxlarge: 'text-3xl',
     },
   },
   defaultVariants: {
@@ -31,12 +42,12 @@ export interface TypographyProps
 }
 
 const Typography = React.forwardRef<HTMLElement, TypographyProps>(
-  ({ className, variant, as, ...props }, ref) => {
+  ({ className, variant, size, as, ...props }, ref) => {
     // Tự động chọn tag HTML phù hợp với variant
     const Component = (as || (variant as keyof JSX.IntrinsicElements) || 'p') as React.ElementType;
 
     return React.createElement(Component, {
-      className: cn(typographyVariants({ variant, className })),
+      className: cn(typographyVariants({ variant, size, className })),
       ref,
       ...props,
     });
