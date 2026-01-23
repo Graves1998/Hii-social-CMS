@@ -2,7 +2,7 @@ import React from 'react';
 import { Video, Image as ImageIcon, Type, Link as LinkIcon, MoreHorizontal } from 'lucide-react';
 import { ContentItem, ContentStatus, MediaType } from '@/shared/types';
 import { STATUS_LABELS } from '@/features/content/constants';
-import { Button } from '@/shared/ui/primitives';
+import { Button } from '@/shared/ui';
 
 interface ContentTableProps {
   items: ContentItem[];
@@ -43,27 +43,27 @@ const ContentTable: React.FC<ContentTableProps> = ({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/10">
-              <th className="h-10 px-6 text-left align-middle w-[50px]">
+              <th className="h-10 w-[50px] px-6 text-left align-middle">
                 <input
                   type="checkbox"
-                  className="accent-white h-3 w-3 bg-transparent border-zinc-700 rounded-none cursor-pointer"
+                  className="h-3 w-3 cursor-pointer rounded-none border-zinc-700 bg-transparent accent-white"
                   checked={allSelected}
                   onChange={onToggleAll}
                 />
               </th>
-              <th className="h-10 px-6 text-left align-middle font-mono text-[10px] uppercase text-zinc-500 tracking-wider">
+              <th className="h-10 px-6 text-left align-middle font-mono text-[10px] tracking-wider text-zinc-500 uppercase">
                 Tài Nguyên
               </th>
-              <th className="h-10 px-6 text-left align-middle font-mono text-[10px] uppercase text-zinc-500 tracking-wider">
+              <th className="h-10 px-6 text-left align-middle font-mono text-[10px] tracking-wider text-zinc-500 uppercase">
                 Loại
               </th>
-              <th className="h-10 px-6 text-left align-middle font-mono text-[10px] uppercase text-zinc-500 tracking-wider">
+              <th className="h-10 px-6 text-left align-middle font-mono text-[10px] tracking-wider text-zinc-500 uppercase">
                 Nguồn
               </th>
-              <th className="h-10 px-6 text-left align-middle font-mono text-[10px] uppercase text-zinc-500 tracking-wider">
+              <th className="h-10 px-6 text-left align-middle font-mono text-[10px] tracking-wider text-zinc-500 uppercase">
                 Trạng Thái
               </th>
-              <th className="h-10 px-6 text-right align-middle font-mono text-[10px] uppercase text-zinc-500 tracking-wider">
+              <th className="h-10 px-6 text-right align-middle font-mono text-[10px] tracking-wider text-zinc-500 uppercase">
                 Thao Tác
               </th>
             </tr>
@@ -72,20 +72,20 @@ const ContentTable: React.FC<ContentTableProps> = ({
             {items.map((item) => (
               <tr
                 key={item.content_id}
-                className={`group transition-colors hover:bg-[#111] cursor-pointer ${selectedIds.includes(item.content_id) ? 'bg-white/5' : ''}`}
+                className={`group cursor-pointer transition-colors hover:bg-[#111] ${selectedIds.includes(item.content_id) ? 'bg-white/5' : ''}`}
                 onClick={() => onView(item.content_id)}
               >
                 <td className="p-6 align-middle" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
-                    className="accent-white h-3 w-3 bg-transparent border-zinc-700 rounded-none cursor-pointer"
+                    className="h-3 w-3 cursor-pointer rounded-none border-zinc-700 bg-transparent accent-white"
                     checked={selectedIds.includes(item.content_id)}
                     onChange={() => onToggleSelect(item.content_id)}
                   />
                 </td>
                 <td className="p-6 align-middle">
-                  <div className="flex flex-col max-w-[300px]">
-                    <span className="font-bold text-white truncate mb-1 group-hover:text-white transition-colors">
+                  <div className="flex max-w-[300px] flex-col">
+                    <span className="mb-1 truncate font-bold text-white transition-colors group-hover:text-white">
                       {item.title}
                     </span>
                     <span className="font-mono text-[10px] text-zinc-600 uppercase">
@@ -102,20 +102,20 @@ const ContentTable: React.FC<ContentTableProps> = ({
                   </div>
                 </td>
                 <td className="p-6 align-middle">
-                  <div className="font-mono text-[10px] uppercase text-zinc-400">
+                  <div className="font-mono text-[10px] text-zinc-400 uppercase">
                     {item.source_platform}
                   </div>
                 </td>
                 <td className="p-6 align-middle">
-                  <div className="inline-block border border-zinc-800 px-2 py-1 font-mono text-[10px] uppercase text-zinc-300">
+                  <div className="inline-block border border-zinc-800 px-2 py-1 font-mono text-[10px] text-zinc-300 uppercase">
                     {STATUS_LABELS[item.status]}
                   </div>
                 </td>
-                <td className="p-6 align-middle text-right">
+                <td className="p-6 text-right align-middle">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-zinc-600 hover:text-white rounded-none"
+                    className="h-8 w-8 rounded-none text-zinc-600 hover:text-white"
                   >
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
@@ -126,7 +126,7 @@ const ContentTable: React.FC<ContentTableProps> = ({
               <tr>
                 <td
                   colSpan={6}
-                  className="p-8 align-middle text-center font-mono text-xs text-zinc-600 uppercase"
+                  className="p-8 text-center align-middle font-mono text-xs text-zinc-600 uppercase"
                 >
                   Không có dữ liệu hiển thị.
                 </td>

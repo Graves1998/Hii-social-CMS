@@ -22,7 +22,15 @@ import {
   ContentStatus,
   SourcePlatform,
 } from '@/features/content';
-import { Button, Input, Select } from '@/shared/ui';
+import {
+  Button,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui';
 import { rootRoute } from './root-layout';
 
 export const contentRoute = createRoute({
@@ -141,11 +149,11 @@ function ContentPage() {
   ).length;
 
   return (
-    <div className="space-y-8 relative">
+    <div className="relative space-y-8">
       <div className="flex flex-col gap-6">
         {/* Status Filter */}
         <div className="space-y-3">
-          <label className="text-[10px] font-mono uppercase text-zinc-500 tracking-wider flex items-center gap-2">
+          <label className="flex items-center gap-2 font-mono text-[10px] tracking-wider text-zinc-500 uppercase">
             <Filter size={10} /> Lọc Trạng Thái
           </label>
           <div className="flex flex-wrap gap-1">
@@ -153,10 +161,10 @@ function ContentPage() {
               <button
                 key={tab.id}
                 onClick={() => setStatusFilter(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 text-[10px] font-mono uppercase border transition-all ${
+                className={`flex items-center gap-2 border px-4 py-2 font-mono text-[10px] uppercase transition-all ${
                   statusFilter === tab.id
-                    ? 'bg-white text-black border-white'
-                    : 'bg-transparent text-zinc-500 border-zinc-800 hover:border-zinc-500 hover:text-zinc-300'
+                    ? 'border-white bg-white text-black'
+                    : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
                 }`}
               >
                 <tab.icon size={12} /> {tab.label}
@@ -167,16 +175,16 @@ function ContentPage() {
 
         {/* Category Filter */}
         <div className="space-y-3">
-          <label className="text-[10px] font-mono uppercase text-zinc-500 tracking-wider flex items-center gap-2">
+          <label className="flex items-center gap-2 font-mono text-[10px] tracking-wider text-zinc-500 uppercase">
             <Hash size={10} /> Lọc Danh Mục
           </label>
           <div className="flex flex-wrap gap-1">
             <button
               onClick={() => setCategoryFilters([])}
-              className={`px-3 py-1 text-[10px] font-mono uppercase border transition-all ${
+              className={`border px-3 py-1 font-mono text-[10px] uppercase transition-all ${
                 categoryFilters.length === 0
-                  ? 'bg-white text-black border-white'
-                  : 'bg-transparent text-zinc-500 border-zinc-800 hover:border-zinc-500 hover:text-zinc-300'
+                  ? 'border-white bg-white text-black'
+                  : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
               }`}
             >
               TẤT CẢ
@@ -185,10 +193,10 @@ function ContentPage() {
               <button
                 key={cat}
                 onClick={() => toggleCategory(cat)}
-                className={`px-3 py-1 text-[10px] font-mono uppercase border transition-all ${
+                className={`border px-3 py-1 font-mono text-[10px] uppercase transition-all ${
                   categoryFilters.includes(cat)
-                    ? 'bg-white text-black border-white'
-                    : 'bg-transparent text-zinc-500 border-zinc-800 hover:border-zinc-500 hover:text-zinc-300'
+                    ? 'border-white bg-white text-black'
+                    : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
                 }`}
               >
                 {cat}
@@ -197,31 +205,35 @@ function ContentPage() {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 border-t border-white/10 pt-6">
+        <div className="flex flex-col gap-4 border-t border-white/10 pt-6 md:flex-row">
           <div className="flex-1">
-            <div className="relative group">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-600 group-hover:text-white transition-colors" />
+            <div className="group relative">
+              <Search className="absolute top-2.5 left-3 h-4 w-4 text-zinc-600 transition-colors group-hover:text-white" />
               <Input
                 placeholder="TÌM_KIẾM_CƠ_SỞ_DỮ_LIỆU..."
-                className="pl-10 h-10 bg-black border-white/10 focus:border-white text-white font-mono uppercase text-xs"
+                className="h-10 border-white/10 bg-black pl-10 font-mono text-xs text-white uppercase focus:border-white"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-48">
-              <Select value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)}>
+            <Select value={platformFilter} onValueChange={(value) => setPlatformFilter(value)}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Tất cả nền tảng" />
+              </SelectTrigger>
+
+              <SelectContent>
                 {platformTabs.map((p) => (
-                  <option key={p.id} value={p.id} className="bg-black text-white">
+                  <SelectItem key={p.id} value={p.id}>
                     {p.label}
-                  </option>
+                  </SelectItem>
                 ))}
-              </Select>
-            </div>
-            <div className="border border-white/10 flex p-1 bg-black">
+              </SelectContent>
+            </Select>
+            <div className="flex border border-white/10 bg-black p-1">
               <button
-                className={`h-8 w-8 flex items-center justify-center transition-colors ${
+                className={`flex h-8 w-8 items-center justify-center transition-colors ${
                   viewMode === 'grid' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'
                 }`}
                 onClick={() => setViewMode('grid')}
@@ -229,7 +241,7 @@ function ContentPage() {
                 <LayoutGrid size={16} />
               </button>
               <button
-                className={`h-8 w-8 flex items-center justify-center transition-colors ${
+                className={`flex h-8 w-8 items-center justify-center transition-colors ${
                   viewMode === 'table' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'
                 }`}
                 onClick={() => setViewMode('table')}
@@ -255,14 +267,14 @@ function ContentPage() {
 
       {/* Floating Batch Action Bar */}
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-4 bg-zinc-900 border border-white/20 p-2 pl-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in">
+        <div className="animate-in slide-in-from-bottom-10 fade-in fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-4 border border-white/20 bg-zinc-900 p-2 pl-6 shadow-2xl">
           <span className="font-mono text-xs text-white uppercase">
             {selectedIds.length} ĐÃ CHỌN
           </span>
           <div className="h-4 w-[1px] bg-white/20" />
           <Button
             variant="default"
-            className="bg-white text-black hover:bg-zinc-200 h-8"
+            className="h-8 bg-white text-black hover:bg-zinc-200"
             onClick={handleBatchApprove}
             disabled={batchActionableCount === 0}
           >

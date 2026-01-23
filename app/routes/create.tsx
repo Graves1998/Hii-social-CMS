@@ -9,7 +9,7 @@ import {
   Input,
   Select,
   Textarea,
-} from '@/shared/ui/primitives';
+} from '@/shared/ui';
 import { MediaType, SourcePlatform, SourceType } from '@/shared/types';
 import { rootRoute } from './root-layout';
 
@@ -53,7 +53,7 @@ function CreatePage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-8">
+    <div className="mx-auto max-w-2xl py-8">
       <Card>
         <CardHeader>
           <CardTitle>GIAO_THỨC_TÀI_NGUYÊN_MỚI</CardTitle>
@@ -62,7 +62,7 @@ function CreatePage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="grid gap-2">
-                <label className="text-xs font-mono uppercase text-zinc-500">Tiêu đề</label>
+                <label className="font-mono text-xs text-zinc-500 uppercase">Tiêu đề</label>
                 <Input
                   required
                   value={formData.title}
@@ -72,7 +72,7 @@ function CreatePage() {
               </div>
 
               <div className="grid gap-2">
-                <label className="text-xs font-mono uppercase text-zinc-500">Mô tả</label>
+                <label className="font-mono text-xs text-zinc-500 uppercase">Mô tả</label>
                 <Textarea
                   required
                   className="h-32"
@@ -84,7 +84,7 @@ function CreatePage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <label className="text-xs font-mono uppercase text-zinc-500">Định dạng</label>
+                  <label className="font-mono text-xs text-zinc-500 uppercase">Định dạng</label>
                   <Select
                     value={formData.media_type}
                     onChange={(e) => setFormData({ ...formData, media_type: e.target.value })}
@@ -97,7 +97,7 @@ function CreatePage() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-xs font-mono uppercase text-zinc-500">Danh mục</label>
+                  <label className="font-mono text-xs text-zinc-500 uppercase">Danh mục</label>
                   <Select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -112,7 +112,7 @@ function CreatePage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t border-white/10 mt-6">
+            <div className="mt-6 flex justify-end gap-2 border-t border-white/10 pt-4">
               <Button type="button" variant="ghost" onClick={() => navigate({ to: '/content' })}>
                 HỦY
               </Button>
