@@ -1,4 +1,4 @@
-import { createRoute, Outlet } from '@tanstack/react-router';
+import { createRoute, Outlet, redirect } from '@tanstack/react-router';
 import { rootRoute } from './_root';
 import { MainLayout } from '../layouts';
 
@@ -10,6 +10,12 @@ export const mainLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'main-layout',
   component: MainLayoutComponent,
+  beforeLoad: ({ context }) => {
+    if (!context.isAuthenticated) {
+      // eslint-disable-next-line @typescript-eslint/no-throw-literal
+      throw redirect({ to: '/login' });
+    }
+  },
 });
 
 function MainLayoutComponent() {

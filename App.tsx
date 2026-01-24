@@ -7,6 +7,7 @@ import { queryClient } from '@/lib/query-client';
 import { createAppRouter, RouterContext } from '@/app/layouts/root-layout';
 import { CMSService } from '@/services/cmsService';
 import { UserRole } from '@/shared/types';
+import { useIsAuthenticated } from './features/auth/stores/useAuthStore';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState({
@@ -35,6 +36,7 @@ const App: React.FC = () => {
     currentUser,
     setCurrentUser,
     refreshData,
+    isAuthenticated: useIsAuthenticated(),
   };
 
   // Create router instance with context

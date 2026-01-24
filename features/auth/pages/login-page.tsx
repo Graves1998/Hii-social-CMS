@@ -1,50 +1,54 @@
-import { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { useForm } from 'react-hook-form';
+import { toast } from '@/shared';
+import { Button, Typography } from '@/shared/ui';
+import { FieldGroup } from '@/shared/ui/field';
+import FormField from '@/shared/ui/form-field';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Lock, Mail, AlertCircle } from 'lucide-react';
-import { Button, Input, Typography } from '@/shared/ui';
-import { useAuthStore } from '../stores/useAuthStore';
+import { useNavigate } from '@tanstack/react-router';
+import { AlertCircle } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { useLogin } from '../hooks';
 import { loginSchema, type LoginFormData } from '../schemas/auth.schema';
 
 function LoginPageComponent() {
   const navigate = useNavigate();
-  const { login } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
+  const { register, handleSubmit, control } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: 'onChange',
+    defaultValues: {
+      username: '',
+      password: '',
+    },
   });
 
+  const { loginMutation } = useLogin();
+  const isLoading = loginMutation.isPending;
+  const serverError = loginMutation.error?.message;
+
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
-    setServerError(null);
-
+    const toastId = toast.loading('LOGGING IN...');
     try {
-      // TODO: Call API login
-      // Giả lập API call
-      // eslint-disable-next-line no-promise-executor-return
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Mock user data - thay bằng response từ API
-      const mockUser = {
-        id: '1',
-        name: 'Admin User',
-        email: data.email,
-        role: 'ADMIN' as const,
-      };
-
-      login(mockUser as any, 'mock-token-123');
-      navigate({ to: '/dashboard' });
+      loginMutation.mutate(data, {
+        onSuccess: () => {
+          toast.dismiss(toastId);
+          toast.success('LOGIN SUCCESS', {
+            description: 'Welcome back to the system',
+            duration: 3000,
+          });
+        },
+        onError: () => {
+          toast.dismiss(toastId);
+          toast.error('LOGIN FAILED', {
+            description: 'Email or password is incorrect',
+            duration: 4000,
+          });
+        },
+      });
     } catch (error) {
-      setServerError('Email hoặc mật khẩu không đúng');
-    } finally {
-      setIsLoading(false);
+      toast.dismiss(toastId);
+      toast.error('SYSTEM ERROR', {
+        description: 'An error occurred, please try again',
+      });
     }
   };
 
@@ -57,10 +61,10 @@ function LoginPageComponent() {
             variant="h1"
             className="mb-2 font-mono text-2xl font-black tracking-wider text-white uppercase"
           >
-            TRUY_CẬP_HỆ_THỐNG
+            ACCESS SYSTEM
           </Typography>
           <Typography variant="muted" className="font-mono text-[10px] text-zinc-600 uppercase">
-            Xác thực danh tính để tiếp tục
+            Verify identity to continue
           </Typography>
         </div>
 
@@ -75,64 +79,33 @@ function LoginPageComponent() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Email Field */}
-            <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="flex items-center gap-2 font-mono text-[10px] tracking-wider text-zinc-500 uppercase"
-              >
-                <Mail size={10} /> Email
-              </label>
-              <Input
-                id="email"
-                type="email"
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" id="login-form">
+            <FieldGroup>
+              {/* Email Field */}
+              <FormField
+                control={control}
+                label="Email"
                 placeholder="user@system.io"
-                className="h-11 border-white/10 bg-transparent font-mono text-sm text-white transition-colors focus:border-white"
-                {...register('email')}
+                {...register('username')}
               />
-              {errors.email && (
-                <Typography variant="small" className="font-mono text-xs text-red-400">
-                  {errors.email.message}
-                </Typography>
-              )}
-            </div>
-
-            {/* Password Field */}
-            <div className="space-y-2">
-              <label
-                htmlFor="password"
-                className="flex items-center gap-2 font-mono text-[10px] tracking-wider text-zinc-500 uppercase"
-              >
-                <Lock size={10} /> Mật khẩu
-              </label>
-              <Input
-                id="password"
-                type="password"
+              <FormField
+                control={control}
+                label="Password"
                 placeholder="••••••••"
-                className="h-11 border-white/10 bg-transparent font-mono text-sm text-white transition-colors focus:border-white"
+                type="password"
                 {...register('password')}
               />
-              {errors.password && (
-                <Typography variant="small" className="font-mono text-xs text-red-400">
-                  {errors.password.message}
-                </Typography>
-              )}
-            </div>
+            </FieldGroup>
 
             {/* Submit Button */}
-            <Button
-              type="submit"
-              className="h-12 w-full bg-white font-mono text-xs font-bold tracking-widest text-black uppercase transition-all hover:bg-zinc-200 disabled:opacity-50"
-              disabled={isLoading}
-            >
+            <Button type="submit" disabled={isLoading} fullWidth>
               {isLoading ? (
                 <span className="flex items-center gap-2">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-black" />
-                  XỬ_LÝ...
+                  PROCESSING...
                 </span>
               ) : (
-                'ĐĂNG_NHẬP'
+                'LOGIN'
               )}
             </Button>
           </form>
@@ -140,13 +113,13 @@ function LoginPageComponent() {
           {/* Register Link */}
           <div className="mt-8 border-t border-white/10 pt-6 text-center">
             <Typography variant="small" className="font-mono text-xs text-zinc-600">
-              Chưa có tài khoản?{' '}
+              Don't have an account?{' '}
               <button
                 type="button"
                 onClick={() => navigate({ to: '/register' })}
                 className="text-white underline transition-colors hover:text-zinc-400"
               >
-                Đăng ký ngay
+                Register now
               </button>
             </Typography>
           </div>

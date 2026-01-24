@@ -4,8 +4,8 @@ import { z } from 'zod';
  * Login Schema
  */
 export const loginSchema = z.object({
-  email: z.string().min(1, 'Email là bắt buộc').email('Email không hợp lệ').toLowerCase().trim(),
-  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+  username: z.string().min(1, 'Username is required').trim(),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
@@ -15,23 +15,25 @@ export type LoginFormData = z.infer<typeof loginSchema>;
  */
 export const registerSchema = z
   .object({
-    name: z
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    username: z
       .string()
-      .min(2, 'Tên phải có ít nhất 2 ký tự')
-      .max(50, 'Tên không được quá 50 ký tự')
+      .min(2, 'Username must be at least 2 characters')
+      .max(50, 'Username must be at most 50 characters')
       .trim(),
-    email: z.string().min(1, 'Email là bắt buộc').email('Email không hợp lệ').toLowerCase().trim(),
+    email: z.string().min(1, 'Email is required').email('Email is invalid').toLowerCase().trim(),
     password: z
       .string()
-      .min(6, 'Mật khẩu phải có ít nhất 6 ký tự')
-      .max(100, 'Mật khẩu không được quá 100 ký tự')
-      .regex(/[A-Z]/, 'Mật khẩu phải có ít nhất 1 chữ hoa')
-      .regex(/[a-z]/, 'Mật khẩu phải có ít nhất 1 chữ thường')
-      .regex(/[0-9]/, 'Mật khẩu phải có ít nhất 1 số'),
-    confirmPassword: z.string().min(1, 'Vui lòng xác nhận mật khẩu'),
+      .min(6, 'Password must be at least 6 characters')
+      .max(100, 'Password must be at most 100 characters')
+      .regex(/[A-Z]/, 'Password must contain at least 1 uppercase letter')
+      .regex(/[a-z]/, 'Password must contain at least 1 lowercase letter')
+      .regex(/[0-9]/, 'Password must contain at least 1 number'),
+    confirmPassword: z.string().min(1, 'Please confirm password'),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'Mật khẩu xác nhận không khớp',
+    message: 'Confirm password does not match',
     path: ['confirmPassword'],
   });
 

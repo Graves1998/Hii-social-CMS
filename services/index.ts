@@ -5,7 +5,7 @@
  */
 
 // API Service - export API methods
-export { api, authApi } from './apiService';
+export { api } from './apiService';
 
 // CMS Service
 export { CMSService } from './cmsService';

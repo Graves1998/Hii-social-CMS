@@ -15,9 +15,9 @@ import {
 import { useMemo, useState } from 'react';
 
 import { useNavigate, useSearch, useRouteContext } from '@tanstack/react-router';
-import ContentGrid from '@/features/content/components/content-grid';
 import ContentTable from '@/features/content/components/content-table';
 import { ContentItem, ContentStatus, SourcePlatform } from '@/features/content/types';
+import { ContentGrid } from '@/shared/components';
 import {
   Button,
   Input,
@@ -27,9 +27,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui';
+import Media from '../components/media';
 
 function ContentPageComponent() {
   const navigate = useNavigate();
+
   const { status, source } = useSearch({ strict: false }) as { status?: string; source?: string };
   const { items, categories, service, currentUser, refreshData } = useRouteContext({
     strict: false,
@@ -247,7 +249,11 @@ function ContentPageComponent() {
           onToggleAll={() => handleSelectAll(filteredContent)}
         />
       ) : (
-        <ContentGrid items={filteredContent} onView={handleNavigateToDetail} />
+        <ContentGrid isEmpty={filteredContent.length === 0}>
+          {filteredContent.map((item: ContentItem) => {
+            return <Media item={item} onView={handleNavigateToDetail} key={item.content_id} />;
+          })}
+        </ContentGrid>
       )}
 
       {/* Floating Batch Action Bar */}

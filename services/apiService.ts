@@ -11,12 +11,11 @@
 import { type Options } from 'ky';
 import {
   apiClient,
-  tokenManager,
   ApiError,
-  ValidationError,
-  UnauthorizedError,
   ForbiddenError,
   NotFoundError,
+  UnauthorizedError,
+  ValidationError,
   type ApiResponse,
 } from '../lib/api-client';
 
@@ -151,49 +150,6 @@ export const api = {
   download: async (url: string, options?: Options): Promise<Blob> => {
     const response = await apiClient.get(url, options);
     return response.blob();
-  },
-};
-
-/**
- * Auth API helpers
- */
-export const authApi = {
-  login: async (email: string, password: string) => {
-    const data = await api.post<{
-      access_token: string;
-      refresh_token: string;
-      user: unknown;
-    }>('auth/login', { email, password });
-
-    tokenManager.setTokens(data.access_token, data.refresh_token);
-    return data;
-  },
-
-  logout: async () => {
-    try {
-      await api.post('auth/logout');
-    } finally {
-      tokenManager.clearTokens();
-    }
-  },
-
-  refreshToken: async () => {
-    const refreshToken = tokenManager.getRefreshToken();
-    if (!refreshToken) {
-      throw new UnauthorizedError('No refresh token available');
-    }
-
-    const data = await api.post<{
-      access_token: string;
-      refresh_token?: string;
-    }>('auth/refresh', { refresh_token: refreshToken });
-
-    tokenManager.setTokens(data.access_token, data.refresh_token);
-    return data.access_token;
-  },
-
-  getCurrentUser: async () => {
-    return api.get<unknown>('auth/me');
   },
 };
 

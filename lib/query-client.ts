@@ -53,7 +53,7 @@ export const queryClient = new QueryClient({
 export const queryKeys = {
   // Content queries
   content: {
-    all: ['content'] as const,
+    all: ['videos-crawler'] as const,
     lists: () => [...queryKeys.content.all, 'list'] as const,
     list: (filters: Record<string, unknown>) => [...queryKeys.content.lists(), filters] as const,
     details: () => [...queryKeys.content.all, 'detail'] as const,

@@ -9,7 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-background text-foreground hover:bg-background/80 hover:text-foreground/80 shadow-none border border-transparent',
+          'bg-foreground text-background hover:bg-foreground/80 hover:text-background/80 shadow-none border border-transparent',
         destructive:
           'bg-destructive text-destructive-foreground hover:bg-destructive/80 shadow-none',
         outline:
@@ -40,10 +40,11 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, fullWidth, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, fullWidth, type = 'button', ...props }, ref) => {
     const Comp = asChild ? Slot : 'button';
     return (
       <Comp
+        type={type}
         className={cn(buttonVariants({ variant, size, className }), fullWidth && 'w-full')}
         ref={ref}
         {...props}

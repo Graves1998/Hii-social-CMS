@@ -4,15 +4,11 @@
  * Authentication and authorization module
  */
 
-// Stores
-export { useAuthStore } from './stores/useAuthStore';
-
+// Hooks
+export * from './hooks';
 // Schemas
 export * from './schemas/auth.schema';
-
 // Pages
-export { default as LoginPage } from './pages/login-page';
-export { default as RegisterPage } from './pages/register-page';
-
+export * from './pages';
 // Types
 export * from './types';

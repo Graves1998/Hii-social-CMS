@@ -5,28 +5,23 @@
  */
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { UserRole } from '../types';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  avatar?: string;
-}
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { User } from '../types';
 
 interface AuthState {
   // State
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
 
   // Actions
-  login: (user: User, token: string) => void;
+  login: (user: User, token: string, refreshToken: string) => void;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
   setToken: (token: string) => void;
+  setRefreshToken: (refreshToken: string) => void;
+  clearTokens: () => void;
 }
 
 /**
@@ -39,12 +34,14 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
+      refreshToken: null,
 
       // Actions
-      login: (user, token) =>
+      login: (user, token, refreshToken) =>
         set({
           user,
           token,
+          refreshToken,
           isAuthenticated: true,
         }),
 
@@ -53,6 +50,7 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           token: null,
           isAuthenticated: false,
+          refreshToken: null,
         }),
 
       updateUser: (updates) =>
@@ -61,6 +59,8 @@ export const useAuthStore = create<AuthState>()(
         })),
 
       setToken: (token) => set({ token }),
+      setRefreshToken: (refreshToken) => set({ refreshToken }),
+      clearTokens: () => set({ token: null, refreshToken: null }),
     }),
     {
       name: 'auth-storage', // localStorage key
@@ -70,6 +70,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,
+        refreshToken: state.refreshToken,
       }),
     }
   )

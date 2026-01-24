@@ -13,14 +13,14 @@
  */
 
 /* eslint-disable max-classes-per-file */
+import { LoginResponse } from '@/features/auth';
+import { useAuthStore } from '@/features/auth/stores/useAuthStore';
 import ky, { HTTPError } from 'ky';
 
 // Base API URL
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.example.com';
-
-// Token storage keys
-const ACCESS_TOKEN_KEY = 'auth_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
+export const BASIC_AUTH = import.meta.env.VITE_BASIC_AUTH || '';
+const AUTH_PATH_REGEX = /^\/users\/(login|register)$/;
 
 // Refresh token state
 let isRefreshing = false;
@@ -84,23 +84,22 @@ export class NotFoundError extends ApiError {
  */
 export const tokenManager = {
   getAccessToken: (): string | null => {
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
+    return useAuthStore.getState().token;
   },
 
   getRefreshToken: (): string | null => {
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
+    return useAuthStore.getState().refreshToken;
   },
 
   setTokens: (accessToken: string, refreshToken?: string): void => {
-    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    useAuthStore.getState().setToken(accessToken);
     if (refreshToken) {
-      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      useAuthStore.getState().setRefreshToken(refreshToken);
     }
   },
 
   clearTokens: (): void => {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    useAuthStore.getState().clearTokens();
     isRefreshing = false;
     refreshTokenPromise = null;
   },
@@ -111,25 +110,26 @@ export const tokenManager = {
  */
 async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = tokenManager.getRefreshToken();
-
+  console.log(refreshToken, 'refreshToken');
   if (!refreshToken) {
     tokenManager.clearTokens();
     return null;
   }
 
   try {
-    const response = await ky.post(`${API_BASE_URL}/auth/refresh`, {
-      json: { refresh_token: refreshToken },
-      retry: 0, // Không retry cho refresh token
+    // Direct API call to avoid circular dependency
+    const response = await ky.post(`${API_BASE_URL}/users/tokens/refresh`, {
+      json: { refreshToken },
+      headers: {
+        Authorization: `Basic ${BASIC_AUTH}`,
+      },
     });
 
-    const data = await response.json<{
-      access_token: string;
-      refresh_token?: string;
-    }>();
+    const data = await response.json<LoginResponse>();
+    console.log(data, 'data');
 
-    tokenManager.setTokens(data.access_token, data.refresh_token);
-    return data.access_token;
+    tokenManager.setTokens(data.accessToken, data.refreshToken);
+    return data.accessToken;
   } catch (error) {
     console.error('Failed to refresh token:', error);
     tokenManager.clearTokens();
@@ -140,14 +140,14 @@ async function refreshAccessToken(): Promise<string | null> {
 /**
  * Get or refresh token
  */
-export async function getValidToken(): Promise<string | null> {
+export async function getValidToken(isRefresh = false): Promise<string | null> {
   // Nếu đang refresh, đợi promise hiện tại
   if (isRefreshing && refreshTokenPromise) {
     return refreshTokenPromise;
   }
 
   const token = tokenManager.getAccessToken();
-  if (token) {
+  if (token && !isRefresh) {
     return token;
   }
 
@@ -176,27 +176,25 @@ export const apiClient = ky.create({
   hooks: {
     beforeRequest: [
       async (request) => {
+        // Add basic auth
+        const path = request.url.substring(API_BASE_URL.length);
+
+        if (AUTH_PATH_REGEX.test(path) && BASIC_AUTH) {
+          request.headers.set('Authorization', `Basic ${BASIC_AUTH}`);
+          return;
+        }
+
         // Add auth token
         const token = await getValidToken();
         if (token) {
           request.headers.set('Authorization', `Bearer ${token}`);
         }
-
-        // Add custom headers
-        request.headers.set('X-App-Version', '1.0.0');
-        request.headers.set('X-Client-Type', 'web');
-
-        // Add request ID for tracking
-        const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        request.headers.set('X-Request-ID', requestId);
-
         // Log request in dev
         if (import.meta.env.DEV) {
           // eslint-disable-next-line no-console
           console.log('🚀 API Request:', {
             method: request.method,
             url: request.url,
-            requestId,
           });
         }
       },
@@ -232,18 +230,17 @@ export const apiClient = ky.create({
       async (request, options, response) => {
         // Log response in dev
         if (import.meta.env.DEV) {
-          const requestId = request.headers.get('X-Request-ID');
           // eslint-disable-next-line no-console
           console.log('✅ API Response:', {
             url: response.url,
             status: response.status,
-            requestId,
           });
         }
+        console.log(response, 'response');
 
         // Handle 401 - try refresh token
         if (response.status === 401) {
-          const newToken = await getValidToken();
+          const newToken = await getValidToken(true);
 
           if (newToken) {
             // Retry request với token mới
@@ -258,8 +255,7 @@ export const apiClient = ky.create({
           }
 
           // Không thể refresh -> redirect to login
-          tokenManager.clearTokens();
-          window.location.href = '/login';
+          // tokenManager.clearTokens();
           throw new UnauthorizedError('Session expired');
         }
 

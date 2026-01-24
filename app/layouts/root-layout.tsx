@@ -9,6 +9,7 @@ import { detailRoute } from '../routes/detail.$contentId';
 import { loginRoute } from '../routes/login';
 import { registerRoute } from '../routes/register';
 import { mainLayoutRoute } from '../routes/_main';
+import { reviewRoute } from '../routes/review';
 
 // Create index route - redirect to dashboard
 const indexRoute = createRoute({
@@ -32,6 +33,7 @@ const routeTree = rootRoute.addChildren([
     detailRoute,
     auditRoute,
     createContentRoute,
+    reviewRoute,
   ]),
 ]);
 

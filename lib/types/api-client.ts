@@ -9,4 +9,19 @@ interface ApiResponse<T = unknown> {
   code?: string;
 }
 
-export type { ApiResponse };
+interface PaginationRequest {
+  limit?: number;
+  page?: number;
+  page_size?: number;
+  sort_order?: 'asc' | 'desc';
+  sort_by?: 'created_at' | 'updated_at';
+}
+
+interface Pagination {
+  total: number;
+  page: number;
+  page_size: number;
+  total_page: number;
+}
+
+export type { ApiResponse, PaginationRequest, Pagination };

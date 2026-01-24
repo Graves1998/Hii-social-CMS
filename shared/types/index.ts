@@ -52,6 +52,7 @@ export interface ContentItem {
   visibility: 'public' | 'hidden';
   moderation_notes: string;
   published_at?: string;
+  thumbnail_url?: string;
 }
 
 export interface AuditLogEntry {
