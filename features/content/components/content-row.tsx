@@ -1,4 +1,4 @@
-import { Button, ContentItem, MediaType, STATUS_LABELS } from '@/shared';
+import { Button, ContentItem, ContentStatus, MediaType, STATUS_LABELS } from '@/shared';
 import { ImageIcon, LinkIcon, MoreHorizontal, Type, Video } from 'lucide-react';
 
 function MediaIcon({ type }: { type: MediaType }) {
@@ -23,18 +23,24 @@ type ContentRowProps = {
   onToggleSelect: (id: string) => void;
 };
 function ContentRow({ item, selectedIds, onView, onToggleSelect }: ContentRowProps) {
+  const isPending = item.status === ContentStatus.PENDING_REVIEW;
+
   return (
     <tr
       className={`group cursor-pointer transition-colors hover:bg-[#111] ${selectedIds.includes(item.id.toString()) ? 'bg-white/5' : ''}`}
       onClick={() => onView()}
     >
       <td className="p-6 align-middle" onClick={(e) => e.stopPropagation()}>
-        <input
-          type="checkbox"
-          className="h-3 w-3 cursor-pointer rounded-none border-zinc-700 bg-transparent accent-white"
-          checked={selectedIds.includes(item.id)}
-          onChange={() => onToggleSelect(item.id)}
-        />
+        {isPending ? (
+          <input
+            type="checkbox"
+            className="h-3 w-3 cursor-pointer rounded-none border-zinc-700 bg-transparent accent-white"
+            checked={selectedIds.includes(item.id)}
+            onChange={() => onToggleSelect(item.id)}
+          />
+        ) : (
+          <div className="h-3 w-3" />
+        )}
       </td>
       <td className="p-6 align-middle">
         <div className="flex max-w-[300px] flex-col">

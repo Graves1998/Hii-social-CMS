@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Media from '@/features/content/components/media';
 import { ContentItem, ContentStatus } from '@/features/content/types';
 import ContentGrid from '@/shared/components/content-grid';
+import { ContentGridSkeleton, ContentTableSkeleton } from '@/shared/components';
 import { useInfiniteScroll } from '@/shared/hooks';
 import {
   Button,
@@ -16,7 +17,8 @@ import {
 } from '@/shared/ui';
 import { useNavigate, useRouteContext } from '@tanstack/react-router';
 import { debounce } from 'lodash';
-import { ContentTable } from '../components';
+import { toast } from 'sonner';
+import { ContentTable, RejectConfirmationModal } from '../components';
 import { useCrawlContent, useMakeVideoCrawler } from '../hooks/useCrawlContent';
 import { useCrawlStore } from '../stores/useCrawlStore';
 
@@ -51,6 +53,7 @@ function ContentCrawlPageComponent() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isBatchRejectModalOpen, setIsBatchRejectModalOpen] = useState(false);
 
   const { setContentDetails } = useCrawlStore();
 
@@ -88,19 +91,101 @@ function ContentCrawlPageComponent() {
   };
 
   const handleBatchApprove = () => {
-    const eligibleApprovals = items.filter(
-      (item: ContentItem) =>
-        selectedIds.includes(item.id) && item.status === ContentStatus.PENDING_REVIEW
+    const eligibleApprovals = crawlContent.filter((item: ContentItem) =>
+      selectedIds.includes(item.id)
     );
 
-    if (eligibleApprovals.length === 0) return;
+    if (eligibleApprovals.length === 0) {
+      toast.error('KHÔNG CÓ NỘI DUNG HỢP LỆ', {
+        description: 'Vui lòng chọn ít nhất một nội dung để duyệt',
+      });
+      return;
+    }
 
-    eligibleApprovals.forEach((item: ContentItem) => {
-      service.updateContent(item.id, { status: ContentStatus.APPROVED }, currentUser.name);
-    });
+    const toastId = toast.loading(`Đang duyệt ${eligibleApprovals.length} video...`);
 
-    refreshData();
-    setSelectedIds([]);
+    // Make all videos as previewed (approve for crawl)
+    const promises = eligibleApprovals.map((item: ContentItem) =>
+      makeVideoCrawler({
+        payload: {
+          is_previewed: true,
+          message: 'Approved by admin',
+          video_id: Number(item.id),
+        },
+        video_id: Number(item.id),
+      })
+    );
+
+    Promise.all(promises)
+      .then(() => {
+        toast.dismiss(toastId);
+        toast.success('DUYỆT THÀNH CÔNG', {
+          description: `Đã duyệt ${eligibleApprovals.length} video`,
+        });
+        setSelectedIds([]);
+        refreshData();
+      })
+      .catch(() => {
+        toast.dismiss(toastId);
+        toast.error('DUYỆT THẤT BẠI', {
+          description: 'Không thể duyệt video. Vui lòng thử lại.',
+        });
+      });
+  };
+
+  const handleBatchReject = () => {
+    const eligibleRejections = crawlContent.filter((item: ContentItem) =>
+      selectedIds.includes(item.id)
+    );
+
+    if (eligibleRejections.length === 0) {
+      toast.error('KHÔNG CÓ NỘI DUNG HỢP LỆ', {
+        description: 'Vui lòng chọn ít nhất một nội dung để từ chối',
+      });
+      return;
+    }
+
+    // Show confirmation modal
+    setIsBatchRejectModalOpen(true);
+  };
+
+  const handleConfirmBatchReject = (reason: string) => {
+    const eligibleRejections = crawlContent.filter((item: ContentItem) =>
+      selectedIds.includes(item.id)
+    );
+
+    if (eligibleRejections.length === 0) return;
+
+    const toastId = toast.loading(`Đang từ chối ${eligibleRejections.length} video...`);
+
+    // Make all videos as rejected
+    const promises = eligibleRejections.map((item: ContentItem) =>
+      makeVideoCrawler({
+        payload: {
+          is_previewed: false,
+          message: reason,
+          video_id: Number(item.id),
+        },
+        video_id: Number(item.id),
+      })
+    );
+
+    Promise.all(promises)
+      .then(() => {
+        toast.dismiss(toastId);
+        toast.success('TỪ CHỐI THÀNH CÔNG', {
+          description: `Đã từ chối ${eligibleRejections.length} video`,
+        });
+        setSelectedIds([]);
+        setIsBatchRejectModalOpen(false);
+        refreshData();
+      })
+      .catch(() => {
+        toast.dismiss(toastId);
+        toast.error('TỪ CHỐI THẤT BẠI', {
+          description: 'Không thể từ chối video. Vui lòng thử lại.',
+        });
+      });
   };
 
   const { filters, setFilters } = useCrawlStore();
@@ -120,9 +205,11 @@ function ContentCrawlPageComponent() {
     { id: 'asc', label: 'Mới nhất' },
     { id: 'desc', label: 'Cũ nhất' },
   ];
-  const batchActionableCount = items.filter(
-    (i: ContentItem) => selectedIds.includes(i.id) && i.status === ContentStatus.PENDING_REVIEW
+  // Count selected items for approve/reject
+  const batchApproveCount = crawlContent.filter((i: ContentItem) =>
+    selectedIds.includes(i.id)
   ).length;
+  const batchRejectCount = batchApproveCount; // Same for crawl page
 
   return (
     <div className="relative space-y-8">
@@ -180,7 +267,13 @@ function ContentCrawlPageComponent() {
         </div>
       </div>
 
-      {viewMode === 'table' ? (
+      {_isLoadingCrawlContent ? (
+        viewMode === 'table' ? (
+          <ContentTableSkeleton rows={10} />
+        ) : (
+          <ContentGridSkeleton count={12} />
+        )
+      ) : viewMode === 'table' ? (
         <ContentTable
           items={crawlContent}
           onView={handleNavigateToDetail}
@@ -203,6 +296,8 @@ function ContentCrawlPageComponent() {
               <Media
                 item={item}
                 onView={() => handleNavigateToDetail(item)}
+                isSelected={selectedIds.includes(item.id)}
+                onToggleSelect={handleToggleSelect}
                 key={item.content_id}
               />
             );
@@ -212,19 +307,34 @@ function ContentCrawlPageComponent() {
 
       {/* Floating Batch Action Bar */}
       {selectedIds.length > 0 && (
-        <div className="animate-in slide-in-from-bottom-10 fade-in fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-4 border border-white/20 bg-zinc-900 p-2 pl-6 shadow-2xl">
+        <div className="animate-in slide-in-from-bottom-10 fade-in fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-3 border border-white/20 bg-zinc-900 p-2 pl-6 shadow-2xl backdrop-blur-md">
           <span className="font-mono text-xs text-white uppercase">
             {selectedIds.length} ĐÃ CHỌN
           </span>
           <div className="h-4 w-[1px] bg-white/20" />
+
+          {/* Approve Button */}
           <Button
             variant="default"
             className="h-8 bg-white text-black hover:bg-zinc-200"
             onClick={handleBatchApprove}
-            disabled={batchActionableCount === 0}
+            disabled={batchApproveCount === 0}
           >
-            DUYỆT HÀNG LOẠT ({batchActionableCount})
+            DUYỆT ({batchApproveCount || 0})
           </Button>
+
+          {/* Reject Button */}
+          <Button
+            variant="destructive"
+            className="h-8"
+            onClick={handleBatchReject}
+            disabled={batchRejectCount === 0}
+          >
+            TỪ CHỐI ({batchRejectCount || 0})
+          </Button>
+
+          {/* Cancel Button */}
+          <div className="h-4 w-[1px] bg-white/20" />
           <Button
             variant="ghost"
             className="h-8 text-zinc-400 hover:text-white"
@@ -234,6 +344,13 @@ function ContentCrawlPageComponent() {
           </Button>
         </div>
       )}
+
+      {/* Batch Reject Confirmation Modal */}
+      <RejectConfirmationModal
+        isOpen={isBatchRejectModalOpen}
+        onClose={() => setIsBatchRejectModalOpen(false)}
+        onConfirm={handleConfirmBatchReject}
+      />
     </div>
   );
 }

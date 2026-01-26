@@ -1,4 +1,4 @@
-import { ContentItem } from '@/shared/types';
+import { ContentItem, ContentStatus } from '@/shared/types';
 import React from 'react';
 import ContentColumn from './content-column';
 import TableRow from './content-row';
@@ -24,8 +24,12 @@ const ContentTable: React.FC<ContentTableProps> = ({
   hasNextPage,
   isFetchingNextPage,
 }) => {
+  // Only count pending items for select all
+  const pendingItems = items.filter((item) => item.status === ContentStatus.PENDING_REVIEW);
   const allSelected =
-    items.length > 0 && items.every((item) => selectedIds.includes(item.id.toString()));
+    pendingItems.length > 0 &&
+    pendingItems.every((item) => selectedIds.includes(item.id.toString()));
+  const hasPendingItems = pendingItems.length > 0;
 
   return (
     <>
@@ -33,7 +37,11 @@ const ContentTable: React.FC<ContentTableProps> = ({
         <div className="w-full overflow-auto">
           <table className="w-full text-sm">
             <thead>
-              <ContentColumn allSelected={allSelected} onToggleAll={onToggleAll} />
+              <ContentColumn
+                allSelected={allSelected}
+                onToggleAll={onToggleAll}
+                hasPendingItems={hasPendingItems}
+              />
             </thead>
             <tbody className="divide-y divide-white/5">
               {items.map((item) => (

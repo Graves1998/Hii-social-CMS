@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 
 import ContentTable from '@/features/content/components/content-table';
 import { ContentItem, ContentStatus } from '@/features/content/types';
-import { ContentGrid } from '@/shared/components';
+import { ContentGrid, ContentGridSkeleton, ContentTableSkeleton } from '@/shared/components';
 import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import {
   Button,
@@ -17,9 +17,15 @@ import {
 } from '@/shared/ui';
 import { useNavigate, useRouteContext } from '@tanstack/react-router';
 import { debounce } from 'lodash';
-import { useContentContext } from '../components';
+import { toast } from 'sonner';
+import { RejectConfirmationModal, useContentContext } from '../components';
 import Media from '../components/media';
-import { useApprovingStatus, useContent } from '../hooks/useContent';
+import {
+  useApprovingStatus,
+  useApproveContents,
+  useContent,
+  useRejectContents,
+} from '../hooks/useContent';
 import { useContentStore } from '../stores/useContentStore';
 import { useCrawlStore } from '../stores/useCrawlStore';
 import { transformStatusLabel } from '../utils';
@@ -30,7 +36,7 @@ function ContentPageComponent() {
   const {
     data: items,
     isLoading,
-    error,
+    error: _error,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
@@ -44,7 +50,11 @@ function ContentPageComponent() {
     threshold: 300,
   });
 
-  const { service, currentUser, refreshData } = useRouteContext({
+  const {
+    service: _service,
+    currentUser: _currentUser,
+    refreshData: _refreshData,
+  } = useRouteContext({
     strict: false,
   });
 
@@ -58,6 +68,11 @@ function ContentPageComponent() {
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const { setContentDetails } = useCrawlStore();
+  const [isBatchRejectModalOpen, setIsBatchRejectModalOpen] = useState(false);
+
+  // Batch mutations
+  const { mutate: approveContents, isPending: isApprovingBatch } = useApproveContents();
+  const { mutate: rejectContents, isPending: isRejectingBatch } = useRejectContents();
 
   const debounceFn = useMemo(
     () => debounce((value: string) => setFilters('search', value), 500),
@@ -75,7 +90,7 @@ function ContentPageComponent() {
     navigate({
       to: `${item.details_link}/$contentId`,
       params: { contentId: item.id },
-      search: { approving_status: item.status },
+      search: { approving_status: item.approving_status },
     });
   };
 
@@ -89,7 +104,12 @@ function ContentPageComponent() {
   };
 
   const handleSelectAll = (visibleItems: ContentItem[]) => {
-    const visibleIds = visibleItems.map((i) => i.id);
+    // Only select pending items
+    const pendingItems = visibleItems.filter(
+      (item) => item.status === ContentStatus.PENDING_REVIEW
+    );
+    const visibleIds = pendingItems.map((i) => i.id);
+
     if (visibleIds.every((id) => selectedIds.includes(id.toString()))) {
       setSelectedIds(selectedIds.filter((id) => !visibleIds.includes(id.toString())));
     } else {
@@ -101,17 +121,92 @@ function ContentPageComponent() {
   const handleBatchApprove = () => {
     const eligibleApprovals = items?.filter(
       (item: ContentItem) =>
-        selectedIds.includes(item.id.toString()) && item.status === ContentStatus.PENDING_REVIEW
+        selectedIds.includes(item.id) && item.status === ContentStatus.PENDING_REVIEW
     );
 
-    if (eligibleApprovals?.length === 0) return;
+    if (!eligibleApprovals || eligibleApprovals.length === 0) {
+      toast.error('KHÔNG CÓ NỘI DUNG HỢP LỆ', {
+        description: 'Chỉ có thể duyệt nội dung ở trạng thái CHỜ DUYỆT',
+      });
+      return;
+    }
 
-    eligibleApprovals?.forEach((item: ContentItem) => {
-      service.updateContent(item.id, { status: ContentStatus.APPROVED }, currentUser.name);
-    });
+    const toastId = toast.loading(`Đang duyệt ${eligibleApprovals.length} nội dung...`);
 
-    refreshData();
-    setSelectedIds([]);
+    approveContents(
+      {
+        reel_id: eligibleApprovals.map((item) => item.id),
+        reason: 'Approved by admin',
+      },
+      {
+        onSuccess: () => {
+          toast.dismiss(toastId);
+          toast.success('DUYỆT THÀNH CÔNG', {
+            description: `Đã duyệt ${eligibleApprovals.length} nội dung`,
+          });
+          setSelectedIds([]);
+        },
+        onError: () => {
+          toast.dismiss(toastId);
+          toast.error('DUYỆT THẤT BẠI', {
+            description: 'Không thể duyệt nội dung. Vui lòng thử lại.',
+          });
+        },
+      }
+    );
+  };
+
+  const handleBatchReject = () => {
+    const eligibleRejections = items?.filter(
+      (item: ContentItem) =>
+        selectedIds.includes(item.id) &&
+        (item.status === ContentStatus.PENDING_REVIEW || item.status === ContentStatus.APPROVED)
+    );
+
+    if (!eligibleRejections || eligibleRejections.length === 0) {
+      toast.error('KHÔNG CÓ NỘI DUNG HỢP LỆ', {
+        description: 'Chỉ có thể từ chối nội dung ở trạng thái CHỜ DUYỆT hoặc ĐÃ DUYỆT',
+      });
+      return;
+    }
+
+    // Show confirmation modal
+    setIsBatchRejectModalOpen(true);
+  };
+
+  const handleConfirmBatchReject = (reason: string) => {
+    const eligibleRejections = items?.filter(
+      (item: ContentItem) =>
+        selectedIds.includes(item.id) &&
+        (item.status === ContentStatus.PENDING_REVIEW || item.status === ContentStatus.APPROVED)
+    );
+
+    if (!eligibleRejections || eligibleRejections.length === 0) return;
+
+    const toastId = toast.loading(`Đang từ chối ${eligibleRejections.length} nội dung...`);
+
+    rejectContents(
+      {
+        reel_id: eligibleRejections.map((item) => item.id),
+        reason,
+      },
+      {
+        onSuccess: () => {
+          toast.dismiss(toastId);
+          toast.success('TỪ CHỐI THÀNH CÔNG', {
+            description: `Đã từ chối ${eligibleRejections.length} nội dung`,
+          });
+          setSelectedIds([]);
+          setIsBatchRejectModalOpen(false);
+        },
+        onError: () => {
+          toast.dismiss(toastId);
+          toast.error('TỪ CHỐI THẤT BẠI', {
+            description: 'Không thể từ chối nội dung. Vui lòng thử lại.',
+          });
+        },
+      }
+    );
   };
 
   const toggleCategory = (cat: string) => {
@@ -138,8 +233,16 @@ function ContentPageComponent() {
     return tabs;
   }, [approvingStatus]);
 
-  const batchActionableCount = items?.filter(
-    (i: ContentItem) => selectedIds.includes(i.id.toString()) && i.status === ContentStatus.ALL
+  // Count items eligible for approve (PENDING_REVIEW only)
+  const batchApproveCount = items?.filter(
+    (i: ContentItem) => selectedIds.includes(i.id) && i.status === ContentStatus.PENDING_REVIEW
+  ).length;
+
+  // Count items eligible for reject (PENDING_REVIEW or APPROVED)
+  const batchRejectCount = items?.filter(
+    (i: ContentItem) =>
+      selectedIds.includes(i.id) &&
+      (i.status === ContentStatus.PENDING_REVIEW || i.status === ContentStatus.APPROVED)
   ).length;
 
   return (
@@ -257,7 +360,10 @@ function ContentPageComponent() {
         </div>
       </div>
 
-      {viewMode === 'table' ? (
+      {isLoading && viewMode === 'table' && <ContentTableSkeleton rows={10} />}
+      {isLoading && viewMode === 'grid' && <ContentGridSkeleton count={12} />}
+
+      {!isLoading && viewMode === 'table' && (
         <ContentTable
           items={items || []}
           onView={handleNavigateToDetail}
@@ -268,7 +374,9 @@ function ContentPageComponent() {
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
         />
-      ) : (
+      )}
+
+      {!isLoading && viewMode === 'grid' && (
         <ContentGrid
           isEmpty={items?.length === 0}
           loadMoreRef={loadMoreRef}
@@ -276,10 +384,13 @@ function ContentPageComponent() {
           isFetchingNextPage={isFetchingNextPage}
         >
           {items?.map((item: ContentItem) => {
+            const isPending = item.status === ContentStatus.PENDING_REVIEW;
             return (
               <Media
                 item={item}
                 onView={() => handleNavigateToDetail(item)}
+                isSelected={selectedIds.includes(item.id)}
+                onToggleSelect={isPending ? handleToggleSelect : undefined}
                 key={item.content_id}
               />
             );
@@ -289,19 +400,34 @@ function ContentPageComponent() {
 
       {/* Floating Batch Action Bar */}
       {selectedIds.length > 0 && (
-        <div className="animate-in slide-in-from-bottom-10 fade-in fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-4 border border-white/20 bg-zinc-900 p-2 pl-6 shadow-2xl">
+        <div className="animate-in slide-in-from-bottom-10 fade-in fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-3 border border-white/20 bg-zinc-900 p-2 pl-6 shadow-2xl backdrop-blur-md">
           <span className="font-mono text-xs text-white uppercase">
             {selectedIds.length} ĐÃ CHỌN
           </span>
           <div className="h-4 w-[1px] bg-white/20" />
+
+          {/* Approve Button */}
           <Button
             variant="default"
-            className="h-8 bg-white text-black hover:bg-zinc-200"
+            className="h-8 bg-white text-black hover:bg-zinc-200 disabled:opacity-50"
             onClick={handleBatchApprove}
-            disabled={batchActionableCount === 0}
+            disabled={batchApproveCount === 0 || isApprovingBatch}
           >
-            DUYỆT HÀNG LOẠT ({batchActionableCount})
+            {isApprovingBatch ? 'ĐANG DUYỆT...' : `DUYỆT (${batchApproveCount || 0})`}
           </Button>
+
+          {/* Reject Button */}
+          <Button
+            variant="destructive"
+            className="h-8 disabled:opacity-50"
+            onClick={handleBatchReject}
+            disabled={batchRejectCount === 0 || isRejectingBatch}
+          >
+            {isRejectingBatch ? 'ĐANG TỪ CHỐI...' : `TỪ CHỐI (${batchRejectCount || 0})`}
+          </Button>
+
+          {/* Cancel Button */}
+          <div className="h-4 w-[1px] bg-white/20" />
           <Button
             variant="ghost"
             className="h-8 text-zinc-400 hover:text-white"
@@ -311,6 +437,13 @@ function ContentPageComponent() {
           </Button>
         </div>
       )}
+
+      {/* Batch Reject Confirmation Modal */}
+      <RejectConfirmationModal
+        isOpen={isBatchRejectModalOpen}
+        onClose={() => setIsBatchRejectModalOpen(false)}
+        onConfirm={handleConfirmBatchReject}
+      />
     </div>
   );
 }

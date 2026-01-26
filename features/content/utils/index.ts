@@ -33,8 +33,6 @@ export const transformCrawlContent = (content: Video): ContentItem => {
 };
 
 export const transformReelContent = (content: Reel): ContentItem => {
-  console.log(content);
-
   return {
     id: content.id,
     title: content.title,
@@ -49,6 +47,7 @@ export const transformReelContent = (content: Reel): ContentItem => {
     original_source_url: '',
     created_at: content.created_at,
     created_by: content.updated_by,
+    approving_status: content.approving_status as ContentStatus,
     status:
       content.status === ContentStatus.PUBLISHED
         ? content.status

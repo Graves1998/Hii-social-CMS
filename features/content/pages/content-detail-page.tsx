@@ -1,4 +1,5 @@
 import { useInfiniteScroll } from '@/shared/hooks';
+import { QueueSkeleton, DetailPageSkeleton } from '@/shared/components';
 import { ContentStatus } from '@/shared/types';
 import { Badge, Button, Typography } from '@/shared/ui';
 import { useNavigate, useParams, useRouteContext, useSearch } from '@tanstack/react-router';
@@ -14,11 +15,14 @@ import {
 } from '../components';
 import {
   useApproveContent,
+  useApproveContents,
   useContent,
   useContentDetails,
   useRejectContent,
+  useRejectContents,
 } from '../hooks/useContent';
 import { useScheduleContent } from '../hooks/useSchedule';
+import { useContentStore } from '../stores/useContentStore';
 
 function DetailPageComponent() {
   const { contentId } = useParams({ strict: false });
@@ -27,14 +31,19 @@ function DetailPageComponent() {
   const {
     data: realContent,
     isLoading: isLoadingCrawlContent,
-    error: errorCrawlContent,
+    error: _errorCrawlContent,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
   } = useContent(searchParams?.approving_status as ContentStatus);
 
   const { mutate: approveContent, isPending: isApproveContentPending } = useApproveContent();
-  const { mutate: rejectContent, isPending: isRejectContentPending } = useRejectContent();
+  const { mutate: rejectContent, isPending: _isRejectContentPending } = useRejectContent();
+
+  // Batch operations
+  const { mutate: approveContents, isPending: isApprovingBatch } = useApproveContents();
+  const { mutate: rejectContents, isPending: isRejectingBatch } = useRejectContents();
+  const { selectedIds, setSelectedIds } = useContentStore((state) => state);
 
   const loadMoreRef = useInfiniteScroll({
     hasNextPage,
@@ -43,17 +52,18 @@ function DetailPageComponent() {
     threshold: 200,
   });
 
-  const { data: item } = useContentDetails({
+  const { data: item, isLoading: isLoadingContentDetails } = useContentDetails({
     id: contentId,
     approving_status: searchParams?.approving_status as string,
   });
   const navigate = useNavigate();
-  const { service, currentUser } = useRouteContext({ strict: false });
+  const { service, currentUser: _currentUser } = useRouteContext({ strict: false });
 
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [isBatchRejectModalOpen, setIsBatchRejectModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  const [pendingRejectId, setPendingRejectId] = useState<string | null>(null);
+  const [_pendingRejectId, setPendingRejectId] = useState<string | null>(null);
 
   const scheduleContentMutation = useScheduleContent();
 
@@ -114,6 +124,119 @@ function DetailPageComponent() {
     }
   };
 
+  const handleToggleSelect = (id: string) => {
+    const isExists = selectedIds.includes(id);
+    if (isExists) {
+      setSelectedIds(selectedIds.filter((x) => x !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  const handleBatchApprove = () => {
+    const eligibleApprovals = realContent?.filter(
+      (contentItem) =>
+        selectedIds.includes(contentItem.id) && contentItem.status === ContentStatus.PENDING_REVIEW
+    );
+
+    if (!eligibleApprovals || eligibleApprovals.length === 0) {
+      toast.error('KHÔNG CÓ NỘI DUNG HỢP LỆ', {
+        description: 'Chỉ có thể duyệt nội dung ở trạng thái CHỜ DUYỆT',
+      });
+      return;
+    }
+
+    const toastId = toast.loading(`Đang duyệt ${eligibleApprovals.length} nội dung...`);
+
+    approveContents(
+      {
+        reel_id: eligibleApprovals.map((contentItem) => contentItem.id),
+        reason: 'Approved by admin',
+      },
+      {
+        onSuccess: () => {
+          toast.dismiss(toastId);
+          toast.success('DUYỆT THÀNH CÔNG', {
+            description: `Đã duyệt ${eligibleApprovals.length} nội dung`,
+          });
+          setSelectedIds([]);
+        },
+        onError: () => {
+          toast.dismiss(toastId);
+          toast.error('DUYỆT THẤT BẠI', {
+            description: 'Không thể duyệt nội dung. Vui lòng thử lại.',
+          });
+        },
+      }
+    );
+  };
+
+  const handleBatchReject = () => {
+    const eligibleRejections = realContent?.filter(
+      (contentItem) =>
+        selectedIds.includes(contentItem.id) &&
+        (contentItem.status === ContentStatus.PENDING_REVIEW ||
+          contentItem.status === ContentStatus.APPROVED)
+    );
+
+    if (!eligibleRejections || eligibleRejections.length === 0) {
+      toast.error('KHÔNG CÓ NỘI DUNG HỢP LỆ', {
+        description: 'Chỉ có thể từ chối nội dung ở trạng thái CHỜ DUYỆT hoặc ĐÃ DUYỆT',
+      });
+      return;
+    }
+
+    // Show confirmation modal
+    setIsBatchRejectModalOpen(true);
+  };
+
+  const handleConfirmBatchReject = (reason: string) => {
+    const eligibleRejections = realContent?.filter(
+      (contentItem) =>
+        selectedIds.includes(contentItem.id) &&
+        (contentItem.status === ContentStatus.PENDING_REVIEW ||
+          contentItem.status === ContentStatus.APPROVED)
+    );
+
+    if (!eligibleRejections || eligibleRejections.length === 0) return;
+
+    const toastId = toast.loading(`Đang từ chối ${eligibleRejections.length} nội dung...`);
+
+    rejectContents(
+      {
+        reel_id: eligibleRejections.map((contentItem) => contentItem.id),
+        reason,
+      },
+      {
+        onSuccess: () => {
+          toast.dismiss(toastId);
+          toast.success('TỪ CHỐI THÀNH CÔNG', {
+            description: `Đã từ chối ${eligibleRejections.length} nội dung`,
+          });
+          setSelectedIds([]);
+          setIsBatchRejectModalOpen(false);
+        },
+        onError: () => {
+          toast.dismiss(toastId);
+          toast.error('TỪ CHỐI THẤT BẠI', {
+            description: 'Không thể từ chối nội dung. Vui lòng thử lại.',
+          });
+        },
+      }
+    );
+  };
+
+  // Count items eligible for approve/reject
+  const batchApproveCount = realContent?.filter(
+    (i) => selectedIds.includes(i.id) && i.status === ContentStatus.PENDING_REVIEW
+  ).length;
+
+  const batchRejectCount = realContent?.filter(
+    (i) =>
+      selectedIds.includes(i.id) &&
+      (i.status === ContentStatus.PENDING_REVIEW || i.status === ContentStatus.APPROVED)
+  ).length;
+
   const handleScheduleConfirm = (scheduledTime: string) => {
     if (!item) return;
 
@@ -144,16 +267,11 @@ function DetailPageComponent() {
     );
   };
 
+  if (isLoadingContentDetails) {
+    return <DetailPageSkeleton />;
+  }
   if (!item) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center font-mono text-zinc-500 uppercase">
-        <AlertTriangle size={48} className="mb-4 opacity-50" />
-        <p className="font-semibold">KHÔNG TÌM THẤY TÀI NGUYÊN</p>
-        <Button variant="link" onClick={() => navigate({ to: '/content' })}>
-          QUAY LẠI DANH SÁCH
-        </Button>
-      </div>
-    );
+    return <EmptyDetailPage />;
   }
 
   const workflowSteps = [
@@ -163,25 +281,30 @@ function DetailPageComponent() {
     { id: ContentStatus.PUBLISHED, label: 'ĐĂNG' },
   ];
 
-  const currentStepIndex = workflowSteps.findIndex((s) => s.id === item.status);
-  const isRejected = item.status === ContentStatus.REJECTED;
-  const isArchived = item.status === ContentStatus.ARCHIVED;
+  const currentStepIndex = workflowSteps.findIndex((s) => s.id === item?.status);
+  const isRejected = item?.status === ContentStatus.REJECTED;
+  const isArchived = item?.status === ContentStatus.ARCHIVED;
 
   let activeIndex = currentStepIndex;
   if (isRejected) activeIndex = 1;
   if (isArchived) activeIndex = 5;
-
   return (
     <div className="detail-layout animate-in fade-in duration-300">
       {/* LEFT: QUEUE SIDEBAR */}
       <aside className="queue-sidebar">
-        <Queue
-          queueItems={realContent || []}
-          item={item}
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          loadMoreRef={loadMoreRef}
-        />
+        {isLoadingCrawlContent ? (
+          <QueueSkeleton count={12} />
+        ) : (
+          <Queue
+            queueItems={realContent || []}
+            item={item}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            loadMoreRef={loadMoreRef}
+            selectedIds={selectedIds}
+            onToggleSelect={handleToggleSelect}
+          />
+        )}
       </aside>
 
       {/* CENTER: VIEWPORT SECTION */}
@@ -255,7 +378,7 @@ function DetailPageComponent() {
               THẺ PHÂN LOẠI
             </Typography>
             <div className="flex flex-wrap gap-1.5">
-              {item.tags?.map((tag: any) => (
+              {item.tags?.map((tag: string) => (
                 <Badge key={tag} variant="outline">
                   {tag}
                 </Badge>
@@ -323,8 +446,68 @@ function DetailPageComponent() {
         onConfirm={handleScheduleConfirm}
         item={item}
       />
+
+      {/* Batch Reject Confirmation Modal */}
+      <RejectConfirmationModal
+        isOpen={isBatchRejectModalOpen}
+        onClose={() => setIsBatchRejectModalOpen(false)}
+        onConfirm={handleConfirmBatchReject}
+      />
+
+      {/* Floating Batch Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="animate-in slide-in-from-bottom-10 fade-in fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-3 border border-white/20 bg-zinc-900 p-2 pl-6 shadow-2xl backdrop-blur-md">
+          <span className="font-mono text-xs text-white uppercase">
+            {selectedIds.length} ĐÃ CHỌN
+          </span>
+          <div className="h-4 w-[1px] bg-white/20" />
+
+          {/* Approve Button */}
+          <Button
+            variant="default"
+            className="h-8 bg-white text-black hover:bg-zinc-200 disabled:opacity-50"
+            onClick={handleBatchApprove}
+            disabled={batchApproveCount === 0 || isApprovingBatch}
+          >
+            {isApprovingBatch ? 'ĐANG DUYỆT...' : `DUYỆT (${batchApproveCount || 0})`}
+          </Button>
+
+          {/* Reject Button */}
+          <Button
+            variant="destructive"
+            className="h-8 disabled:opacity-50"
+            onClick={handleBatchReject}
+            disabled={batchRejectCount === 0 || isRejectingBatch}
+          >
+            {isRejectingBatch ? 'ĐANG TỪ CHỐI...' : `TỪ CHỐI (${batchRejectCount || 0})`}
+          </Button>
+
+          {/* Cancel Button */}
+          <div className="h-4 w-[1px] bg-white/20" />
+          <Button
+            variant="ghost"
+            className="h-8 text-zinc-400 hover:text-white"
+            onClick={() => setSelectedIds([])}
+          >
+            HỦY
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
 export default DetailPageComponent;
+
+function EmptyDetailPage() {
+  const navigate = useNavigate();
+  return (
+    <div className="flex h-full flex-col items-center justify-center font-mono text-zinc-500 uppercase">
+      <AlertTriangle size={48} className="mb-4 opacity-50" />
+      <p className="font-semibold">KHÔNG TÌM THẤY TÀI NGUYÊN</p>
+      <Button variant="link" onClick={() => navigate({ to: '/content' })}>
+        QUAY LẠI DANH SÁCH
+      </Button>
+    </div>
+  );
+}

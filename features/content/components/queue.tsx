@@ -1,7 +1,7 @@
 import { cn } from '@/lib';
 import { ContentItem, ContentStatus, STATUS_LABELS, Typography } from '@/shared';
 import { useNavigate } from '@tanstack/react-router';
-import { ListVideo } from 'lucide-react';
+import { Check, ListVideo } from 'lucide-react';
 import { useCrawlStore } from '../stores/useCrawlStore';
 
 type QueueListProps = {
@@ -10,6 +10,8 @@ type QueueListProps = {
   loadMoreRef?: React.RefObject<HTMLDivElement>;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
+  selectedIds?: string[];
+  onToggleSelect?: (id: string) => void;
 };
 
 function QueueList({
@@ -18,6 +20,8 @@ function QueueList({
   loadMoreRef,
   hasNextPage,
   isFetchingNextPage,
+  selectedIds,
+  onToggleSelect,
 }: QueueListProps) {
   return (
     <div className="custom-scrollbar flex flex-col overflow-y-auto">
@@ -26,6 +30,8 @@ function QueueList({
           key={qItem.content_id}
           qItem={qItem}
           activeItem={qItem.content_id === item.content_id}
+          isSelected={selectedIds?.includes(qItem.id)}
+          onToggleSelect={onToggleSelect}
         />
       ))}
 
@@ -42,9 +48,17 @@ function QueueList({
   );
 }
 
-function QueueItem({ qItem, activeItem }: { qItem: ContentItem; activeItem: boolean }) {
+interface QueueItemProps {
+  qItem: ContentItem;
+  activeItem: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (id: string) => void;
+}
+
+function QueueItem({ qItem, activeItem, isSelected, onToggleSelect }: QueueItemProps) {
   const navigate = useNavigate();
   const { setContentDetails } = useCrawlStore();
+  const isPending = qItem.status === ContentStatus.PENDING_REVIEW;
 
   const handleClick = () => {
     setContentDetails(qItem);
@@ -54,12 +68,18 @@ function QueueItem({ qItem, activeItem }: { qItem: ContentItem; activeItem: bool
       search: { approving_status: qItem.status },
     });
   };
+
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleSelect?.(qItem.id);
+  };
+
   return (
     <div
       role="button"
       tabIndex={0}
       className={cn(
-        'relative flex cursor-pointer items-center gap-3 p-4 transition-all duration-300',
+        'group relative flex cursor-pointer items-center gap-3 p-4 transition-all duration-300',
         activeItem &&
           'after:bg-accent bg-foreground/5 after:absolute after:top-0 after:bottom-0 after:left-0 after:w-0.5 after:shadow-md'
       )}
@@ -71,6 +91,19 @@ function QueueItem({ qItem, activeItem }: { qItem: ContentItem; activeItem: bool
         }
       }}
     >
+      {/* Selection Checkbox - Only for PENDING items */}
+      {isPending && onToggleSelect && (
+        <div
+          onClick={handleCheckboxClick}
+          className={cn(
+            'absolute top-2 right-2 z-10 flex h-5 w-5 cursor-pointer items-center justify-center border border-white/20 bg-black/80 backdrop-blur transition-all hover:border-white',
+            isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          )}
+        >
+          {isSelected && <Check size={12} className="text-white" />}
+        </div>
+      )}
+
       <img
         src={qItem.thumbnail_url}
         className="border-border h-16 w-12 shrink-0 border object-cover"
@@ -98,9 +131,19 @@ type QueueProps = {
   loadMoreRef?: React.RefObject<HTMLDivElement>;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
+  selectedIds?: string[];
+  onToggleSelect?: (id: string) => void;
 };
 
-function Queue({ queueItems, item, loadMoreRef, hasNextPage, isFetchingNextPage }: QueueProps) {
+function Queue({
+  queueItems,
+  item,
+  loadMoreRef,
+  hasNextPage,
+  isFetchingNextPage,
+  selectedIds,
+  onToggleSelect,
+}: QueueProps) {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <Typography className="flex items-center gap-2 p-4 font-medium" variant="tiny">
@@ -114,6 +157,8 @@ function Queue({ queueItems, item, loadMoreRef, hasNextPage, isFetchingNextPage 
         loadMoreRef={loadMoreRef}
         hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
+        selectedIds={selectedIds}
+        onToggleSelect={onToggleSelect}
       />
     </div>
   );

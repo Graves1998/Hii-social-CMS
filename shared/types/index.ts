@@ -50,6 +50,7 @@ export interface ContentItem {
   created_at: string;
   created_by: string;
   status: ContentStatus;
+  approving_status?: ContentStatus;
   category: string;
   tags: string[];
   visibility: 'public' | 'hidden';

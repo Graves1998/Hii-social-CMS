@@ -241,7 +241,6 @@ export const apiClient = ky.create({
             status: response.status,
           });
         }
-        console.log(response, 'response');
 
         // Handle 401 - try refresh token
         if (response.status === 401) {
