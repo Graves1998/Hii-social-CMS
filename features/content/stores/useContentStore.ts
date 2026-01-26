@@ -8,20 +8,35 @@ import { ContentItem } from '@/shared';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-interface CrawlState {
+const defaultFilters: ContentState['filters'] = {
+  cursor: '',
+  limit: 20,
+  search: '',
+  sorted: 'asc',
+  sort: 'created_at',
+  approving_status: '',
+  tags: [],
+  platform: '',
+  status: '',
+};
+
+interface ContentState {
   // State
   filters: {
-    page: number;
-    page_size: number;
-    sort_order: 'asc' | 'desc';
-    sort_by: 'created_at' | 'updated_at';
+    cursor: string;
     limit: number;
     search?: string;
+    sorted: 'asc' | 'desc';
+    sort: string;
+    approving_status: string;
+    tags: string[];
+    platform: string;
+    status: string;
   };
   selectedIds: string[];
   contentDetails: ContentItem | null;
 
-  setFilters: (key: keyof CrawlState['filters'], value: any) => void;
+  setFilters: (key: keyof ContentState['filters'], value: any) => void;
   setSelectedIds: (ids: string[]) => void;
   setContentDetails: (details: Partial<ContentItem>) => void;
   resetFilters: () => void;
@@ -32,20 +47,13 @@ interface CrawlState {
 /**
  * Auth Store với persistence
  */
-export const useCrawlStore = create<CrawlState>()(
+export const useContentStore = create<ContentState>()(
   persist(
     (set) => ({
-      filters: {
-        page: 1,
-        page_size: 20,
-        sort_order: 'asc',
-        sort_by: 'created_at',
-        limit: 20,
-        search: '',
-      },
+      filters: defaultFilters,
       selectedIds: [],
       contentDetails: null,
-      setFilters: (key: keyof CrawlState['filters'], value: any) =>
+      setFilters: (key: keyof ContentState['filters'], value: any) =>
         set((state) => ({ filters: { ...state.filters, [key]: value } })),
       setSelectedIds: (ids: string[]) => set({ selectedIds: ids }),
       setContentDetails: (details: Partial<ContentItem>) =>
@@ -53,15 +61,12 @@ export const useCrawlStore = create<CrawlState>()(
           contentDetails: { ...state.contentDetails, ...details } as ContentItem,
         })),
 
-      resetFilters: () =>
-        set({
-          filters: { page: 1, page_size: 10, sort_order: 'asc', sort_by: 'created_at', limit: 10 },
-        }),
+      resetFilters: () => set({ filters: defaultFilters }),
       resetSelectedIds: () => set({ selectedIds: [] }),
       resetContentDetails: () => set({ contentDetails: null }),
     }),
     {
-      name: 'content-crawl-storage', // localStorage key
+      name: 'content-storage', // localStorage key
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         contentDetails: state.contentDetails,
@@ -73,6 +78,6 @@ export const useCrawlStore = create<CrawlState>()(
 /**
  * Selectors - Tối ưu re-renders
  */
-export const useCrawl = () => useCrawlStore((state) => state);
-export const useCrawlFilters = () => useCrawlStore((state) => state.filters);
-export const useCrawlContentDetails = () => useCrawlStore((state) => state.contentDetails);
+export const useCrawl = () => useContentStore((state) => state);
+export const useCrawlFilters = () => useContentStore((state) => state.filters);
+export const useCrawlContentDetails = () => useContentStore((state) => state.contentDetails);

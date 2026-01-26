@@ -16,6 +16,7 @@
 import { LoginResponse } from '@/features/auth';
 import { useAuthStore } from '@/features/auth/stores/useAuthStore';
 import ky, { HTTPError } from 'ky';
+import { ApiResponse } from './types/api';
 
 // Base API URL
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.example.com';
@@ -110,7 +111,6 @@ export const tokenManager = {
  */
 async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = tokenManager.getRefreshToken();
-  console.log(refreshToken, 'refreshToken');
   if (!refreshToken) {
     tokenManager.clearTokens();
     return null;
@@ -125,8 +125,13 @@ async function refreshAccessToken(): Promise<string | null> {
       },
     });
 
-    const data = await response.json<LoginResponse>();
-    console.log(data, 'data');
+    const responseData = (await response.json()) as ApiResponse<LoginResponse>;
+    const { data } = responseData;
+    if (!data) {
+      console.error('No data returned from refresh token response');
+      tokenManager.clearTokens();
+      return null;
+    }
 
     tokenManager.setTokens(data.accessToken, data.refreshToken);
     return data.accessToken;
@@ -319,4 +324,4 @@ export const apiClient = ky.create({
 /**
  * Re-export types
  */
-export type { ApiResponse } from './types/api-client';
+export type { ApiResponse } from './types/api';

@@ -1,6 +1,6 @@
 import { CMSService } from '@/services/cmsService';
-import { Toaster } from '@/shared/ui';
 import { ContentItem, UserRole } from '@/shared/types';
+import { Toaster } from '@/shared/ui';
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 

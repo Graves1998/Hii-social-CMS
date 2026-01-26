@@ -1,13 +1,11 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { RouterProvider } from '@tanstack/react-router';
-import React, { useState } from 'react';
-import { INITIAL_CONTENT, MOCK_CATEGORIES, MOCK_TAGS } from '@/shared';
-import { queryClient } from '@/lib/query-client';
 import { createAppRouter, RouterContext } from '@/app/layouts/root-layout';
 import { CMSService } from '@/services/cmsService';
+import { INITIAL_CONTENT, MOCK_CATEGORIES, MOCK_TAGS } from '@/shared';
 import { UserRole } from '@/shared/types';
+import { RouterProvider } from '@tanstack/react-router';
+import React, { useState } from 'react';
 import { useIsAuthenticated } from './features/auth/stores/useAuthStore';
+import { Providers } from './shared/providers';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState({
@@ -43,11 +41,9 @@ const App: React.FC = () => {
   const router = createAppRouter(routerContext);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <Providers>
       <RouterProvider router={router} context={routerContext} />
-      {/* React Query Devtools - only in development */}
-      <ReactQueryDevtools initialIsOpen={false} position="bottom" />
-    </QueryClientProvider>
+    </Providers>
   );
 };
 

@@ -1,0 +1,47 @@
+export const queryKeys = {
+  categories: {
+    all: ['categories'] as const,
+    lists: () => [...queryKeys.categories.all, 'list'] as const,
+  },
+
+  platforms: {
+    all: ['platforms'] as const,
+    lists: () => [...queryKeys.platforms.all, 'list'] as const,
+  },
+
+  // Content queries
+  content: {
+    all: ['content'] as const,
+    lists: () => [...queryKeys.content.all, 'list'] as const,
+    list: (filters: Record<string, unknown>) => [...queryKeys.content.lists(), filters] as const,
+    details: () => [...queryKeys.content.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.content.details(), id] as const,
+    approvingStatus: () => [...queryKeys.content.all, 'approving-status'] as const,
+  },
+
+  contentCrawl: {
+    all: ['content-crawl'] as const,
+    lists: () => [...queryKeys.contentCrawl.all, 'list'] as const,
+    list: (filters: Record<string, unknown>) =>
+      [...queryKeys.contentCrawl.lists(), filters] as const,
+    details: () => [...queryKeys.contentCrawl.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.contentCrawl.details(), id] as const,
+  },
+
+  // User queries
+  users: {
+    all: ['users'] as const,
+    lists: () => [...queryKeys.users.all, 'list'] as const,
+    list: (filters: Record<string, unknown>) => [...queryKeys.users.lists(), filters] as const,
+    details: () => [...queryKeys.users.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.users.details(), id] as const,
+    current: () => [...queryKeys.users.all, 'current'] as const,
+  },
+
+  // Dashboard queries
+  dashboard: {
+    all: ['dashboard'] as const,
+    stats: () => [...queryKeys.dashboard.all, 'stats'] as const,
+    analytics: (range: string) => [...queryKeys.dashboard.all, 'analytics', range] as const,
+  },
+};

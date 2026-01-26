@@ -98,7 +98,7 @@ export {
   type ApiResponse,
 } from './api-client';
 
-export { queryClient, queryKeys } from './query-client';
+export { queryClient } from './query-client';
 ```
 
 **services/index.ts:**

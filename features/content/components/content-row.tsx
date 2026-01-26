@@ -19,21 +19,21 @@ function MediaIcon({ type }: { type: MediaType }) {
 type ContentRowProps = {
   item: ContentItem;
   selectedIds: string[];
-  onView: (id: string) => void;
+  onView: () => void;
   onToggleSelect: (id: string) => void;
 };
 function ContentRow({ item, selectedIds, onView, onToggleSelect }: ContentRowProps) {
   return (
     <tr
-      className={`group cursor-pointer transition-colors hover:bg-[#111] ${selectedIds.includes(item.content_id) ? 'bg-white/5' : ''}`}
-      onClick={() => onView(item.content_id)}
+      className={`group cursor-pointer transition-colors hover:bg-[#111] ${selectedIds.includes(item.id.toString()) ? 'bg-white/5' : ''}`}
+      onClick={() => onView()}
     >
       <td className="p-6 align-middle" onClick={(e) => e.stopPropagation()}>
         <input
           type="checkbox"
           className="h-3 w-3 cursor-pointer rounded-none border-zinc-700 bg-transparent accent-white"
-          checked={selectedIds.includes(item.content_id)}
-          onChange={() => onToggleSelect(item.content_id)}
+          checked={selectedIds.includes(item.id)}
+          onChange={() => onToggleSelect(item.id)}
         />
       </td>
       <td className="p-6 align-middle">

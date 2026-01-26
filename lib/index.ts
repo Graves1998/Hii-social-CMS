@@ -20,7 +20,7 @@ export {
 } from './api-client';
 
 // Query Client
-export { queryClient, queryKeys } from './query-client';
+export { queryClient } from './query-client';
 
 // Utils
 export { cn } from './utils';

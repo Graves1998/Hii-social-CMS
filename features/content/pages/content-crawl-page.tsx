@@ -2,14 +2,9 @@ import { LayoutGrid, Rows, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import Media from '@/features/content/components/media';
-import {
-  ContentItem,
-  ContentStatus,
-  MediaType,
-  SourcePlatform,
-  SourceType,
-} from '@/features/content/types';
+import { ContentItem, ContentStatus } from '@/features/content/types';
 import ContentGrid from '@/shared/components/content-grid';
+import { useInfiniteScroll } from '@/shared/hooks';
 import {
   Button,
   Input,
@@ -20,27 +15,62 @@ import {
   SelectValue,
 } from '@/shared/ui';
 import { useNavigate, useRouteContext } from '@tanstack/react-router';
+import { debounce } from 'lodash';
 import { ContentTable } from '../components';
-import { useCrawlContent } from '../hooks/useCrawlContent';
+import { useCrawlContent, useMakeVideoCrawler } from '../hooks/useCrawlContent';
 import { useCrawlStore } from '../stores/useCrawlStore';
 
 function ContentCrawlPageComponent() {
   const navigate = useNavigate();
 
-  const { items, categories, service, currentUser, refreshData } = useRouteContext({
+  const {
+    items,
+    categories: _categories,
+    service,
+    currentUser,
+    refreshData,
+  } = useRouteContext({
     strict: false,
   });
   const {
     data: crawlContent,
-    isLoading: isLoadingCrawlContent,
-    error: errorCrawlContent,
+    isLoading: _isLoadingCrawlContent,
+    error: _errorCrawlContent,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
   } = useCrawlContent();
+
+  // Infinite scroll
+  const loadMoreRef = useInfiniteScroll({
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    threshold: 300,
+  });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleNavigateToDetail = (id: string) => {
-    navigate({ to: '/detail/$contentId', params: { contentId: id } });
+  const { setContentDetails } = useCrawlStore();
+
+  const { mutate: makeVideoCrawler } = useMakeVideoCrawler();
+
+  const handleNavigateToDetail = (item: ContentItem) => {
+    makeVideoCrawler({
+      payload: {
+        is_previewed: true,
+        message: 'Ok',
+        video_id: Number(item.id),
+      },
+      video_id: Number(item.id),
+    });
+    setContentDetails(item);
+    navigate({
+      to: `${item.details_link}/$contentId`,
+      params: { contentId: item.id },
+      search: { approving_status: item.status },
+    });
   };
 
   const handleToggleSelect = (id: string) => {
@@ -48,25 +78,25 @@ function ContentCrawlPageComponent() {
   };
 
   const handleSelectAll = (visibleItems: ContentItem[]) => {
-    const visibleIds = visibleItems.map((i) => i.content_id);
+    const visibleIds = visibleItems.map((i) => i.id);
     if (visibleIds.every((id) => selectedIds.includes(id))) {
       setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
     } else {
       const newSelection = new Set([...selectedIds, ...visibleIds]);
-      setSelectedIds(Array.from(newSelection));
+      setSelectedIds(Array.from(newSelection).map((id) => id.toString()));
     }
   };
 
   const handleBatchApprove = () => {
     const eligibleApprovals = items.filter(
       (item: ContentItem) =>
-        selectedIds.includes(item.content_id) && item.status === ContentStatus.PENDING_REVIEW
+        selectedIds.includes(item.id) && item.status === ContentStatus.PENDING_REVIEW
     );
 
     if (eligibleApprovals.length === 0) return;
 
     eligibleApprovals.forEach((item: ContentItem) => {
-      service.updateContent(item.content_id, { status: ContentStatus.APPROVED }, currentUser.name);
+      service.updateContent(item.id, { status: ContentStatus.APPROVED }, currentUser.name);
     });
 
     refreshData();
@@ -75,13 +105,23 @@ function ContentCrawlPageComponent() {
 
   const { filters, setFilters } = useCrawlStore();
 
+  const debounceFn = useMemo(
+    () => debounce((value: string) => setFilters('search', value), 500),
+    [setFilters]
+  );
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setSearchQuery(value);
+    debounceFn(value);
+  };
+
   const sortOrderOptions = [
     { id: 'asc', label: 'Mới nhất' },
     { id: 'desc', label: 'Cũ nhất' },
   ];
   const batchActionableCount = items.filter(
-    (i: ContentItem) =>
-      selectedIds.includes(i.content_id) && i.status === ContentStatus.PENDING_REVIEW
+    (i: ContentItem) => selectedIds.includes(i.id) && i.status === ContentStatus.PENDING_REVIEW
   ).length;
 
   return (
@@ -95,7 +135,7 @@ function ContentCrawlPageComponent() {
                 placeholder="TÌM_KIẾM_CƠ_SỞ_DỮ_LIỆU..."
                 className="h-10 border-white/10 bg-black pl-10 font-mono text-xs text-white uppercase focus:border-white"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearch}
               />
             </div>
           </div>
@@ -118,6 +158,7 @@ function ContentCrawlPageComponent() {
             </Select>
             <div className="flex border border-white/10 bg-black p-1">
               <button
+                type="button"
                 className={`flex h-8 w-8 items-center justify-center transition-colors ${
                   viewMode === 'grid' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'
                 }`}
@@ -126,6 +167,7 @@ function ContentCrawlPageComponent() {
                 <LayoutGrid size={16} />
               </button>
               <button
+                type="button"
                 className={`flex h-8 w-8 items-center justify-center transition-colors ${
                   viewMode === 'table' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'
                 }`}
@@ -145,11 +187,25 @@ function ContentCrawlPageComponent() {
           selectedIds={selectedIds}
           onToggleSelect={handleToggleSelect}
           onToggleAll={() => handleSelectAll(crawlContent)}
+          loadMoreRef={loadMoreRef}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
         />
       ) : (
-        <ContentGrid isEmpty={crawlContent.length === 0}>
+        <ContentGrid
+          isEmpty={crawlContent.length === 0}
+          loadMoreRef={loadMoreRef}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+        >
           {crawlContent.map((item) => {
-            return <Media item={item} onView={handleNavigateToDetail} key={item.content_id} />;
+            return (
+              <Media
+                item={item}
+                onView={() => handleNavigateToDetail(item)}
+                key={item.content_id}
+              />
+            );
           })}
         </ContentGrid>
       )}

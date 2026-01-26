@@ -10,7 +10,8 @@ export * from './ui';
 // Components
 export * from './components';
 
-// Hooks will be added here when created
+// Hooks
+export * from './hooks';
 
 // Utils
 export { toast } from './utils/toast';

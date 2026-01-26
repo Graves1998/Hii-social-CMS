@@ -1,15 +1,18 @@
 import { createRoute, createRouter, redirect } from '@tanstack/react-router';
 import { rootRoute, type RouterContext } from '../routes/_root';
-import { authLayoutRoute } from '../routes/_auth';
-import { auditRoute } from '../routes/audit';
-import { contentRoute } from '../routes/content';
-import { createContentRoute } from '../routes/create';
-import { dashboardRoute } from '../routes/dashboard';
-import { detailRoute } from '../routes/detail.$contentId';
-import { loginRoute } from '../routes/login';
-import { registerRoute } from '../routes/register';
+import {
+  authLayoutRoute,
+  dashboardRoute,
+  contentRoute,
+  contentDetailRoute,
+  loginRoute,
+  registerRoute,
+  reviewDetailRoute,
+  auditRoute,
+  createContentRoute,
+  reviewRoute,
+} from '../routes';
 import { mainLayoutRoute } from '../routes/_main';
-import { reviewRoute } from '../routes/review';
 
 // Create index route - redirect to dashboard
 const indexRoute = createRoute({
@@ -30,10 +33,11 @@ const routeTree = rootRoute.addChildren([
   mainLayoutRoute.addChildren([
     dashboardRoute,
     contentRoute,
-    detailRoute,
+    contentDetailRoute,
     auditRoute,
     createContentRoute,
     reviewRoute,
+    reviewDetailRoute,
   ]),
 ]);
 

@@ -1,23 +1,10 @@
-import {
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Filter,
-  Hash,
-  Layers,
-  LayoutGrid,
-  Rows,
-  Search,
-  ShieldAlert,
-  ThumbsUp,
-  Zap,
-} from 'lucide-react';
+import { Filter, Hash, Layers, LayoutGrid, Rows, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { useNavigate, useSearch, useRouteContext } from '@tanstack/react-router';
 import ContentTable from '@/features/content/components/content-table';
-import { ContentItem, ContentStatus, SourcePlatform } from '@/features/content/types';
+import { ContentItem, ContentStatus } from '@/features/content/types';
 import { ContentGrid } from '@/shared/components';
+import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import {
   Button,
   Input,
@@ -26,53 +13,101 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Typography,
 } from '@/shared/ui';
+import { useNavigate, useRouteContext } from '@tanstack/react-router';
+import { debounce } from 'lodash';
+import { useContentContext } from '../components';
 import Media from '../components/media';
+import { useApprovingStatus, useContent } from '../hooks/useContent';
+import { useContentStore } from '../stores/useContentStore';
+import { useCrawlStore } from '../stores/useCrawlStore';
+import { transformStatusLabel } from '../utils';
 
 function ContentPageComponent() {
   const navigate = useNavigate();
 
-  const { status, source } = useSearch({ strict: false }) as { status?: string; source?: string };
-  const { items, categories, service, currentUser, refreshData } = useRouteContext({
+  const {
+    data: items,
+    isLoading,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useContent();
+
+  // Infinite scroll
+  const loadMoreRef = useInfiniteScroll({
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    threshold: 300,
+  });
+
+  const { service, currentUser, refreshData } = useRouteContext({
     strict: false,
   });
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const { data: approvingStatus } = useApprovingStatus();
+
+  const { platforms, categories } = useContentContext();
+
+  const { filters, setFilters } = useContentStore();
+
+  const { selectedIds, setSelectedIds } = useContentStore((state) => state);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>(status || 'ALL');
-  const [sourceFilter] = useState<string>(source || 'ALL');
-  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
-  const [platformFilter, setPlatformFilter] = useState<string>('ALL');
+  const { setContentDetails } = useCrawlStore();
 
-  const handleNavigateToDetail = (id: string) => {
-    navigate({ to: '/detail/$contentId', params: { contentId: id } });
+  const debounceFn = useMemo(
+    () => debounce((value: string) => setFilters('search', value), 500),
+    [setFilters]
+  );
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setSearchQuery(value);
+    debounceFn(value);
+  };
+
+  const handleNavigateToDetail = (item: ContentItem) => {
+    setContentDetails(item);
+    navigate({
+      to: `${item.details_link}/$contentId`,
+      params: { contentId: item.id },
+      search: { approving_status: item.status },
+    });
   };
 
   const handleToggleSelect = (id: string) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    const isExists = selectedIds.includes(id);
+    if (isExists) {
+      setSelectedIds(selectedIds.filter((x) => x !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
   };
 
   const handleSelectAll = (visibleItems: ContentItem[]) => {
-    const visibleIds = visibleItems.map((i) => i.content_id);
-    if (visibleIds.every((id) => selectedIds.includes(id))) {
-      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+    const visibleIds = visibleItems.map((i) => i.id);
+    if (visibleIds.every((id) => selectedIds.includes(id.toString()))) {
+      setSelectedIds(selectedIds.filter((id) => !visibleIds.includes(id.toString())));
     } else {
       const newSelection = new Set([...selectedIds, ...visibleIds]);
-      setSelectedIds(Array.from(newSelection));
+      setSelectedIds(Array.from(newSelection).map((id) => id.toString()));
     }
   };
 
   const handleBatchApprove = () => {
-    const eligibleApprovals = items.filter(
+    const eligibleApprovals = items?.filter(
       (item: ContentItem) =>
-        selectedIds.includes(item.content_id) && item.status === ContentStatus.PENDING_REVIEW
+        selectedIds.includes(item.id.toString()) && item.status === ContentStatus.PENDING_REVIEW
     );
 
-    if (eligibleApprovals.length === 0) return;
+    if (eligibleApprovals?.length === 0) return;
 
-    eligibleApprovals.forEach((item: ContentItem) => {
-      service.updateContent(item.content_id, { status: ContentStatus.APPROVED }, currentUser.name);
+    eligibleApprovals?.forEach((item: ContentItem) => {
+      service.updateContent(item.id, { status: ContentStatus.APPROVED }, currentUser.name);
     });
 
     refreshData();
@@ -80,59 +115,31 @@ function ContentPageComponent() {
   };
 
   const toggleCategory = (cat: string) => {
-    setCategoryFilters((prev) =>
-      prev.includes(cat) ? prev.filter((c: string) => c !== cat) : [...prev, cat]
-    );
+    const isExists = filters.tags.includes(cat);
+    if (isExists) {
+      setFilters(
+        'tags',
+        filters.tags.filter((c: string) => c !== cat)
+      );
+    } else {
+      setFilters('tags', [...filters.tags, cat]);
+    }
   };
 
-  const filteredContent = useMemo(() => {
-    return items.filter((item: ContentItem) => {
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        if (!item.title.toLowerCase().includes(q) && !item.content_id.toLowerCase().includes(q)) {
-          return false;
-        }
-      }
-      if (statusFilter !== 'ALL' && item.status !== statusFilter) return false;
-      if (sourceFilter !== 'ALL') {
-        if (item.source_type !== sourceFilter && item.source_platform !== sourceFilter)
-          return false;
-      }
-      if (platformFilter !== 'ALL') {
-        if (
-          item.source_platform !== platformFilter &&
-          !item.target_platforms?.includes(platformFilter as SourcePlatform)
-        ) {
-          return false;
-        }
-      }
-      if (categoryFilters.length > 0 && !categoryFilters.includes(item.category)) {
-        return false;
-      }
-      return true;
-    });
-  }, [items, searchQuery, statusFilter, sourceFilter, platformFilter, categoryFilters]);
+  const statusTabs = useMemo(() => {
+    const tabs = approvingStatus
+      ?.filter((tab) => tab.slug !== 'draft')
+      .map((tab) => ({
+        slug: tab.slug,
+        name: transformStatusLabel(tab.slug),
+        icon: Layers,
+      }));
+    tabs?.unshift({ slug: '', name: transformStatusLabel(ContentStatus.ALL), icon: Layers });
+    return tabs;
+  }, [approvingStatus]);
 
-  const statusTabs = [
-    { id: 'ALL', label: 'Tất cả', icon: Layers },
-    { id: ContentStatus.DRAFT, label: 'Nháp', icon: Zap },
-    { id: ContentStatus.PENDING_REVIEW, label: 'Chờ duyệt', icon: Clock },
-    { id: ContentStatus.APPROVED, label: 'Đã duyệt', icon: ThumbsUp },
-    { id: ContentStatus.SCHEDULED, label: 'Đã lên lịch', icon: Calendar },
-    { id: ContentStatus.PUBLISHED, label: 'Đã đăng', icon: CheckCircle2 },
-    { id: ContentStatus.REJECTED, label: 'Từ chối', icon: ShieldAlert },
-  ];
-
-  const platformTabs = [
-    { id: 'ALL', label: 'Tất cả nền tảng' },
-    { id: SourcePlatform.YAAH_CONNECT, label: 'Yaah Connect' },
-    { id: SourcePlatform.LALALA, label: 'Lalala' },
-    { id: SourcePlatform.VOTEME, label: 'Voteme' },
-  ];
-
-  const batchActionableCount = items.filter(
-    (i: ContentItem) =>
-      selectedIds.includes(i.content_id) && i.status === ContentStatus.PENDING_REVIEW
+  const batchActionableCount = items?.filter(
+    (i: ContentItem) => selectedIds.includes(i.id.toString()) && i.status === ContentStatus.ALL
   ).length;
 
   return (
@@ -140,21 +147,22 @@ function ContentPageComponent() {
       <div className="flex flex-col gap-6">
         {/* Status Filter */}
         <div className="space-y-3">
-          <label className="flex items-center gap-2 font-mono text-[10px] tracking-wider text-zinc-500 uppercase">
+          <Typography variant="tiny" className="flex items-center gap-2 font-mono text-zinc-500">
             <Filter size={10} /> Lọc Trạng Thái
-          </label>
+          </Typography>
           <div className="flex flex-wrap gap-1">
-            {statusTabs.map((tab) => (
+            {statusTabs?.map((tab) => (
               <button
-                key={tab.id}
-                onClick={() => setStatusFilter(tab.id)}
+                key={tab.slug}
+                type="button"
+                onClick={() => setFilters('approving_status', tab.slug)}
                 className={`flex items-center gap-2 border px-4 py-2 font-mono text-[10px] uppercase transition-all ${
-                  statusFilter === tab.id
+                  filters.approving_status === tab.slug
                     ? 'border-white bg-white text-black'
                     : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                <tab.icon size={12} /> {tab.label}
+                {tab.name}
               </button>
             ))}
           </div>
@@ -162,31 +170,33 @@ function ContentPageComponent() {
 
         {/* Category Filter */}
         <div className="space-y-3">
-          <label className="flex items-center gap-2 font-mono text-[10px] tracking-wider text-zinc-500 uppercase">
+          <Typography variant="tiny" className="flex items-center gap-2 font-mono text-zinc-500">
             <Hash size={10} /> Lọc Danh Mục
-          </label>
+          </Typography>
           <div className="flex flex-wrap gap-1">
             <button
-              onClick={() => setCategoryFilters([])}
+              type="button"
+              onClick={() => setFilters('tags', [])}
               className={`border px-3 py-1 font-mono text-[10px] uppercase transition-all ${
-                categoryFilters.length === 0
+                filters.tags.length === 0
                   ? 'border-white bg-white text-black'
                   : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
               }`}
             >
               TẤT CẢ
             </button>
-            {categories.map((cat: string) => (
+            {categories.map((cat) => (
               <button
-                key={cat}
-                onClick={() => toggleCategory(cat)}
+                key={cat.id}
+                type="button"
+                onClick={() => toggleCategory(cat.id)}
                 className={`border px-3 py-1 font-mono text-[10px] uppercase transition-all ${
-                  categoryFilters.includes(cat)
+                  filters.tags.includes(cat.id)
                     ? 'border-white bg-white text-black'
                     : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                {cat}
+                {cat.name}
               </button>
             ))}
           </div>
@@ -200,26 +210,32 @@ function ContentPageComponent() {
                 placeholder="TÌM_KIẾM_CƠ_SỞ_DỮ_LIỆU..."
                 className="h-10 border-white/10 bg-black pl-10 font-mono text-xs text-white uppercase focus:border-white"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearch}
               />
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Select value={platformFilter} onValueChange={(value) => setPlatformFilter(value)}>
+            <Select
+              value={filters.platform}
+              onValueChange={(value) => setFilters('platform', value)}
+            >
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Tất cả nền tảng" />
               </SelectTrigger>
-
               <SelectContent>
-                {platformTabs.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.label}
+                <SelectItem defaultChecked value="all">
+                  Tất cả nền tảng
+                </SelectItem>
+                {platforms.map((p) => (
+                  <SelectItem key={p.id} value={p.api_key}>
+                    {p.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <div className="flex border border-white/10 bg-black p-1">
               <button
+                type="button"
                 className={`flex h-8 w-8 items-center justify-center transition-colors ${
                   viewMode === 'grid' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'
                 }`}
@@ -228,6 +244,7 @@ function ContentPageComponent() {
                 <LayoutGrid size={16} />
               </button>
               <button
+                type="button"
                 className={`flex h-8 w-8 items-center justify-center transition-colors ${
                   viewMode === 'table' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'
                 }`}
@@ -242,16 +259,30 @@ function ContentPageComponent() {
 
       {viewMode === 'table' ? (
         <ContentTable
-          items={filteredContent}
+          items={items || []}
           onView={handleNavigateToDetail}
           selectedIds={selectedIds}
           onToggleSelect={handleToggleSelect}
-          onToggleAll={() => handleSelectAll(filteredContent)}
+          onToggleAll={() => handleSelectAll(items || [])}
+          loadMoreRef={loadMoreRef}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
         />
       ) : (
-        <ContentGrid isEmpty={filteredContent.length === 0}>
-          {filteredContent.map((item: ContentItem) => {
-            return <Media item={item} onView={handleNavigateToDetail} key={item.content_id} />;
+        <ContentGrid
+          isEmpty={items?.length === 0}
+          loadMoreRef={loadMoreRef}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+        >
+          {items?.map((item: ContentItem) => {
+            return (
+              <Media
+                item={item}
+                onView={() => handleNavigateToDetail(item)}
+                key={item.content_id}
+              />
+            );
           })}
         </ContentGrid>
       )}

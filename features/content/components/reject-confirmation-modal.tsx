@@ -41,12 +41,12 @@ function RejectConfirmationModal({
             <AlertTriangle size={20} /> Xác Nhận Từ Chối
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="flex flex-col gap-4 py-4">
           <p className="text-muted-foreground font-mono text-sm">
             Hành động này sẽ chuyển trạng thái bài viết về &ldquo;Từ Chối&rdquo; và yêu cầu chỉnh
             sửa.
           </p>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <label htmlFor="reject-reason" className="font-mono text-xs font-medium uppercase">
               Lý do từ chối
             </label>

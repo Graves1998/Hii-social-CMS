@@ -1,11 +1,13 @@
 export enum ContentStatus {
-  DRAFT = 'DRAFT',
-  PENDING_REVIEW = 'PENDING_REVIEW',
-  APPROVED = 'APPROVED',
-  SCHEDULED = 'SCHEDULED',
-  REJECTED = 'REJECTED',
-  PUBLISHED = 'PUBLISHED',
-  ARCHIVED = 'ARCHIVED',
+  ALL = '',
+  PENDING_REVIEW = 'pending',
+  APPROVED = 'approved',
+  SCHEDULED = 'scheduled',
+  REJECTED = 'rejected',
+  PUBLISHED = 'published',
+  ARCHIVED = 'archived',
+  DRAFT = 'draft',
+  PRIVATE = 'private',
 }
 
 // Fix: Added IMAGE and LINK members to resolve missing property errors in ContentTable and ContentGrid
@@ -22,7 +24,7 @@ export enum SourceType {
 }
 
 export enum SourcePlatform {
-  YAAH_CONNECT = 'yaah connect',
+  BOOKING = 'booking',
   LALALA = 'lalala',
   VOTEME = 'voteme',
   OTHER = 'other',
@@ -35,6 +37,7 @@ export enum UserRole {
 }
 
 export interface ContentItem {
+  id: string;
   content_id: string;
   title: string;
   short_description: string;
@@ -53,6 +56,7 @@ export interface ContentItem {
   moderation_notes: string;
   published_at?: string;
   thumbnail_url?: string;
+  details_link?: string;
 }
 
 export interface AuditLogEntry {

@@ -1,46 +1,147 @@
-import { STATUS_LABELS } from '@/shared';
-import { ContentStatus, MediaType } from '@/shared/types';
-import { Badge, Button, Textarea, Typography } from '@/shared/ui';
-import { AlertTriangle, FileText, Globe, ListVideo, X } from 'lucide-react';
+import { useInfiniteScroll } from '@/shared/hooks';
+import { ContentStatus } from '@/shared/types';
+import { Badge, Button, Typography } from '@/shared/ui';
+import { useNavigate, useParams, useRouteContext, useSearch } from '@tanstack/react-router';
+import { AlertTriangle, Globe, X } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate, useParams, useRouteContext } from '@tanstack/react-router';
-import { ActivityLogModal, Queue, RejectConfirmationModal, WorkflowSteps } from '../components';
+import { toast } from 'sonner';
+import {
+  ActivityLogModal,
+  Queue,
+  RejectConfirmationModal,
+  ScheduleModal,
+  WorkflowSteps,
+} from '../components';
+import {
+  useApproveContent,
+  useContent,
+  useContentDetails,
+  useRejectContent,
+} from '../hooks/useContent';
+import { useScheduleContent } from '../hooks/useSchedule';
 
 function DetailPageComponent() {
   const { contentId } = useParams({ strict: false });
+  const searchParams = useSearch({ strict: false });
+
+  const {
+    data: realContent,
+    isLoading: isLoadingCrawlContent,
+    error: errorCrawlContent,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useContent(searchParams?.approving_status as ContentStatus);
+
+  const { mutate: approveContent, isPending: isApproveContentPending } = useApproveContent();
+  const { mutate: rejectContent, isPending: isRejectContentPending } = useRejectContent();
+
+  const loadMoreRef = useInfiniteScroll({
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    threshold: 200,
+  });
+
+  const { data: item } = useContentDetails({
+    id: contentId,
+    approving_status: searchParams?.approving_status as string,
+  });
   const navigate = useNavigate();
-  const { items, service, currentUser, refreshData } = useRouteContext({ strict: false });
+  const { service, currentUser } = useRouteContext({ strict: false });
 
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [pendingRejectId, setPendingRejectId] = useState<string | null>(null);
 
-  const item = items.find((i: any) => i.content_id === contentId);
+  const scheduleContentMutation = useScheduleContent();
 
-  const handleUpdateStatus = (id: string, nextStatus: ContentStatus) => {
-    if (nextStatus === ContentStatus.REJECTED) {
-      setPendingRejectId(id);
-      setIsRejectModalOpen(true);
-    } else {
-      service.updateContent(id, { status: nextStatus }, currentUser.name);
-      refreshData();
+  const approveContentHandler = () => {
+    if (!item) return;
+    const toastId = toast.loading(`Duyệt nội dung ${item.id}...`);
+
+    approveContent(
+      {
+        reel_id: item.id,
+        reason: 'Ok',
+      },
+      {
+        onSuccess: () => {
+          toast.dismiss(toastId);
+          toast.success('Duyệt nội dung thành công');
+        },
+        onError: () => {
+          toast.dismiss(toastId);
+          toast.error('Duyệt nội dung thất bại');
+        },
+      }
+    );
+  };
+
+  const handleUpdateStatus = (nextStatus: ContentStatus) => {
+    if (!item) return;
+    switch (nextStatus) {
+      case ContentStatus.REJECTED:
+        setIsRejectModalOpen(true);
+        break;
+      case ContentStatus.APPROVED:
+        approveContentHandler();
+        break;
+      default:
+        break;
     }
   };
 
   const handleConfirmReject = (reason: string) => {
-    if (pendingRejectId) {
-      service.updateContent(
-        pendingRejectId,
+    if (item) {
+      rejectContent(
         {
-          status: ContentStatus.REJECTED,
-          moderation_notes: reason,
+          reel_id: item.id,
+          reason,
         },
-        currentUser.name
+        {
+          onSuccess: () => {
+            toast.success('Từ chối nội dung thành công');
+            setIsRejectModalOpen(false);
+            setPendingRejectId(null);
+          },
+          onError: () => {
+            toast.error('Từ chối nội dung thất bại');
+          },
+        }
       );
-      refreshData();
     }
-    setIsRejectModalOpen(false);
-    setPendingRejectId(null);
+  };
+
+  const handleScheduleConfirm = (scheduledTime: string) => {
+    if (!item) return;
+
+    const toastId = toast.loading('ĐANG_LÊN_LỊCH...');
+
+    scheduleContentMutation.mutate(
+      {
+        contentId: item.content_id,
+        scheduledTime,
+      },
+      {
+        onSuccess: () => {
+          toast.dismiss(toastId);
+          toast.success('LÊN_LỊCH_THÀNH_CÔNG', {
+            description: `Video sẽ được đăng vào ${new Date(scheduledTime).toLocaleString('vi-VN')}`,
+            duration: 4000,
+          });
+          setIsScheduleModalOpen(false);
+        },
+        onError: () => {
+          toast.dismiss(toastId);
+          toast.error('LÊN_LỊCH_THẤT_BẠI', {
+            description: 'Không thể lên lịch. Vui lòng thử lại.',
+            duration: 4000,
+          });
+        },
+      }
+    );
   };
 
   if (!item) {
@@ -55,14 +156,10 @@ function DetailPageComponent() {
     );
   }
 
-  const isEditable = item.status === ContentStatus.DRAFT || currentUser.role === 'ADMIN';
-  const queueItems = items.filter((i: any) => i.status === item.status);
-
   const workflowSteps = [
-    { id: ContentStatus.DRAFT, label: 'K.TẠO' },
-    { id: ContentStatus.PENDING_REVIEW, label: 'DUYỆT' },
-    { id: ContentStatus.APPROVED, label: 'XONG' },
-    { id: ContentStatus.SCHEDULED, label: 'CHỜ' },
+    { id: ContentStatus.PENDING_REVIEW, label: 'CHỜ DUYỆT' },
+    { id: ContentStatus.APPROVED, label: 'DUYỆT' },
+    { id: ContentStatus.SCHEDULED, label: 'LÊN LỊCH' },
     { id: ContentStatus.PUBLISHED, label: 'ĐĂNG' },
   ];
 
@@ -78,7 +175,13 @@ function DetailPageComponent() {
     <div className="detail-layout animate-in fade-in duration-300">
       {/* LEFT: QUEUE SIDEBAR */}
       <aside className="queue-sidebar">
-        <Queue queueItems={queueItems} item={item} />
+        <Queue
+          queueItems={realContent || []}
+          item={item}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          loadMoreRef={loadMoreRef}
+        />
       </aside>
 
       {/* CENTER: VIEWPORT SECTION */}
@@ -99,7 +202,7 @@ function DetailPageComponent() {
             <div className="scanline" />
             <div className="text-right">
               <span>
-                {item.media_type.toUpperCase()} {/* HD */}
+                {item.media_type?.toUpperCase()} {/* HD */}
               </span>
               <br />
               <span>BITRATE: 45MBPS</span>
@@ -107,17 +210,7 @@ function DetailPageComponent() {
           </div>
 
           {/* Media Content */}
-          {item.media_type === MediaType.VIDEO ? (
-            <img
-              src={`https://picsum.photos/seed/${item.content_id}/450/800`}
-              className="video-mock"
-              alt="Preview"
-            />
-          ) : (
-            <div className="video-mock flex items-center justify-center bg-zinc-900">
-              <FileText size={64} className="text-zinc-600" />
-            </div>
-          )}
+          <video src={item.media_url} className="video-mock" autoPlay muted loop />
         </div>
 
         {/* Close Button */}
@@ -137,24 +230,9 @@ function DetailPageComponent() {
           <Typography variant="tiny" className="text-muted-foreground font-medium">
             NHẬT KÝ PHIÊN DỊCH
           </Typography>
-          {isEditable ? (
-            <Textarea
-              value={item.short_description}
-              onChange={(e) => {
-                service.updateContent(
-                  item.content_id,
-                  { short_description: e.target.value },
-                  currentUser.name
-                );
-                refreshData();
-              }}
-              className="readout h-32 resize-none border border-white/10 bg-transparent p-2 transition-colors focus:border-white"
-            />
-          ) : (
-            <p className="readout border border-transparent p-2">
-              &ldquo;{item.short_description}&rdquo;
-            </p>
-          )}
+          <p className="readout border border-transparent p-2">
+            &ldquo;{item.short_description}&rdquo;
+          </p>
         </div>
 
         {/* DISTRIBUTION NETWORKS */}
@@ -163,29 +241,28 @@ function DetailPageComponent() {
             MẠNG LƯỚI PHÂN PHỐI
           </Typography>
           <div className="flex flex-wrap gap-1.5">
-            {item.target_platforms?.map((platform: any) => (
-              <Badge key={platform} variant="outline">
-                <Globe size={10} />
-                {platform}
-              </Badge>
-            ))}
+            <Badge variant="outline">
+              <Globe size={10} />
+              {item.category}
+            </Badge>
           </div>
         </div>
 
         {/* TAGS */}
-        <div className="flex flex-col gap-2">
-          <Typography variant="tiny" className="text-muted-foreground font-medium">
-            THẺ PHÂN LOẠI
-          </Typography>
-          <div className="flex flex-wrap gap-1.5">
-            <Badge variant="outline">#{item.category}</Badge>
-            {item.tags.map((tag: any) => (
-              <Badge key={tag} variant="outline">
-                #{tag}
-              </Badge>
-            ))}
+        {!!item.tags?.length && (
+          <div className="flex flex-col gap-2">
+            <Typography variant="tiny" className="text-muted-foreground font-medium">
+              THẺ PHÂN LOẠI
+            </Typography>
+            <div className="flex flex-wrap gap-1.5">
+              {item.tags?.map((tag: any) => (
+                <Badge key={tag} variant="outline">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* WORKFLOW STATUS PROGRESS */}
         <WorkflowSteps
@@ -199,20 +276,30 @@ function DetailPageComponent() {
         <div className="actions">
           <Button
             variant="destructive"
-            onClick={() => handleUpdateStatus(item.content_id, ContentStatus.REJECTED)}
+            onClick={() => handleUpdateStatus(ContentStatus.REJECTED)}
             disabled={isRejected}
           >
             TỪ CHỐI
           </Button>
-          <Button
-            variant="default"
-            onClick={() => handleUpdateStatus(item.content_id, ContentStatus.APPROVED)}
-            disabled={
-              item.status === ContentStatus.APPROVED || item.status === ContentStatus.PUBLISHED
-            }
-          >
-            DUYỆT
-          </Button>
+          {item.status !== ContentStatus.PENDING_REVIEW && (
+            <Button
+              variant="outline"
+              onClick={() => setIsScheduleModalOpen(true)}
+              disabled={item.status === ContentStatus.PUBLISHED}
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              LÊN LỊCH
+            </Button>
+          )}
+          {item.status === ContentStatus.PENDING_REVIEW && (
+            <Button
+              variant="default"
+              onClick={() => handleUpdateStatus(ContentStatus.APPROVED)}
+              disabled={isApproveContentPending}
+            >
+              DUYỆT
+            </Button>
+          )}
         </div>
       </aside>
 
@@ -229,6 +316,12 @@ function DetailPageComponent() {
           setPendingRejectId(null);
         }}
         onConfirm={handleConfirmReject}
+      />
+      <ScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        onConfirm={handleScheduleConfirm}
+        item={item}
       />
     </div>
   );
