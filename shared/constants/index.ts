@@ -1,13 +1,7 @@
-import {
-  ContentStatus,
-  MediaType,
-  SourceType,
-  SourcePlatform,
-  ContentItem,
-  UserRole,
-} from '@/shared/types';
+import { ContentStatus, MediaType, SourceType, SourcePlatform, ContentItem } from '@/shared/types';
 
 export const STATUS_COLORS: Record<ContentStatus, string> = {
+  [ContentStatus.ALL]: 'bg-gray-100 text-gray-700 hover:bg-gray-100/80',
   [ContentStatus.DRAFT]: 'bg-slate-100 text-slate-700 hover:bg-slate-100/80',
   [ContentStatus.PENDING_REVIEW]: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100/80',
   [ContentStatus.APPROVED]: 'bg-blue-100 text-blue-700 hover:bg-blue-100/80',
@@ -15,9 +9,11 @@ export const STATUS_COLORS: Record<ContentStatus, string> = {
   [ContentStatus.REJECTED]: 'bg-red-100 text-red-700 hover:bg-red-100/80',
   [ContentStatus.PUBLISHED]: 'bg-green-100 text-green-700 hover:bg-green-100/80',
   [ContentStatus.ARCHIVED]: 'bg-stone-100 text-stone-700 hover:bg-stone-100/80',
+  [ContentStatus.PRIVATE]: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-100/80',
 };
 
 export const STATUS_LABELS: Record<ContentStatus, string> = {
+  [ContentStatus.ALL]: 'Tất Cả',
   [ContentStatus.DRAFT]: 'Nháp',
   [ContentStatus.PENDING_REVIEW]: 'Chờ Duyệt',
   [ContentStatus.APPROVED]: 'Đã Duyệt',
@@ -25,6 +21,7 @@ export const STATUS_LABELS: Record<ContentStatus, string> = {
   [ContentStatus.REJECTED]: 'Bị Từ Chối',
   [ContentStatus.PUBLISHED]: 'Đã Đăng',
   [ContentStatus.ARCHIVED]: 'Lưu Trữ',
+  [ContentStatus.PRIVATE]: 'Riêng Tư',
 };
 
 export const MOCK_CATEGORIES = [
@@ -75,6 +72,9 @@ const createPendingMock = (
   tags: [category, 'Lan truyền'], // Use tags to store categories as per new requirement
   visibility: 'public',
   moderation_notes: '',
+  id: Math.random().toString(36).substring(2, 15),
+  published_at: new Date(Date.now() - Math.random() * 86400000).toISOString(),
+  approving_status: ContentStatus.PENDING_REVIEW,
 });
 
 const createPublishedMock = (
@@ -115,68 +115,45 @@ const createPublishedMock = (
     tags: [category, 'Published', 'Trending'],
     visibility: 'public',
     moderation_notes: '',
+    id: Math.random().toString(36).substring(2, 15),
   };
 };
 
 const publishedMocks = [
   createPublishedMock('PUB-001', 'Trend nhảy múa 2024', SourcePlatform.LALALA, 'Giải trí', 0),
-  createPublishedMock(
-    'PUB-002',
-    'Review Cơm Tấm Sài Gòn',
-    SourcePlatform.YAAH_CONNECT,
-    'Ẩm thực',
-    0
-  ),
+  createPublishedMock('PUB-002', 'Review Cơm Tấm Sài Gòn', SourcePlatform.LALALA, 'Ẩm thực', 0),
   createPublishedMock('PUB-003', 'Mẹo vặt: Tẩy trắng áo', SourcePlatform.VOTEME, 'Đời sống', 0),
   createPublishedMock('PUB-004', 'Bản tin sáng 6h', SourcePlatform.OTHER, 'Tin tức & Chính trị', 1),
   createPublishedMock('PUB-005', 'Highlight: MU vs MC', SourcePlatform.LALALA, 'Thể thao', 1),
-  createPublishedMock(
-    'PUB-006',
-    'Hướng dẫn kẻ mắt nước',
-    SourcePlatform.YAAH_CONNECT,
-    'Thời trang',
-    1
-  ),
+  createPublishedMock('PUB-006', 'Hướng dẫn kẻ mắt nước', SourcePlatform.LALALA, 'Thời trang', 1),
   createPublishedMock('PUB-007', 'Vlog: Một ngày ở Đà Lạt', SourcePlatform.VOTEME, 'Du lịch', 2),
   createPublishedMock('PUB-008', 'Thử thách không cười', SourcePlatform.LALALA, 'Giải trí', 2),
   createPublishedMock('PUB-009', 'Review iPhone 16 Concept', SourcePlatform.OTHER, 'Công nghệ', 2),
   createPublishedMock(
     'PUB-010',
     'Cover: Em của ngày hôm qua',
-    SourcePlatform.YAAH_CONNECT,
+    SourcePlatform.LALALA,
     'Giải trí',
     3
   ),
   createPublishedMock('PUB-011', 'Phim ngắn: Chuyện công sở', SourcePlatform.VOTEME, 'Đời sống', 3),
   createPublishedMock('PUB-012', 'ASMR: Ăn gà rán', SourcePlatform.LALALA, 'Ẩm thực', 3),
   createPublishedMock('PUB-013', 'Học từ vựng tiếng Anh', SourcePlatform.OTHER, 'Giáo dục', 4),
-  createPublishedMock(
-    'PUB-014',
-    'Tin đồn Showbiz mới nhất',
-    SourcePlatform.YAAH_CONNECT,
-    'Giải trí',
-    4
-  ),
+  createPublishedMock('PUB-014', 'Tin đồn Showbiz mới nhất', SourcePlatform.LALALA, 'Giải trí', 4),
   createPublishedMock('PUB-015', 'Cách chăm sóc Corgi', SourcePlatform.VOTEME, 'Đời sống', 5),
   createPublishedMock('PUB-016', 'DIY: Làm đèn ngủ', SourcePlatform.LALALA, 'Đời sống', 5),
   createPublishedMock('PUB-017', 'Podcast: Chữa lành', SourcePlatform.OTHER, 'Đời sống', 6),
   createPublishedMock(
     'PUB-018',
     'Nhảy hiện đại: Kpop Random',
-    SourcePlatform.YAAH_CONNECT,
+    SourcePlatform.LALALA,
     'Giải trí',
     6
   ),
   createPublishedMock('PUB-019', 'Review sách: Nhà Giả Kim', SourcePlatform.VOTEME, 'Giáo dục', 7),
   createPublishedMock('PUB-020', 'Công thức nấu Phở Bò', SourcePlatform.LALALA, 'Ẩm thực', 7),
   createPublishedMock('PUB-021', 'Báo cáo tài chính Q1', SourcePlatform.OTHER, 'Tài chính', 1),
-  createPublishedMock(
-    'PUB-022',
-    'Outfit đi biển hè này',
-    SourcePlatform.YAAH_CONNECT,
-    'Thời trang',
-    2
-  ),
+  createPublishedMock('PUB-022', 'Outfit đi biển hè này', SourcePlatform.LALALA, 'Thời trang', 2),
   createPublishedMock('PUB-023', 'Top 5 địa điểm checkin', SourcePlatform.VOTEME, 'Du lịch', 0),
   createPublishedMock('PUB-024', 'Làm gốm Bát Tràng', SourcePlatform.LALALA, 'Đời sống', 4),
   createPublishedMock('PUB-025', 'Review Laptop Gaming', SourcePlatform.OTHER, 'Công nghệ', 5),
@@ -201,7 +178,7 @@ export const INITIAL_CONTENT: ContentItem[] = [
   createPendingMock(
     'P-103',
     'Ẩm thực đường phố: Tacos cay',
-    SourcePlatform.YAAH_CONNECT,
+    SourcePlatform.LALALA,
     'Ẩm thực',
     'chef_diego'
   ),
@@ -223,7 +200,7 @@ export const INITIAL_CONTENT: ContentItem[] = [
   createPendingMock(
     'P-107',
     'Tin địa phương: Mở cửa lại công viên',
-    SourcePlatform.YAAH_CONNECT,
+    SourcePlatform.LALALA,
     'Tin tức & Chính trị',
     'city_reporter'
   ),
@@ -255,8 +232,8 @@ export const INITIAL_CONTENT: ContentItem[] = [
     media_type: MediaType.VIDEO,
     media_url: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
     source_type: SourceType.CRAWL,
-    source_platform: SourcePlatform.YAAH_CONNECT,
-    target_platforms: [SourcePlatform.YAAH_CONNECT, SourcePlatform.VOTEME],
+    source_platform: SourcePlatform.LALALA,
+    target_platforms: [SourcePlatform.LALALA, SourcePlatform.VOTEME],
     original_source_url: '',
     created_at: '2024-05-20T10:00:00Z',
     created_by: 'CrawlerBot',
@@ -265,6 +242,7 @@ export const INITIAL_CONTENT: ContentItem[] = [
     tags: ['Thể thao', 'Xu hướng'],
     visibility: 'public',
     moderation_notes: '',
+    id: Math.random().toString(36).substring(2, 15),
   },
   {
     content_id: 'C-003',
@@ -276,6 +254,7 @@ export const INITIAL_CONTENT: ContentItem[] = [
     source_platform: SourcePlatform.VOTEME,
     target_platforms: [SourcePlatform.VOTEME],
     original_source_url: '',
+    id: Math.random().toString(36).substring(2, 15),
     created_at: '2024-05-22T09:00:00Z',
     created_by: 'Editor John',
     status: ContentStatus.APPROVED,
