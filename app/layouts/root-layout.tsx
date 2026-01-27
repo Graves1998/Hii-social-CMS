@@ -1,20 +1,21 @@
+import { NotFoundPage } from '@/features/error';
 import { createRoute, createRouter, redirect } from '@tanstack/react-router';
-import { rootRoute, type RouterContext } from '../routes/_root';
 import {
+  auditRoute,
   authLayoutRoute,
-  dashboardRoute,
-  contentRoute,
   contentDetailRoute,
+  contentRoute,
+  createContentRoute,
+  dashboardRoute,
   loginRoute,
   registerRoute,
   reportDetailRoute,
   reportRoute,
   reviewDetailRoute,
-  auditRoute,
-  createContentRoute,
   reviewRoute,
 } from '../routes';
 import { mainLayoutRoute } from '../routes/_main';
+import { rootRoute, type RouterContext } from '../routes/_root';
 
 // Create index route - redirect to dashboard
 const indexRoute = createRoute({
@@ -50,6 +51,7 @@ export function createAppRouter(context: RouterContext) {
   return createRouter({
     routeTree,
     context,
+    defaultNotFoundComponent: NotFoundPage,
   });
 }
 

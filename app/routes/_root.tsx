@@ -1,3 +1,4 @@
+import { NotFoundPage } from '@/features/error';
 import { CMSService } from '@/services/cmsService';
 import { ContentItem, UserRole } from '@/shared/types';
 import { Toaster } from '@/shared/ui';
@@ -25,4 +26,5 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
       <TanStackRouterDevtools />
     </>
   ),
+  notFoundComponent: NotFoundPage,
 });

@@ -10,3 +10,4 @@ export * from './review.detail.$contentId';
 export * from './review';
 export * from './report';
 export * from './report.detail.$reportId';
+export * from './not-found';
