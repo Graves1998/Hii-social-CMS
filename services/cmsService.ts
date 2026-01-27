@@ -114,6 +114,7 @@ export class CMSService {
     if (role === UserRole.ADMIN) return true;
 
     const transitions: Record<ContentStatus, ContentStatus[]> = {
+      [ContentStatus.ALL]: [], // ALL is a filter status, not a content state
       [ContentStatus.DRAFT]: [ContentStatus.PENDING_REVIEW],
       [ContentStatus.PENDING_REVIEW]: [ContentStatus.APPROVED, ContentStatus.REJECTED],
       [ContentStatus.APPROVED]: [
@@ -125,9 +126,11 @@ export class CMSService {
       [ContentStatus.REJECTED]: [ContentStatus.DRAFT],
       [ContentStatus.PUBLISHED]: [ContentStatus.ARCHIVED],
       [ContentStatus.ARCHIVED]: [ContentStatus.DRAFT],
+      [ContentStatus.PRIVATE]: [ContentStatus.DRAFT, ContentStatus.PENDING_REVIEW],
     };
 
     const allowedRoles: Record<ContentStatus, UserRole[]> = {
+      [ContentStatus.ALL]: [], // ALL is a filter status, not a content state
       [ContentStatus.DRAFT]: [UserRole.EDITOR],
       [ContentStatus.PENDING_REVIEW]: [UserRole.EDITOR],
       [ContentStatus.APPROVED]: [UserRole.REVIEWER],
@@ -135,6 +138,7 @@ export class CMSService {
       [ContentStatus.REJECTED]: [UserRole.REVIEWER],
       [ContentStatus.PUBLISHED]: [UserRole.EDITOR, UserRole.REVIEWER],
       [ContentStatus.ARCHIVED]: [UserRole.EDITOR, UserRole.REVIEWER],
+      [ContentStatus.PRIVATE]: [UserRole.EDITOR],
     };
 
     // Check if transition exists

@@ -17,7 +17,11 @@ const useCrawlContent = () => {
   const crawlContentQuery = useInfiniteQuery({
     queryKey: [queryKeys.contentCrawl.all, filters],
     queryFn: ({ pageParam = 1 }) =>
-      crawlService.getContentCrawler({ ...filters, page: pageParam }) as Promise<PaginatedResponse>,
+      crawlService.getContentCrawler({
+        ...filters,
+        page: pageParam,
+        is_previewed: Boolean(filters.is_previewed),
+      }) as Promise<PaginatedResponse>,
     getNextPageParam: (lastPage: PaginatedResponse) => {
       const totalPages = lastPage.pagination.total_page;
       const currentPage = lastPage.pagination.page;
