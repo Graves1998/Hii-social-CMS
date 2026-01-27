@@ -13,6 +13,7 @@ import {
   auditRoute,
   createContentRoute,
   reviewRoute,
+  notFoundRoute,
 } from '../routes';
 import { mainLayoutRoute } from '../routes/_main';
 
@@ -43,6 +44,7 @@ const routeTree = rootRoute.addChildren([
     reportRoute,
     reportDetailRoute,
   ]),
+  notFoundRoute,
 ]);
 
 // Create and export the router instance
