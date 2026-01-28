@@ -1,4 +1,5 @@
-import { Badge, Typography } from '@/shared';
+import { cn } from '@/lib';
+import { Badge, STATUS_COLORS, STATUS_LABELS, Typography } from '@/shared';
 import { ContentItem, MediaType } from '@/shared/types';
 import { Check, Play } from 'lucide-react';
 
@@ -8,6 +9,7 @@ interface MediaProps {
   isSelected?: boolean;
   onToggleSelect?: (id: string) => void;
 }
+const limitTags = 2;
 
 function Media({ item, onView, isSelected, onToggleSelect }: MediaProps) {
   const isVideo = item.media_type === MediaType.VIDEO;
@@ -17,11 +19,14 @@ function Media({ item, onView, isSelected, onToggleSelect }: MediaProps) {
     onToggleSelect?.(item.id);
   };
 
+  const tags = item.tags?.slice(0, limitTags);
+  const remainingTags = +(item.tags?.length || 0) - limitTags;
+
   return (
     <button
       type="button"
       onClick={() => onView()}
-      className="group hover:bg-background relative cursor-pointer overflow-hidden bg-black p-6 text-left transition-colors"
+      className="group hover:bg-background relative flex cursor-pointer flex-col items-start gap-3 overflow-hidden bg-black p-4 text-left transition-colors"
     >
       {/* Hover Line */}
       <div className="absolute top-0 left-0 z-20 h-[1px] w-full origin-left scale-x-0 transform bg-white transition-transform duration-500 group-hover:scale-x-100" />
@@ -37,17 +42,8 @@ function Media({ item, onView, isSelected, onToggleSelect }: MediaProps) {
         </button>
       )}
 
-      {/* Meta */}
-      <div className="mb-6 flex flex-wrap items-center gap-1 font-mono text-[10px] text-zinc-500">
-        {item.tags?.map((tag) => (
-          <Badge variant="outline" key={tag}>
-            {tag}
-          </Badge>
-        ))}
-      </div>
-
       {/* Image/Media */}
-      <div className="relative mb-6 aspect-[16/10] overflow-hidden border border-white/5 bg-[#111] transition-colors duration-500 group-hover:border-zinc-600">
+      <div className="relative mb-4 aspect-[16/10] w-full overflow-hidden border border-white/5 bg-[#111] transition-colors duration-500 group-hover:border-zinc-600">
         <img
           src={item.thumbnail_url}
           alt={item.title}
@@ -64,16 +60,37 @@ function Media({ item, onView, isSelected, onToggleSelect }: MediaProps) {
       </div>
 
       {/* Content */}
-      <div className="flex flex-col gap-2">
+      <div className="flex w-full flex-col gap-2 overflow-hidden text-ellipsis">
         <Typography
           variant="h4"
-          className="line-clamp-2 text-white transition-colors group-hover:text-white"
+          className="line-clamp-2 text-ellipsis text-white transition-colors group-hover:text-white"
         >
           {item.title}
         </Typography>
-        <Typography variant="small" className="line-clamp-2 font-mono text-zinc-500">
+        <Typography variant="small" className="line-clamp-2 font-mono text-ellipsis text-zinc-500">
           {item.short_description}
         </Typography>
+      </div>
+      {/* Meta */}
+      <div className="flex flex-wrap items-center gap-1 font-mono text-[10px] text-zinc-500">
+        {tags.map((tag) => (
+          <Badge variant="outline" key={tag}>
+            {tag}
+          </Badge>
+        ))}
+        {remainingTags > 0 && (
+          <Badge variant="outline" className="cursor-pointer" onClick={() => onView()}>
+            +{remainingTags}
+          </Badge>
+        )}
+      </div>
+      <div className="absolute top-3 left-4">
+        <Badge
+          className={cn('cursor-pointer', STATUS_COLORS[item.status])}
+          onClick={() => onView()}
+        >
+          {STATUS_LABELS[item.status]}
+        </Badge>
       </div>
 
       {/* Bottom Actions */}

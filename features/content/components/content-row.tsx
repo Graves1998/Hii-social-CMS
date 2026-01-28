@@ -1,4 +1,13 @@
-import { Button, ContentItem, MediaType, STATUS_LABELS, Typography } from '@/shared';
+import { cn } from '@/lib';
+import {
+  Badge,
+  Button,
+  ContentItem,
+  MediaType,
+  STATUS_COLORS,
+  STATUS_LABELS,
+  Typography,
+} from '@/shared';
 import { ImageIcon, LinkIcon, MoreHorizontal, Type, Video } from 'lucide-react';
 
 function MediaIcon({ type }: { type: MediaType }) {
@@ -66,9 +75,9 @@ function ContentRow({ item, selectedIds, onView, onToggleSelect }: ContentRowPro
         <div className="font-mono text-[10px] text-zinc-400 uppercase">{item.source_platform}</div>
       </td>
       <td className="p-6 align-middle">
-        <div className="inline-block border border-zinc-800 px-2 py-1 font-mono text-[10px] text-zinc-300 uppercase">
+        <Badge variant="outline" className={cn(STATUS_COLORS[item.status])}>
           {STATUS_LABELS[item.status]}
-        </div>
+        </Badge>
       </td>
       <td className="p-6 text-right align-middle">
         <Button
