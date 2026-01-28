@@ -14,3 +14,6 @@ export * from './types';
 
 // Pages
 export * from './pages';
+
+// Schemas
+export * from './schemas';

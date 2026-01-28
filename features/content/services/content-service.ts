@@ -9,6 +9,7 @@ import {
   GetContentResponse,
   PublishContentPayload,
   Reel,
+  RejectContentBatchPayload,
   ScheduleContentPayload,
 } from '../types';
 
@@ -71,7 +72,7 @@ export const contentService = {
     return response;
   },
 
-  rejectContents: async (payload: ApproveContentBatchPayload) => {
+  rejectContents: async (payload: RejectContentBatchPayload) => {
     const response = await api.post(`reels/dashboard/reject-batch`, payload);
     return response;
   },

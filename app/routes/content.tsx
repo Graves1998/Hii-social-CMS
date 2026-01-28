@@ -1,6 +1,6 @@
 import { createRoute } from '@tanstack/react-router';
 import ContentPageComponent from '@/features/content/pages/content-page';
-import { ContentProvider } from '@/features/content';
+import { ContentProvider, contentSearchSchema } from '@/features/content';
 import { mainLayoutRoute } from './_main';
 
 export const contentRoute = createRoute({
@@ -11,4 +11,5 @@ export const contentRoute = createRoute({
       <ContentPageComponent />
     </ContentProvider>
   ),
+  validateSearch: contentSearchSchema,
 });

@@ -66,14 +66,16 @@ function ReportCard({ report, onView, isSelected, onToggleSelect }: ReportCardPr
             {report.report_count} BÁO CÁO
           </Badge>
           <Badge variant="outline" className={`font-mono text-[10px] uppercase ${statusColor}`}>
-            {report.video_info.status}
+            {report.reports[0].status}
           </Badge>
         </div>
 
         {/* Latest Reporter Info */}
         <div className="flex items-center gap-2 font-mono text-xs text-zinc-500">
           <User size={12} />
-          <span className="flex-1">{report.reports[0].user_reporter}</span>
+          <span className="flex-1">
+            {report.reports[0].reporter_info?.name || report.reports[0].user_reporter}
+          </span>
           {report.report_count > 1 && (
             <span className="text-zinc-600">+{report.report_count - 1} người khác</span>
           )}

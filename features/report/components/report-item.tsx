@@ -60,7 +60,7 @@ function ReportItem({ report, index, isSelected, onToggleSelect }: ReportItemPro
       <div className="mb-4 space-y-2 border-l-2 border-white/10 pl-4">
         <div className="flex items-center gap-2 font-mono text-xs text-zinc-400">
           <User size={12} className="text-zinc-600" />
-          <span className="text-white">{report.user_reporter}</span>
+          <span className="text-white">{report?.reporter_info?.name || report?.user_reporter}</span>
         </div>
 
         {/* Reason */}
