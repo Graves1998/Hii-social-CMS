@@ -20,7 +20,7 @@ import { REPORT_STATUS_LABELS } from '../utils';
 function ReportListPage() {
   const navigate = useNavigate();
   const { filters, setFilters } = useReportStore();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery] = useState('');
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [isAcceptModalOpen, setIsAcceptModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);

@@ -1,4 +1,3 @@
-import { ContentStatus } from '@/shared/types';
 import {
   Button,
   Dialog,
@@ -8,7 +7,7 @@ import {
   DialogTitle,
 } from '@/shared/ui';
 
-function ActivityLogModal({ item, isOpen, onClose, service }: any) {
+function ActivityLogModal({ item, isOpen, onClose }: any) {
   // const logs = service.getAuditLogs().filter((log: any) => log.content_id === item.content_id);
   // const sortedLogs = [...logs].sort(
   //   (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()

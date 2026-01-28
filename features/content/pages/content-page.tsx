@@ -267,7 +267,7 @@ function ContentPageComponent() {
       <div className="flex flex-col gap-6">
         {/* Status Filter */}
         {isLoading ? (
-          <FilterSkeleton count={6} label="Lọc Trạng Thái" />
+          <FilterSkeleton count={6} />
         ) : (
           <div className="space-y-3">
             <Typography variant="tiny" className="flex items-center gap-2 font-mono text-zinc-500">
@@ -294,7 +294,7 @@ function ContentPageComponent() {
 
         {/* Category Filter */}
         {isLoading ? (
-          <FilterSkeleton count={5} label="Lọc Danh Mục" />
+          <FilterSkeleton count={5} />
         ) : (
           <div className="space-y-3">
             <Typography variant="tiny" className="flex items-center gap-2 font-mono text-zinc-500">
