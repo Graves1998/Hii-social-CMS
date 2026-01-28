@@ -64,22 +64,7 @@ function ContentCrawlPageComponent() {
     navigate({
       to: `${item.details_link}/$contentId`,
       params: { contentId: item.id },
-      search: { approving_status: item.status },
     });
-  };
-
-  const handleToggleSelect = (id: string) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
-
-  const handleSelectAll = (visibleItems: ContentItem[]) => {
-    const visibleIds = visibleItems.map((i) => i.id);
-    if (visibleIds.every((id) => selectedIds.includes(id))) {
-      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
-    } else {
-      const newSelection = new Set([...selectedIds, ...visibleIds]);
-      setSelectedIds(Array.from(newSelection).map((id) => id.toString()));
-    }
   };
 
   const handleBatchApprove = () => {
