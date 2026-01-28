@@ -1,3 +1,4 @@
+import { DetailPageSkeleton, VideoPlayer } from '@/shared/components';
 import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import { ContentStatus } from '@/shared/types';
 import { Badge, Button, Textarea, Typography } from '@/shared/ui';
@@ -6,20 +7,9 @@ import { AlertTriangle, Globe, X } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { DetailPageSkeleton, VideoPlayer } from '@/shared/components';
-import {
-  ActivityLogModal,
-  Queue,
-  RejectConfirmationModal,
-  useContentContext,
-  WorkflowSteps,
-} from '../components';
+import { ActivityLogModal, Queue, useContentContext, WorkflowSteps } from '../components';
 import { useCreateContent } from '../hooks/useContent';
-import {
-  useCrawlContent,
-  useGetContentCrawlerDetails,
-  useMakeVideoCrawler,
-} from '../hooks/useCrawlContent';
+import { useCrawlContent, useGetContentCrawlerDetails } from '../hooks/useCrawlContent';
 import { ContentSchema } from '../schemas/content.schema';
 import { useCrawlStore } from '../stores/useCrawlStore';
 
@@ -42,8 +32,7 @@ function DetailPageComponent() {
   });
 
   const { mutate: createContent } = useCreateContent();
-  const { mutateAsync: makeVideoCrawler } = useMakeVideoCrawler();
-  const { selectedIds, setSelectedIds } = useCrawlStore();
+  const { selectedIds } = useCrawlStore();
 
   const navigate = useNavigate();
   const { service, currentUser } = useRouteContext({
@@ -53,13 +42,8 @@ function DetailPageComponent() {
   const { platforms, categories } = useContentContext();
 
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
-  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-  const [isBatchRejectModalOpen, setIsBatchRejectModalOpen] = useState(false);
-  const [pendingRejectId, setPendingRejectId] = useState<string | null>(null);
 
-  const { data: contentDetails, isLoading: isLoadingContentDetails } = useGetContentCrawlerDetails(
-    Number(contentId)
-  );
+  const { data: contentDetails } = useGetContentCrawlerDetails(Number(contentId));
 
   const allTags = [...(contentDetails?.tags || []), ...categories.map((c) => c.slug)];
   const { register, handleSubmit, setValue, watch } = useForm<ContentSchema>({

@@ -6,8 +6,6 @@
 
 import { UserRole } from '@/shared';
 
-export * from '@/shared/types';
-
 export interface User {
   id: string;
   username: string;

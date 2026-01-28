@@ -9,10 +9,10 @@ import {
 } from '@/shared/ui';
 
 function ActivityLogModal({ item, isOpen, onClose, service }: any) {
-  const logs = service.getAuditLogs().filter((log: any) => log.content_id === item.content_id);
-  const sortedLogs = [...logs].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
+  // const logs = service.getAuditLogs().filter((log: any) => log.content_id === item.content_id);
+  // const sortedLogs = [...logs].sort(
+  //   (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  // );
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -33,7 +33,7 @@ function ActivityLogModal({ item, isOpen, onClose, service }: any) {
             </div>
           </div>
 
-          {sortedLogs.map((log) => (
+          {/* {sortedLogs.map((log) => (
             <div
               key={log.id}
               className={`relative flex gap-4 border-l-2 py-3 pl-4 ${
@@ -50,7 +50,7 @@ function ActivityLogModal({ item, isOpen, onClose, service }: any) {
                 <div className="font-mono text-xs text-zinc-400">USER: {log.user}</div>
               </div>
             </div>
-          ))}
+          ))} */}
         </div>
         <DialogFooter>
           <Button onClick={onClose} className="w-full">

@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useNavigate, useRouteContext } from '@tanstack/react-router';
+import { MediaType, SourcePlatform, SourceType } from '@/shared/types';
 import {
   Button,
   Card,
@@ -14,11 +13,11 @@ import {
   SelectValue,
   Textarea,
 } from '@/shared/ui';
-import { MediaType, SourcePlatform, SourceType } from '@/shared/types';
+import { useNavigate } from '@tanstack/react-router';
+import React, { useState } from 'react';
 
 function CreatePageComponent() {
   const navigate = useNavigate();
-  const { categories, service, currentUser, refreshData } = useRouteContext({ strict: false });
 
   const [formData, setFormData] = useState<any>({
     title: '',
@@ -29,7 +28,7 @@ function CreatePageComponent() {
     source_platform: SourcePlatform.OTHER,
     target_platforms: [SourcePlatform.OTHER],
     original_source_url: '',
-    category: categories[0] || 'Thể thao',
+    category: 'Thể thao',
     tags: [],
     visibility: 'public',
     moderation_notes: '',
@@ -37,8 +36,6 @@ function CreatePageComponent() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    service.createContent(formData, currentUser.name);
-    refreshData();
     navigate({ to: '/content' });
   };
 
@@ -107,7 +104,7 @@ function CreatePageComponent() {
                       <SelectValue placeholder="Danh mục" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((c: string) => (
+                      {['Thể thao', 'Giải đấu', 'Tin tức', 'Video', 'Hình ảnh'].map((c: string) => (
                         <SelectItem key={c} value={c}>
                           {c}
                         </SelectItem>

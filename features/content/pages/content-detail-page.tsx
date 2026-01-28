@@ -495,7 +495,7 @@ function DetailPageComponent() {
           {item.status !== ContentStatus.PENDING_REVIEW && (
             <Button
               variant="default"
-              onClick={() => handleUpdateStatus(ContentStatus.APPROVED)}
+              onClick={() => handleUpdateStatus(ContentStatus.PUBLISHED)}
               disabled={isPublishingContent || item.status === ContentStatus.PUBLISHED}
             >
               Đăng ngay

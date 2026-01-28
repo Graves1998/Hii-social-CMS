@@ -1,6 +1,6 @@
 import { useAuthStore, useUser } from '@/features/auth/stores/useAuthStore';
 import { UserRole } from '@/shared';
-import { UserProfile } from '@/shared/components';
+import { UserProfile } from '@/shared/components/user-profile';
 import { Link, useRouterState } from '@tanstack/react-router';
 
 function Sidebar() {
