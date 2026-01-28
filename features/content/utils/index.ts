@@ -9,6 +9,7 @@ import {
 } from '../types';
 
 export const transformCrawlContent = (content: Video): ContentItem => {
+  console.log(content.publish_metadata, 'content');
   return {
     id: content.id.toString(),
     title: content.video_metadata.title,
@@ -25,7 +26,7 @@ export const transformCrawlContent = (content: Video): ContentItem => {
     created_by: content.publish_metadata.data.updated_by,
     status: content.download_status as ContentStatus,
     category: '',
-    tags: content.publish_metadata.data.tags,
+    tags: content.publish_metadata.data.tags || [],
     visibility: 'public',
     moderation_notes: '',
     details_link: `/review/detail`,
@@ -55,7 +56,7 @@ export const transformReelContent = (content: Reel): ContentItem => {
         ? content.status
         : (content.approving_status as ContentStatus),
     category: content.type,
-    tags: content.tags,
+    tags: content.tags || [],
     visibility: 'public',
     moderation_notes: '',
     details_link: `/content/detail`,

@@ -65,7 +65,9 @@ function QueueItem({ qItem, activeItem, isSelected, onToggleSelect }: QueueItemP
     navigate({
       to: `${qItem.details_link}/$contentId`,
       params: { contentId: qItem.id },
-      search: { approving_status: qItem.status },
+      search: {
+        approving_status: qItem.details_link === '/content/detail' ? qItem.status : undefined,
+      },
     });
   };
 
