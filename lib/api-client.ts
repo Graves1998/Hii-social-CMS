@@ -13,7 +13,7 @@
  */
 
 /* eslint-disable max-classes-per-file */
-import { LoginResponse } from '@/features/auth';
+import { LoginResponse } from '@/shared/types';
 import { useAuthStore } from '@/features/auth/stores/useAuthStore';
 import ky, { HTTPError } from 'ky';
 import { ApiResponse } from './types/api';

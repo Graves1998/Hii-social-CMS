@@ -1,11 +1,13 @@
+import { useAuthStore, useUser } from '@/features/auth/stores/useAuthStore';
 import { UserRole } from '@/shared';
-import { UserProfile } from '@/shared/components';
+import { UserProfile } from '@/shared/components/user-profile';
 import { Link, useRouterState } from '@tanstack/react-router';
 
 function Sidebar() {
   const routerState = useRouterState();
 
-  const { currentUser, setCurrentUser } = routerState.matches[0]?.context || {};
+  const currentUser = useUser();
+  const setCurrentUser = useAuthStore((state) => state.updateUser);
 
   const menuItems = [
     { id: 'dashboard', path: '/dashboard', label: 'Tổng Quan' },

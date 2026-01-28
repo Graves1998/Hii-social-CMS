@@ -267,7 +267,7 @@ function ContentPageComponent() {
       <div className="flex flex-col gap-6">
         {/* Status Filter */}
         {isLoading ? (
-          <FilterSkeleton count={6} label="Lọc Trạng Thái" />
+          <FilterSkeleton count={6} />
         ) : (
           <div className="space-y-3">
             <Typography variant="tiny" className="flex items-center gap-2 font-mono text-zinc-500">
@@ -294,7 +294,7 @@ function ContentPageComponent() {
 
         {/* Category Filter */}
         {isLoading ? (
-          <FilterSkeleton count={5} label="Lọc Danh Mục" />
+          <FilterSkeleton count={5} />
         ) : (
           <div className="space-y-3">
             <Typography variant="tiny" className="flex items-center gap-2 font-mono text-zinc-500">
@@ -316,9 +316,9 @@ function ContentPageComponent() {
                 <button
                   key={cat.id}
                   type="button"
-                  onClick={() => toggleCategory(cat.id)}
+                  onClick={() => toggleCategory(cat.name)}
                   className={`border px-3 py-1 font-mono text-[10px] uppercase transition-all ${
-                    filters.tags.includes(cat.id)
+                    filters.tags.includes(cat.name)
                       ? 'border-white bg-white text-black'
                       : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
                   }`}

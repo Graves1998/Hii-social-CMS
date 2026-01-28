@@ -8,7 +8,5 @@
 export * from './hooks';
 // Schemas
 export * from './schemas/auth.schema';
-// Pages
-export * from './pages';
-// Types
+
 export * from './types';

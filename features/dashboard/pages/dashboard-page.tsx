@@ -1,19 +1,24 @@
-import { ContentItem, ContentStatus } from '@/shared/types';
+import { STATUS_LABELS } from '@/shared/constants';
+import { ContentStatus } from '@/shared/types';
 import { Button, Typography } from '@/shared/ui';
-import { useNavigate, useRouteContext } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { ArrowUpRight, Zap } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
-import { useContentStore } from '@/features/content/stores/useContentStore';
+import { DashboardSkeleton } from '@/shared/components';
 import { CustomTooltip, KPICard, StatItem } from '../components';
+import { useDashboardStats, useDashboardTimeseries } from '../hooks';
+import { TimeseriesItem } from '../types';
 
 function DashboardPage() {
   const navigate = useNavigate();
-  const { items } = useRouteContext({ strict: false });
-  const { setFilters } = useContentStore();
+
+  const { data: stats, isLoading: isLoadingStats } = useDashboardStats();
+  const { data: timeseries, isLoading: isLoadingTimeseries } = useDashboardTimeseries();
+
+  const isLoading = isLoadingStats || isLoadingTimeseries;
 
   const handleNavigate = (filter: { status?: string; source?: string }) => {
-    setFilters('status', filter.status);
     if (filter.status === ContentStatus.DRAFT) {
       navigate({
         to: '/review',
@@ -28,33 +33,15 @@ function DashboardPage() {
     }
   };
 
-  const [startDate] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 7);
-    return d.toISOString().split('T')[0];
-  });
-  const [endDate] = useState(() => new Date().toISOString().split('T')[0]);
-
-  const kpiData = useMemo(() => {
-    return {
-      draft: items.filter((i: ContentItem) => i.status === ContentStatus.DRAFT).length,
-      pending: items.filter((i: ContentItem) => i.status === ContentStatus.PENDING_REVIEW).length,
-      rejected: items.filter((i: ContentItem) => i.status === ContentStatus.REJECTED).length,
-      approved: items.filter((i: ContentItem) => i.status === ContentStatus.APPROVED).length,
-      scheduled: items.filter((i: ContentItem) => i.status === ContentStatus.SCHEDULED).length,
-      published: items.filter((i: ContentItem) => i.status === ContentStatus.PUBLISHED).length,
-    };
-  }, [items]);
-
   const chartData = useMemo(() => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    if (!timeseries) return [];
+
+    const start = new Date(timeseries[0].timestamp);
+    const end = new Date(timeseries[timeseries.length - 1].timestamp);
     end.setHours(23, 59, 59, 999);
 
-    const rangeItems = items.filter((item: ContentItem) => {
-      if (item.status !== ContentStatus.PUBLISHED) return false;
-      const dateStr = item.published_at || item.created_at;
-      const date = new Date(dateStr);
+    const rangeItems = timeseries.filter((item: TimeseriesItem) => {
+      const date = new Date(item.timestamp);
       return date >= start && date <= end;
     });
 
@@ -63,10 +50,10 @@ function DashboardPage() {
       timeMap.set(d.toISOString().split('T')[0], 0);
     }
 
-    rangeItems.forEach((item: ContentItem) => {
-      const dateStr = (item.published_at || item.created_at).split('T')[0];
+    rangeItems.forEach((item: TimeseriesItem) => {
+      const dateStr = item.timestamp.split('T')[0];
       if (timeMap.has(dateStr)) {
-        timeMap.set(dateStr, (timeMap.get(dateStr) || 0) + 1);
+        timeMap.set(dateStr, (timeMap.get(dateStr) || 0) + item.reels);
       }
     });
 
@@ -74,7 +61,12 @@ function DashboardPage() {
       date: new Date(date).toLocaleDateString('vi-VN', { month: 'numeric', day: 'numeric' }),
       count,
     }));
-  }, [items, startDate, endDate]);
+  }, [timeseries]);
+
+  // Show skeleton while loading
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="animate-in fade-in duration-700">
@@ -158,7 +150,7 @@ function DashboardPage() {
             <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
           </div>
           <Typography variant="h3" size="xxxlarge" className="mb-4 text-white">
-            {kpiData.pending}
+            {stats?.total_pending || 0}
           </Typography>
           <Typography variant="small" className="mb-8 leading-relaxed text-zinc-500" as="p">
             Nội dung đang chờ quy trình phê duyệt. Cần hành động ngay để duy trì tốc độ luồng.
@@ -176,40 +168,44 @@ function DashboardPage() {
 
         {/* KPI Grid */}
         <KPICard
-          count={kpiData.draft}
-          subtext="NHÁP"
+          count={stats?.total_draft || 0}
+          subtext={STATUS_LABELS[ContentStatus.DRAFT]}
           onClick={() => handleNavigate({ status: ContentStatus.DRAFT })}
         />
         <KPICard
-          count={kpiData.approved}
-          subtext="ĐÃ DUYỆT"
+          count={stats?.total_published || 0}
+          subtext={STATUS_LABELS[ContentStatus.APPROVED]}
           onClick={() => handleNavigate({ status: ContentStatus.APPROVED })}
         />
         <KPICard
-          count={kpiData.published}
-          subtext="ĐÃ ĐĂNG"
+          count={stats?.total_published || 0}
+          subtext={STATUS_LABELS[ContentStatus.PUBLISHED]}
           onClick={() => handleNavigate({ status: ContentStatus.PUBLISHED })}
         />
         <KPICard
-          count={kpiData.rejected}
-          subtext="TỪ CHỐI"
+          count={stats?.total_rejected || 0}
+          subtext={STATUS_LABELS[ContentStatus.REJECTED]}
           onClick={() => handleNavigate({ status: ContentStatus.REJECTED })}
         />
         <KPICard
-          count={kpiData.scheduled}
-          subtext="ĐÃ LÊN LỊCH"
+          count={stats?.total_scheduled || 0}
+          subtext={STATUS_LABELS[ContentStatus.SCHEDULED]}
           onClick={() => handleNavigate({ status: ContentStatus.SCHEDULED })}
         />
 
         {/* Create New Action */}
-        <div className="group relative flex cursor-pointer flex-col justify-between overflow-hidden bg-white p-8 transition-colors hover:bg-zinc-200">
+        <button
+          type="button"
+          onClick={() => navigate({ to: '/create' })}
+          className="group relative flex cursor-pointer flex-col justify-between overflow-hidden bg-white p-8 text-left transition-colors hover:bg-zinc-200"
+        >
           <div className="flex items-start justify-between">
             <Typography variant="tiny" className="text-black uppercase">
               THAO TÁC
             </Typography>
             <Zap className="h-4 w-4 text-black" />
           </div>
-          <div onClick={() => navigate({ to: '/create' })}>
+          <div>
             <Typography variant="h3" size="xlarge" className="mb-1 text-black">
               Tạo Mới
             </Typography>
@@ -217,7 +213,7 @@ function DashboardPage() {
               THỦ CÔNG
             </Typography>
           </div>
-        </div>
+        </button>
       </div>
     </div>
   );

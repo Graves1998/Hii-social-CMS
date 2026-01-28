@@ -1,4 +1,4 @@
-import { toast } from '@/shared';
+import { toast } from '@/shared/utils/toast';
 import { Button, Typography } from '@/shared/ui';
 import { FieldGroup } from '@/shared/ui/field';
 import FormField from '@/shared/ui/form-field';
@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@tanstack/react-router';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { useRegister } from '../hooks';
+import { useRegister } from '../hooks/index';
 import { registerSchema, type RegisterFormData } from '../schemas/auth.schema';
 
 function RegisterPageComponent() {
@@ -138,7 +138,7 @@ function RegisterPageComponent() {
                 {/* Password Strength Indicators */}
                 {password && (
                   <div className="mt-3 space-y-1.5">
-                    {passwordChecks.map((check, index) => (
+                    {passwordChecks.map((check) => (
                       <div key={check.label} className="flex items-center gap-2">
                         {check.valid ? (
                           <CheckCircle2 size={12} className="text-[#00ff66]" />

@@ -1,4 +1,4 @@
-import { toast } from '@/shared';
+import { toast } from '@/shared/utils/toast';
 import { Button, Typography } from '@/shared/ui';
 import { FieldGroup } from '@/shared/ui/field';
 import FormField from '@/shared/ui/form-field';
@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@tanstack/react-router';
 import { AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { useLogin } from '../hooks';
+import { useLogin } from '../hooks/index';
 import { loginSchema, type LoginFormData } from '../schemas/auth.schema';
 
 function LoginPageComponent() {

@@ -2,10 +2,9 @@ import { Skeleton } from './skeleton';
 
 interface FilterSkeletonProps {
   count?: number;
-  label?: string;
 }
 
-function FilterSkeleton({ count = 5, label = 'Đang tải...' }: FilterSkeletonProps) {
+function FilterSkeleton({ count = 5 }: FilterSkeletonProps) {
   return (
     <div className="space-y-3">
       {/* Label Skeleton */}
