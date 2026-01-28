@@ -1,8 +1,8 @@
 import { Filter, Hash, Layers, LayoutGrid, Rows, Search } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import ContentTable from '@/features/content/components/content-table';
-import { ContentItem, ContentStatus } from '@/features/content/types';
+import { ApproveContentBatchPayload, ContentItem, ContentStatus } from '@/features/content/types';
 import {
   ContentGrid,
   ContentGridSkeleton,
@@ -11,7 +11,6 @@ import {
 } from '@/shared/components';
 import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import {
-  Button,
   Input,
   Select,
   SelectContent,
@@ -20,17 +19,18 @@ import {
   SelectValue,
   Typography,
 } from '@/shared/ui';
-import { useNavigate, useRouteContext } from '@tanstack/react-router';
+import { useNavigate, useRouteContext, useSearch } from '@tanstack/react-router';
 import { debounce } from 'lodash';
 import { toast } from 'sonner';
-import { RejectConfirmationModal, useContentContext } from '../components';
+import { FloatingBatchActionBar, RejectConfirmationModal, useContentContext } from '../components';
 import Media from '../components/media';
 import {
-  useApprovingStatus,
   useApproveContents,
+  useApprovingStatus,
   useContent,
   useRejectContents,
 } from '../hooks/useContent';
+import { ContentSearchSchema } from '../schemas';
 import { useContentStore } from '../stores/useContentStore';
 import { useCrawlStore } from '../stores/useCrawlStore';
 import { transformStatusLabel } from '../utils';
@@ -67,7 +67,24 @@ function ContentPageComponent() {
 
   const { platforms, categories } = useContentContext();
 
-  const { filters, setFilters } = useContentStore();
+  const filters: ContentSearchSchema = useSearch({ strict: false });
+
+  const updateFilters = useMemo(() => {
+    return (key: keyof ContentSearchSchema, value: any) => {
+      navigate({
+        to: '/content',
+        search: {
+          ...filters,
+          [key]: value,
+        },
+      });
+    };
+  }, [filters, navigate]);
+
+  const setFilters = useCallback(
+    (key: keyof ContentSearchSchema, value: any) => updateFilters(key, value),
+    [updateFilters]
+  );
 
   const { selectedIds, setSelectedIds } = useContentStore((state) => state);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
@@ -120,6 +137,8 @@ function ContentPageComponent() {
     }
   };
 
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
   const handleBatchApprove = () => {
     const eligibleApprovals = items?.filter((item: ContentItem) => selectedIds.includes(item.id));
 
@@ -132,9 +151,14 @@ function ContentPageComponent() {
 
     const toastId = toast.loading(`Đang duyệt ${eligibleApprovals.length} nội dung...`);
 
+    const reelIds = eligibleApprovals.map((item) => ({
+      reel_id: item.id,
+      categories: selectedCategories,
+    }));
+
     approveContents(
       {
-        reel_ids: eligibleApprovals.map((item) => item.id),
+        reel_ids: reelIds as ApproveContentBatchPayload['reel_ids'],
         reason: 'Approved by admin',
       },
       {
@@ -237,14 +261,6 @@ function ContentPageComponent() {
 
   // Count items eligible for reject (PENDING_REVIEW or APPROVED)
   const batchRejectCount = items?.filter((i: ContentItem) => selectedIds.includes(i.id)).length;
-
-  const { resetFilters } = useContentStore();
-
-  useEffect(() => {
-    return () => {
-      resetFilters();
-    };
-  }, []);
 
   return (
     <div className="relative space-y-8">
@@ -416,44 +432,23 @@ function ContentPageComponent() {
       )}
 
       {/* Floating Batch Action Bar */}
-      {selectedIds.length > 0 && (
-        <div className="animate-in slide-in-from-bottom-10 fade-in fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-3 border border-white/20 bg-zinc-900 p-2 pl-6 shadow-2xl backdrop-blur-md">
-          <span className="font-mono text-xs text-white uppercase">
-            {selectedIds.length} ĐÃ CHỌN
-          </span>
-          <div className="h-4 w-[1px] bg-white/20" />
-
-          {/* Approve Button */}
-          <Button
-            variant="default"
-            className="h-8 bg-white text-black hover:bg-zinc-200 disabled:opacity-50"
-            onClick={handleBatchApprove}
-            disabled={batchApproveCount === 0 || isApprovingBatch}
-          >
-            {isApprovingBatch ? 'ĐANG DUYỆT...' : `DUYỆT (${batchApproveCount || 0})`}
-          </Button>
-
-          {/* Reject Button */}
-          <Button
-            variant="destructive"
-            className="h-8 disabled:opacity-50"
-            onClick={handleBatchReject}
-            disabled={batchRejectCount === 0 || isRejectingBatch}
-          >
-            {isRejectingBatch ? 'ĐANG TỪ CHỐI...' : `TỪ CHỐI (${batchRejectCount || 0})`}
-          </Button>
-
-          {/* Cancel Button */}
-          <div className="h-4 w-[1px] bg-white/20" />
-          <Button
-            variant="ghost"
-            className="h-8 text-zinc-400 hover:text-white"
-            onClick={() => setSelectedIds([])}
-          >
-            HỦY
-          </Button>
-        </div>
-      )}
+      <FloatingBatchActionBar
+        selectedCount={selectedIds.length}
+        approveCount={batchApproveCount}
+        rejectCount={batchRejectCount}
+        isApproving={isApprovingBatch}
+        isRejecting={isRejectingBatch}
+        onApprove={handleBatchApprove}
+        onReject={handleBatchReject}
+        onCancel={() => {
+          setSelectedIds([]);
+          setSelectedCategories([]);
+        }}
+        categories={categories.map((cat) => cat.name)}
+        showCategorySelector
+        onCategoriesChange={(cats: string[]) => setSelectedCategories(cats)}
+        selectedCategories={selectedCategories}
+      />
 
       {/* Batch Reject Confirmation Modal */}
       <RejectConfirmationModal

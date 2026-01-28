@@ -11,6 +11,13 @@ export interface Report {
   user_reporter: string;
   video_id: string;
   reason: ReportReason;
+  reporter_info: ReporterInfo;
+}
+export interface ReporterInfo {
+  user_id: string;
+  username: string;
+  email: string;
+  name: string;
 }
 
 export interface ReportDetailResponse {

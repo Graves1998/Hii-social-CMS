@@ -1,6 +1,6 @@
-import { DetailPageComponent } from '@/features/content';
-import { createRoute } from '@tanstack/react-router';
+import { contentDetailSearchSchema, DetailPageComponent } from '@/features/content';
 import { ContentProvider } from '@/features/content/components';
+import { createRoute } from '@tanstack/react-router';
 import { mainLayoutRoute } from './_main';
 
 export const contentDetailRoute = createRoute({
@@ -11,4 +11,5 @@ export const contentDetailRoute = createRoute({
       <DetailPageComponent />
     </ContentProvider>
   ),
+  validateSearch: contentDetailSearchSchema,
 });

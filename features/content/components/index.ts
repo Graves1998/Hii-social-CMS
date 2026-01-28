@@ -13,3 +13,4 @@ export { QueueItem, QueueList } from './queue';
 export { default as Queue } from './queue';
 export { ContentProvider, useContentContext } from './content-context';
 export { ScheduleModal } from './schedule-modal';
+export { FloatingBatchActionBar } from './floating-batch-action-bar';

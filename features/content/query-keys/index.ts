@@ -1,3 +1,5 @@
+import { ContentSearchSchema } from '../schemas';
+
 export const queryKeys = {
   categories: {
     all: ['categories'] as const,
@@ -12,11 +14,14 @@ export const queryKeys = {
   // Content queries
   content: {
     all: ['content'] as const,
-    lists: () => [...queryKeys.content.all, 'list'] as const,
-    list: (filters: Record<string, unknown>) => [...queryKeys.content.lists(), filters] as const,
-    details: () => [...queryKeys.content.all, 'detail'] as const,
-    detail: (id: string) => [...queryKeys.content.details(), id] as const,
-    approvingStatus: () => [...queryKeys.content.all, 'approving-status'] as const,
+    lists: (filters: ContentSearchSchema) => [...queryKeys.content.all, 'list', filters] as const,
+    details: (id: string, approving_status: string) =>
+      [...queryKeys.content.all, 'detail', id, approving_status] as const,
+  },
+
+  // Approving Status queries
+  approvingStatus: {
+    all: ['approving-status'] as const,
   },
 
   contentCrawl: {

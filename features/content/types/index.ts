@@ -200,9 +200,20 @@ export interface Category {
 export interface ApproveContentPayload {
   reason: string;
   reel_id: string;
+  categories: string[];
 }
 
 export interface ApproveContentBatchPayload {
+  reason: string;
+  reel_ids: [
+    {
+      reel_id: string;
+      categories: string[];
+    },
+  ];
+}
+
+export interface RejectContentBatchPayload {
   reason: string;
   reel_ids: string[];
 }

@@ -21,6 +21,9 @@ function DashboardPage() {
     } else {
       navigate({
         to: '/content',
+        search: {
+          approving_status: filter.status,
+        },
       });
     }
   };

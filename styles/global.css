@@ -92,7 +92,7 @@
     --toast-error-accent: oklch(0.62 0.25 27);
     --toast-error-border: oklch(0.38 0.18 27);
 
-    --toast-warning: oklch(0.16 0.12 85);
+    --toast-warning: oklch(0.78 0.2 85);
     --toast-warning-foreground: oklch(0.96 0.04 85);
 
     --toast-warning-accent: oklch(0.78 0.2 85);
@@ -160,7 +160,7 @@
     --toast-error-accent: oklch(0.62 0.25 27);
     --toast-error-border: oklch(0.38 0.18 27);
 
-    --toast-warning: oklch(0.16 0.12 85);
+    --toast-warning: oklch(0.78 0.2 85);
     --toast-warning-foreground: oklch(0.96 0.04 85);
 
     --toast-warning-accent: oklch(0.78 0.2 85);

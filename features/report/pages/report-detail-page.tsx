@@ -5,6 +5,7 @@ import { AlertTriangle, MessageSquare, Video, X, XCircle, Check } from 'lucide-r
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { RejectConfirmationModal } from '@/features/content/components';
+import { ContentStatus, STATUS_LABELS } from '@/shared';
 import { AcceptConfirmationModal, ReportItem } from '../components';
 import {
   useAcceptReport,
@@ -182,7 +183,7 @@ function ReportDetailPage() {
           {/* Video Status */}
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className={`font-mono text-sm uppercase ${statusColor}`}>
-              {report.video_info.status}
+              {STATUS_LABELS[report.video_info.status as ContentStatus]}
             </Badge>
             <Badge variant="destructive" className="font-mono text-sm">
               <MessageSquare size={12} className="mr-1" />

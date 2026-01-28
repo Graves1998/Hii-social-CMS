@@ -1,33 +1,35 @@
+import { DetailPageSkeleton, QueueSkeleton, VideoPlayer } from '@/shared/components';
 import { useInfiniteScroll } from '@/shared/hooks';
-import { QueueSkeleton, DetailPageSkeleton, VideoPlayer } from '@/shared/components';
 import { ContentStatus } from '@/shared/types';
 import { Badge, Button, Typography } from '@/shared/ui';
 import { useNavigate, useParams, useRouteContext, useSearch } from '@tanstack/react-router';
-import { AlertTriangle, Globe, X } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Globe, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import {
   ActivityLogModal,
+  FloatingBatchActionBar,
   Queue,
   RejectConfirmationModal,
   ScheduleModal,
+  useContentContext,
   WorkflowSteps,
 } from '../components';
 import {
-  useApproveContent,
   useApproveContents,
   useContent,
   useContentDetails,
   usePublishContent,
-  useRejectContent,
   useRejectContents,
 } from '../hooks/useContent';
 import { useScheduleContent } from '../hooks/useSchedule';
+import { ContentDetailSearchSchema } from '../schemas';
 import { useContentStore } from '../stores/useContentStore';
+import { ApproveContentBatchPayload } from '../types';
 
 function DetailPageComponent() {
   const { contentId } = useParams({ strict: false });
-  const searchParams = useSearch({ strict: false });
+  const searchParams: ContentDetailSearchSchema = useSearch({ strict: false });
 
   const {
     data: realContent,
@@ -38,9 +40,7 @@ function DetailPageComponent() {
     isFetchingNextPage,
   } = useContent(searchParams?.approving_status as ContentStatus);
 
-  const { mutate: approveContent, isPending: isApproveContentPending } = useApproveContent();
-  const { mutate: rejectContent, isPending: _isRejectContentPending } = useRejectContent();
-
+  const { categories } = useContentContext();
   // Batch operations
   const { mutate: approveContents, isPending: isApprovingBatch } = useApproveContents();
   const { mutate: rejectContents, isPending: isRejectingBatch } = useRejectContents();
@@ -60,6 +60,8 @@ function DetailPageComponent() {
   const navigate = useNavigate();
   const { service, currentUser: _currentUser } = useRouteContext({ strict: false });
 
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [isBatchRejectModalOpen, setIsBatchRejectModalOpen] = useState(false);
@@ -69,13 +71,27 @@ function DetailPageComponent() {
   const { mutate: scheduleContent, isPending: isSchedulingContent } = useScheduleContent();
   const { mutate: publishContent, isPending: isPublishingContent } = usePublishContent();
 
+  const handleToggleCategory = (categoryId: string) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(categoryId)) {
+        return prev.filter((id) => id !== categoryId);
+      }
+      return [...prev, categoryId];
+    });
+  };
+
   const approveContentHandler = () => {
     if (!item) return;
     const toastId = toast.loading(`Duyệt nội dung ${item.id}...`);
 
-    approveContent(
+    approveContents(
       {
-        reel_id: item.id,
+        reel_ids: [
+          {
+            reel_id: item.id,
+            categories: selectedCategories,
+          },
+        ],
         reason: 'Ok',
       },
       {
@@ -132,9 +148,9 @@ function DetailPageComponent() {
 
   const handleConfirmReject = (reason: string) => {
     if (item) {
-      rejectContent(
+      rejectContents(
         {
-          reel_id: item.id,
+          reel_ids: [item.id],
           reason,
         },
         {
@@ -175,9 +191,16 @@ function DetailPageComponent() {
 
     const toastId = toast.loading(`Đang duyệt ${eligibleApprovals.length} nội dung...`);
 
+    const reelIds = eligibleApprovals.map((contentItem) => {
+      return {
+        reel_id: contentItem.id,
+        categories: selectedCategories,
+      };
+    });
+
     approveContents(
       {
-        reel_ids: eligibleApprovals.map((contentItem) => contentItem.id),
+        reel_ids: reelIds as ApproveContentBatchPayload['reel_ids'],
         reason: 'Approved by admin',
       },
       {
@@ -413,6 +436,33 @@ function DetailPageComponent() {
           </div>
         )}
 
+        {/* CATEGORIES */}
+        {!!categories?.length && item.status === ContentStatus.PENDING_REVIEW && (
+          <div className="flex flex-col gap-2">
+            <Typography variant="tiny" className="text-muted-foreground font-medium">
+              DANH MỤC
+            </Typography>
+            <Typography
+              variant="tiny"
+              className="text-toast-warning flex items-center gap-2 font-medium"
+            >
+              <AlertCircle size={10} /> Vui lòng chọt ít nhất 1 danh mục để duyệt nội dung
+            </Typography>
+            <div className="flex flex-wrap gap-1.5">
+              {categories.map((category) => (
+                <Badge
+                  key={category.id}
+                  variant={selectedCategories.includes(category.name) ? 'default' : 'outline'}
+                  onClick={() => handleToggleCategory(category.name)}
+                  className="cursor-pointer transition-colors"
+                >
+                  {category.name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* WORKFLOW STATUS PROGRESS */}
         <WorkflowSteps
           isRejected={isRejected}
@@ -455,9 +505,9 @@ function DetailPageComponent() {
             <Button
               variant="default"
               onClick={() => handleUpdateStatus(ContentStatus.APPROVED)}
-              disabled={isApproveContentPending}
+              disabled={isApprovingBatch || selectedCategories.length === 0}
             >
-              DUYỆT
+              {isApprovingBatch ? 'ĐANG DUYỆT...' : 'DUYỆT'}
             </Button>
           )}
         </div>
@@ -492,44 +542,23 @@ function DetailPageComponent() {
       />
 
       {/* Floating Batch Action Bar */}
-      {selectedIds.length > 0 && (
-        <div className="animate-in slide-in-from-bottom-10 fade-in fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 transform items-center gap-3 border border-white/20 bg-zinc-900 p-2 pl-6 shadow-2xl backdrop-blur-md">
-          <span className="font-mono text-xs text-white uppercase">
-            {selectedIds.length} ĐÃ CHỌN
-          </span>
-          <div className="h-4 w-[1px] bg-white/20" />
-
-          {/* Approve Button */}
-          <Button
-            variant="default"
-            className="h-8 bg-white text-black hover:bg-zinc-200 disabled:opacity-50"
-            onClick={handleBatchApprove}
-            disabled={batchApproveCount === 0 || isApprovingBatch}
-          >
-            {isApprovingBatch ? 'ĐANG DUYỆT...' : `DUYỆT (${batchApproveCount || 0})`}
-          </Button>
-
-          {/* Reject Button */}
-          <Button
-            variant="destructive"
-            className="h-8 disabled:opacity-50"
-            onClick={handleBatchReject}
-            disabled={batchRejectCount === 0 || isRejectingBatch}
-          >
-            {isRejectingBatch ? 'ĐANG TỪ CHỐI...' : `TỪ CHỐI (${batchRejectCount || 0})`}
-          </Button>
-
-          {/* Cancel Button */}
-          <div className="h-4 w-[1px] bg-white/20" />
-          <Button
-            variant="ghost"
-            className="h-8 text-zinc-400 hover:text-white"
-            onClick={() => setSelectedIds([])}
-          >
-            HỦY
-          </Button>
-        </div>
-      )}
+      <FloatingBatchActionBar
+        showCategorySelector
+        selectedCount={selectedIds.length}
+        approveCount={batchApproveCount}
+        rejectCount={batchRejectCount}
+        isApproving={isApprovingBatch}
+        isRejecting={isRejectingBatch}
+        onApprove={handleBatchApprove}
+        onReject={handleBatchReject}
+        onCancel={() => {
+          setSelectedIds([]);
+          setSelectedCategories([]);
+        }}
+        categories={categories.map((cat) => cat.name)}
+        onCategoriesChange={(cats: string[]) => setSelectedCategories(cats)}
+        selectedCategories={selectedCategories}
+      />
     </div>
   );
 }
