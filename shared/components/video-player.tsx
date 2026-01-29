@@ -121,6 +121,7 @@ function VideoPlayer({
   const handleReady = () => {
     setIsLoading(false);
     setHasError(false);
+    setPlaying(true);
   };
 
   const handleError = (error: unknown) => {
@@ -201,6 +202,7 @@ function VideoPlayer({
         onTimeUpdate={handleTimeUpdate}
         playsInline
         poster={poster}
+        autoPlay
       />
 
       {/* Loading Overlay - Only show when actually loading */}

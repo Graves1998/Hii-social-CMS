@@ -1,13 +1,14 @@
+import { useUser } from '@/features/auth/stores/useAuthStore';
+import { STATUS_LABELS } from '@/shared';
 import { DetailPageSkeleton, VideoPlayer } from '@/shared/components';
 import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
-import { ContentStatus } from '@/shared/types';
+import { ContentStatus, UserRole } from '@/shared/types';
 import { Badge, Button, Textarea, Typography } from '@/shared/ui';
-import { useNavigate, useParams, useRouteContext } from '@tanstack/react-router';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { AlertTriangle, Globe, X } from 'lucide-react';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { ActivityLogModal, Queue, useContentContext, WorkflowSteps } from '../components';
+import { Queue, useContentContext, WorkflowSteps } from '../components';
 import { useCreateContent } from '../hooks/useContent';
 import { useCrawlContent, useGetContentCrawlerDetails } from '../hooks/useCrawlContent';
 import { ContentSchema } from '../schemas/content.schema';
@@ -35,13 +36,9 @@ function DetailPageComponent() {
   const { selectedIds } = useCrawlStore();
 
   const navigate = useNavigate();
-  const { service, currentUser } = useRouteContext({
-    strict: false,
-  });
+  const currentUser = useUser();
 
   const { platforms, categories } = useContentContext();
-
-  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
 
   const { data: contentDetails } = useGetContentCrawlerDetails(Number(contentId));
 
@@ -57,6 +54,7 @@ function DetailPageComponent() {
           thumbnail: contentDetails?.thumbnail_url || '',
           platforms: platforms?.map((p) => p.api_key) || [],
           status: ContentStatus.PRIVATE,
+          id: contentDetails?.id || '',
         }
       : undefined,
   });
@@ -77,20 +75,30 @@ function DetailPageComponent() {
   };
 
   const onSubmit = (data: ContentSchema) => {
-    const toastId = toast.loading(`Publishing content...`);
+    const toastId = toast.loading(`Khởi tạo nội dung...`);
+    const { id, ...rest } = data;
     createContent(
       {
-        data,
+        data: rest,
       },
       {
         onSuccess: () => {
           toast.dismiss(toastId);
-          toast.success('Publish content successfully');
-          navigate({ to: '/review' });
+          toast.success('Khởi tạo nội dung thành công');
+          const itemIndex = crawlContent?.findIndex((c) => c.id === id);
+          const nextItem = crawlContent?.[itemIndex + 1];
+          if (nextItem) {
+            navigate({
+              to: '/review/detail/$contentId',
+              params: { contentId: nextItem.id },
+            });
+          } else {
+            navigate({ to: '/review' });
+          }
         },
         onError: () => {
           toast.dismiss(toastId);
-          toast.error('Publish content failed');
+          toast.error('Khởi tạo nội dung thất bại');
         },
       }
     );
@@ -109,14 +117,14 @@ function DetailPageComponent() {
   }
 
   const isEditable =
-    contentDetails.status === ContentStatus.DRAFT || currentUser.role === 'ADMIN' || true;
+    contentDetails.status === ContentStatus.DRAFT || currentUser?.role === UserRole.ADMIN || true;
 
   const workflowSteps = [
-    { id: ContentStatus.DRAFT, label: 'K.TẠO' },
-    { id: ContentStatus.PENDING_REVIEW, label: 'DUYỆT' },
-    { id: ContentStatus.APPROVED, label: 'XONG' },
-    { id: ContentStatus.SCHEDULED, label: 'CHỜ' },
-    { id: ContentStatus.PUBLISHED, label: 'ĐĂNG' },
+    { id: ContentStatus.DRAFT, label: STATUS_LABELS[ContentStatus.DRAFT] },
+    { id: ContentStatus.PENDING_REVIEW, label: STATUS_LABELS[ContentStatus.PENDING_REVIEW] },
+    { id: ContentStatus.APPROVED, label: STATUS_LABELS[ContentStatus.APPROVED] },
+    { id: ContentStatus.SCHEDULED, label: STATUS_LABELS[ContentStatus.SCHEDULED] },
+    { id: ContentStatus.PUBLISHED, label: STATUS_LABELS[ContentStatus.PUBLISHED] },
   ];
 
   const currentStepIndex = workflowSteps.findIndex((s) => s.id === contentDetails.status);
@@ -281,13 +289,6 @@ function DetailPageComponent() {
           </Button>
         </div>
       </form>
-
-      <ActivityLogModal
-        item={contentDetails}
-        isOpen={isLogModalOpen}
-        onClose={() => setIsLogModalOpen(false)}
-        service={service}
-      />
     </div>
   );
 }

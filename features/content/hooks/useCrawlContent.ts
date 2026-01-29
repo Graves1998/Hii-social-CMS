@@ -15,7 +15,7 @@ import { transformCrawlContent } from '../utils';
 const useCrawlContent = () => {
   const filters = useCrawlFilters();
   const crawlContentQuery = useInfiniteQuery({
-    queryKey: [queryKeys.contentCrawl.all, filters],
+    queryKey: queryKeys.contentCrawl.list(filters),
     queryFn: ({ pageParam = 1 }) =>
       crawlService.getContentCrawler({
         ...filters,
@@ -52,7 +52,7 @@ const useGetContentCrawlerDetails = (video_id: number) => {
   const initialData = useCrawlContentDetails();
 
   const contentDetailsQuery = useQuery({
-    queryKey: [queryKeys.contentCrawl.details, video_id],
+    queryKey: queryKeys.contentCrawl.detail(video_id.toString()),
     queryFn: () => crawlService.getContentCrawlerDetails(video_id),
     placeholderData: keepPreviousData,
   });

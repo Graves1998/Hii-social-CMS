@@ -2,12 +2,12 @@ import { DetailPageSkeleton, QueueSkeleton, VideoPlayer } from '@/shared/compone
 import { useInfiniteScroll } from '@/shared/hooks';
 import { ContentStatus } from '@/shared/types';
 import { Badge, Button, Typography } from '@/shared/ui';
-import { useNavigate, useParams, useRouteContext, useSearch } from '@tanstack/react-router';
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { AlertCircle, AlertTriangle, Globe, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { STATUS_LABELS } from '@/shared';
 import {
-  ActivityLogModal,
   FloatingBatchActionBar,
   Queue,
   RejectConfirmationModal,
@@ -58,11 +58,9 @@ function DetailPageComponent() {
     approving_status: searchParams?.approving_status as string,
   });
   const navigate = useNavigate();
-  const { service, currentUser: _currentUser } = useRouteContext({ strict: false });
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
-  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [isBatchRejectModalOpen, setIsBatchRejectModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
@@ -82,7 +80,7 @@ function DetailPageComponent() {
 
   const approveContentHandler = () => {
     if (!item) return;
-    const toastId = toast.loading(`Duyệt nội dung ${item.id}...`);
+    const toastId = toast.loading(`Duyệt 1 nội dung ...`);
 
     approveContents(
       {
@@ -98,7 +96,16 @@ function DetailPageComponent() {
         onSuccess: () => {
           toast.dismiss(toastId);
           toast.success('Duyệt nội dung thành công');
-          navigate({ to: '/content' });
+          const nextItem = realContent?.find((c) => c.id !== item.id);
+          if (nextItem) {
+            navigate({
+              to: '/content/detail/$contentId',
+              params: { contentId: nextItem.id },
+              search: { approving_status: nextItem?.approving_status as string },
+            });
+          } else {
+            navigate({ to: '/content' });
+          }
         },
         onError: () => {
           toast.dismiss(toastId);
@@ -119,7 +126,16 @@ function DetailPageComponent() {
         onSuccess: () => {
           toast.dismiss(toastId);
           toast.success('Đăng nội dung thành công');
-          navigate({ to: '/content' });
+          const nextItem = realContent?.find((c) => c.id !== item.id);
+          if (nextItem) {
+            navigate({
+              to: '/content/detail/$contentId',
+              params: { contentId: nextItem.id },
+              search: { approving_status: nextItem?.approving_status as string },
+            });
+          } else {
+            navigate({ to: '/content' });
+          }
         },
         onError: () => {
           toast.dismiss(toastId);
@@ -158,7 +174,16 @@ function DetailPageComponent() {
             toast.success('Từ chối nội dung thành công');
             setIsRejectModalOpen(false);
             setPendingRejectId(null);
-            navigate({ to: '/content' });
+            const nextItem = realContent?.find((c) => c.id !== item.id);
+            if (nextItem) {
+              navigate({
+                to: '/content/detail/$contentId',
+                params: { contentId: nextItem.id },
+                search: { approving_status: nextItem?.approving_status as string },
+              });
+            } else {
+              navigate({ to: '/content' });
+            }
           },
           onError: () => {
             toast.error('Từ chối nội dung thất bại');
@@ -210,7 +235,16 @@ function DetailPageComponent() {
             description: `Đã duyệt ${eligibleApprovals.length} nội dung`,
           });
           setSelectedIds([]);
-          navigate({ to: '/content' });
+          const nextItem = realContent?.find((c) => !eligibleApprovals.includes(c));
+          if (nextItem) {
+            navigate({
+              to: '/content/detail/$contentId',
+              params: { contentId: nextItem.id },
+              search: { approving_status: nextItem?.approving_status as string },
+            });
+          } else {
+            navigate({ to: '/content' });
+          }
         },
         onError: () => {
           toast.dismiss(toastId);
@@ -260,7 +294,16 @@ function DetailPageComponent() {
           });
           setSelectedIds([]);
           setIsBatchRejectModalOpen(false);
-          navigate({ to: '/content' });
+          const nextItem = realContent?.find((c) => !eligibleRejections.includes(c));
+          if (nextItem) {
+            navigate({
+              to: '/content/detail/$contentId',
+              params: { contentId: nextItem.id },
+              search: { approving_status: nextItem?.approving_status as string },
+            });
+          } else {
+            navigate({ to: '/content' });
+          }
         },
         onError: () => {
           toast.dismiss(toastId);
@@ -296,6 +339,16 @@ function DetailPageComponent() {
             duration: 4000,
           });
           setIsScheduleModalOpen(false);
+          const nextItem = realContent?.find((c) => c.id !== item.id);
+          if (nextItem) {
+            navigate({
+              to: '/content/detail/$contentId',
+              params: { contentId: nextItem.id },
+              search: { approving_status: nextItem?.approving_status as string },
+            });
+          } else {
+            navigate({ to: '/content' });
+          }
         },
         onError: () => {
           toast.dismiss(toastId);
@@ -316,10 +369,10 @@ function DetailPageComponent() {
   }
 
   const workflowSteps = [
-    { id: ContentStatus.PENDING_REVIEW, label: 'CHỜ DUYỆT' },
-    { id: ContentStatus.APPROVED, label: 'DUYỆT' },
-    { id: ContentStatus.SCHEDULED, label: 'LÊN LỊCH' },
-    { id: ContentStatus.PUBLISHED, label: 'ĐĂNG' },
+    { id: ContentStatus.PENDING_REVIEW, label: STATUS_LABELS[ContentStatus.PENDING_REVIEW] },
+    { id: ContentStatus.APPROVED, label: STATUS_LABELS[ContentStatus.APPROVED] },
+    { id: ContentStatus.SCHEDULED, label: STATUS_LABELS[ContentStatus.SCHEDULED] },
+    { id: ContentStatus.PUBLISHED, label: STATUS_LABELS[ContentStatus.PUBLISHED] },
   ];
 
   const currentStepIndex = workflowSteps.findIndex((s) => s.id === item?.status);
@@ -513,12 +566,6 @@ function DetailPageComponent() {
         </div>
       </aside>
 
-      <ActivityLogModal
-        item={item}
-        isOpen={isLogModalOpen}
-        onClose={() => setIsLogModalOpen(false)}
-        service={service}
-      />
       <RejectConfirmationModal
         isOpen={isRejectModalOpen}
         onClose={() => {

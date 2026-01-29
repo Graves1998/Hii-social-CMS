@@ -9,7 +9,6 @@ import {
 } from '../types';
 
 export const transformCrawlContent = (content: Video): ContentItem => {
-  console.log(content.publish_metadata, 'content');
   return {
     id: content.id.toString(),
     title: content.video_metadata.title,
@@ -24,7 +23,7 @@ export const transformCrawlContent = (content: Video): ContentItem => {
     original_source_url: content.original_url,
     created_at: content.created_at,
     created_by: content.publish_metadata.data.updated_by,
-    status: content.download_status as ContentStatus,
+    status: ContentStatus.DRAFT as ContentStatus,
     category: '',
     tags: content.publish_metadata.data.tags || [],
     visibility: 'public',
