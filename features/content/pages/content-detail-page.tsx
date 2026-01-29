@@ -4,7 +4,7 @@ import { ContentStatus } from '@/shared/types';
 import { Badge, Button, Typography } from '@/shared/ui';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { AlertCircle, AlertTriangle, Globe, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { STATUS_LABELS } from '@/shared';
 import {
@@ -53,10 +53,40 @@ function DetailPageComponent() {
     threshold: 200,
   });
 
-  const { data: item, isLoading: isLoadingContentDetails } = useContentDetails({
+  const {
+    data: item,
+    isLoading: isLoadingContentDetails,
+    isFetched,
+  } = useContentDetails({
     id: contentId,
     approving_status: searchParams?.approving_status as string,
   });
+
+  const firstFetch = useRef(false);
+
+  useEffect(() => {
+    if (!realContent || !item || firstFetch.current) return;
+
+    const itemIndex = realContent?.findIndex((c) => c.id === item.id) || 0;
+    if (itemIndex >= 0) {
+      const queueList = document.querySelector('.queue-list');
+      const activeItem = document.querySelector('.queue-item-active');
+      if (activeItem && isFetched) {
+        requestAnimationFrame(() => {
+          const activeItemRect = activeItem.getBoundingClientRect();
+          // scroll to the active item, but keep the center of the queue visible
+          const top = activeItemRect.top - (queueList?.clientHeight || 0) / 2;
+          queueList?.scrollTo({ top, behavior: 'smooth' });
+          firstFetch.current = true;
+        });
+      }
+      return;
+    }
+
+    if (hasNextPage) {
+      fetchNextPage();
+    }
+  }, [item, realContent, hasNextPage, fetchNextPage, isFetched]);
 
   // Count items eligible for approve/reject
   const batchApproveCount = realContent?.filter((i) => selectedIds.includes(i.id)).length;
@@ -104,11 +134,15 @@ function DetailPageComponent() {
           toast.success('Duyệt nội dung thành công');
           const itemIndex = realContent?.findIndex((c) => c.id === item.id) || 0;
           const nextItem = realContent?.[itemIndex + 1];
-          if (nextItem) {
+          const previousItem = realContent?.[itemIndex - 1];
+          if (nextItem || previousItem) {
+            const nextItemId = nextItem?.id || previousItem?.id;
+            const nextItemApprovingStatus =
+              nextItem?.approving_status || previousItem?.approving_status;
             navigate({
               to: '/content/detail/$contentId',
-              params: { contentId: nextItem.id },
-              search: { approving_status: nextItem?.approving_status as string },
+              params: { contentId: nextItemId },
+              search: { approving_status: nextItemApprovingStatus as string },
             });
           } else {
             navigate({ to: '/content' });
@@ -168,11 +202,15 @@ function DetailPageComponent() {
             setPendingRejectId(null);
             const itemIndex = realContent?.findIndex((c) => c.id === item.id) || 0;
             const nextItem = realContent?.[itemIndex + 1];
-            if (nextItem) {
+            const previousItem = realContent?.[itemIndex - 1];
+            if (nextItem || previousItem) {
+              const nextItemId = nextItem?.id || previousItem?.id;
+              const nextItemApprovingStatus =
+                nextItem?.approving_status || previousItem?.approving_status;
               navigate({
                 to: '/content/detail/$contentId',
-                params: { contentId: nextItem.id },
-                search: { approving_status: nextItem?.approving_status as string },
+                params: { contentId: nextItemId },
+                search: { approving_status: nextItemApprovingStatus as string },
               });
             } else {
               navigate({ to: '/content' });
@@ -332,11 +370,15 @@ function DetailPageComponent() {
           setSelectedCategories([]);
           const itemIndex = realContent?.findIndex((c) => c.id === item.id) || 0;
           const nextItem = realContent?.[itemIndex + 1];
-          if (nextItem) {
+          const previousItem = realContent?.[itemIndex - 1];
+          if (nextItem || previousItem) {
+            const nextItemId = nextItem?.id || previousItem?.id;
+            const nextItemApprovingStatus =
+              nextItem?.approving_status || previousItem?.approving_status;
             navigate({
               to: '/content/detail/$contentId',
-              params: { contentId: nextItem.id },
-              search: { approving_status: nextItem?.approving_status as string },
+              params: { contentId: nextItemId },
+              search: { approving_status: nextItemApprovingStatus as string },
             });
           } else {
             navigate({ to: '/content' });
