@@ -4,7 +4,7 @@ import { ContentStatus } from '@/shared/types';
 import { Badge, Button, Typography } from '@/shared/ui';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { AlertCircle, AlertTriangle, Globe, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { STATUS_LABELS } from '@/shared';
 import {
@@ -62,8 +62,10 @@ function DetailPageComponent() {
     approving_status: searchParams?.approving_status as string,
   });
 
+  const firstFetch = useRef(false);
+
   useEffect(() => {
-    if (!realContent || !item) return;
+    if (!realContent || !item || firstFetch.current) return;
 
     const itemIndex = realContent?.findIndex((c) => c.id === item.id) || 0;
     if (itemIndex >= 0) {
@@ -75,6 +77,7 @@ function DetailPageComponent() {
           // scroll to the active item, but keep the center of the queue visible
           const top = activeItemRect.top - (queueList?.clientHeight || 0) / 2;
           queueList?.scrollTo({ top, behavior: 'smooth' });
+          firstFetch.current = true;
         });
       }
       return;

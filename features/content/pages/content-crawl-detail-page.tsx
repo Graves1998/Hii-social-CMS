@@ -8,7 +8,7 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import { AlertTriangle, Globe, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Queue, useContentContext, WorkflowSteps } from '../components';
 import { useCreateContent } from '../hooks/useContent';
 import { useCrawlContent, useGetContentCrawlerDetails } from '../hooks/useCrawlContent';
@@ -42,9 +42,10 @@ function DetailPageComponent() {
   const { platforms, categories } = useContentContext();
 
   const { data: contentDetails, isFetched } = useGetContentCrawlerDetails(Number(contentId));
+  const firstFetch = useRef(false);
 
   useEffect(() => {
-    if (!crawlContent || !contentDetails) return;
+    if (!crawlContent || !contentDetails || firstFetch.current) return;
 
     const itemIndex = crawlContent?.findIndex((c) => c.id === contentDetails.id) || 0;
     if (itemIndex >= 0) {
@@ -55,6 +56,7 @@ function DetailPageComponent() {
           const activeItemRect = activeItem.getBoundingClientRect();
           const top = activeItemRect.top - (queueList?.clientHeight || 0) / 2;
           queueList?.scrollTo({ top, behavior: 'smooth' });
+          firstFetch.current = true;
         });
       }
       return;
