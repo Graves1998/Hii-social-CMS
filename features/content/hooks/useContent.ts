@@ -19,13 +19,10 @@ export const useContent = (overrideStatus?: ContentStatus) => {
   const filters: ContentSearchSchema = useSearch({ strict: false });
 
   const approvingStatus = overrideStatus || filters.approving_status;
-  const queryKey = [
-    queryKeys.content.lists,
-    {
-      ...filters,
-      approving_status: approvingStatus,
-    },
-  ];
+  const queryKey = queryKeys.content.lists({
+    ...filters,
+    approving_status: approvingStatus,
+  });
   const contentQuery = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam = 1 }) =>
@@ -57,7 +54,7 @@ export const useCreateContent = () => {
   return useMutation({
     mutationFn: ({ data }: { data: ContentSchema }) => contentService.createContent(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeys.contentCrawl.lists] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.contentCrawl.all });
     },
   });
 };
@@ -69,7 +66,7 @@ export const useContentDetails = ({
   id: string;
   approving_status: string;
 }) => {
-  const queryKey = [queryKeys.content.details, id, approving_status];
+  const queryKey = queryKeys.content.details(id, approving_status);
   const contentDetailsQuery = useQuery({
     queryKey,
     queryFn: () => contentService.getContentDetails(id, approving_status),
@@ -91,74 +88,46 @@ export const useApprovingStatus = () => {
 };
 
 export const useApproveContent = () => {
-  const filters: ContentSearchSchema = useSearch({ strict: false });
-
   return useMutation({
     mutationFn: (payload: ApproveContentPayload) => contentService.approveContent(payload),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [queryKeys.content.lists, filters] });
-      queryClient.invalidateQueries({
-        queryKey: [queryKeys.content.details, variables.reel_id],
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
     },
   });
 };
 
 export const useApproveContents = () => {
-  const filters: ContentSearchSchema = useSearch({ strict: false });
-
-  const queryKey = [queryKeys.content.lists, filters];
-
   return useMutation({
     mutationFn: (payload: ApproveContentBatchPayload) => contentService.approveContents(payload),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({
-        queryKey: [queryKeys.content.details, variables.reel_ids],
-      });
+    onSuccess: (_) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
     },
   });
 };
 
 export const useRejectContent = () => {
-  const filters: ContentSearchSchema = useSearch({ strict: false });
-  const queryKey = [queryKeys.content.lists, filters];
-
   return useMutation({
     mutationFn: (payload: ApproveContentPayload) => contentService.rejectContent(payload),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({
-        queryKey: [queryKeys.content.details, variables.reel_id],
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
     },
   });
 };
 
 export const useRejectContents = () => {
-  const filters: ContentSearchSchema = useSearch({ strict: false });
-  const queryKey = [queryKeys.content.lists, filters];
   return useMutation({
     mutationFn: (payload: RejectContentBatchPayload) => contentService.rejectContents(payload),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({
-        queryKey: [queryKeys.content.details, variables.reel_ids],
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
     },
   });
 };
 
 export const usePublishContent = () => {
-  const filters: ContentSearchSchema = useSearch({ strict: false });
-  const queryKey = [queryKeys.content.lists, filters];
   return useMutation({
     mutationFn: (payload: PublishContentPayload) => contentService.publishContent(payload),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({
-        queryKey: [queryKeys.content.details, variables.reel_ids],
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
     },
   });
 };

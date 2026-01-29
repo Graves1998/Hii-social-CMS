@@ -9,6 +9,7 @@ export const contentSchema = z.object({
   thumbnail: z.string().optional(),
   platforms: z.array(z.string()).default([]),
   status: z.string().optional(),
+  id: z.string().optional(),
 });
 
 export type ContentSchema = z.infer<typeof contentSchema>;
