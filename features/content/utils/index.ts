@@ -42,7 +42,7 @@ export const transformCrawlContent = (content: Video): ContentItem => {
     tags: content.publish_metadata.data.tags || [],
     visibility: 'public',
     moderation_notes: '',
-    details_link: `/review/detail`,
+    details_link: `/draft/detail`,
     categories: [],
   };
 };

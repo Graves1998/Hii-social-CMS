@@ -85,7 +85,7 @@ function ContentHeader() {
   }, [approvingStatus]);
 
   return (
-    <div className="sticky top-0 z-10 flex flex-col gap-6">
+    <div className="sticky top-0 z-50 flex flex-col gap-6 bg-black/80 py-4 backdrop-blur">
       {/* Status Filter */}
       {isLoadingApprovingStatus ? (
         <FilterSkeleton count={6} />

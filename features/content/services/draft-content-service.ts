@@ -1,19 +1,19 @@
 import { api } from '@/services';
 import { PaginationRequest } from '@/lib/types/api';
 import queryString from 'query-string';
-import { MakeVideoCrawlerPayload, Video } from '../types';
+import { MakeDraftContentPreviewPayload, Video } from '../types';
 
-export const crawlService = {
-  getContentCrawler: async (payload: PaginationRequest) => {
+export const draftContentService = {
+  getDraftContent: async (payload: PaginationRequest) => {
     const searchParams = queryString.stringify(payload);
     const response = await api.get('crawler/videos', { searchParams });
     return response;
   },
-  getContentCrawlerDetails: async (video_id: number) => {
+  getDraftContentDetails: async (video_id: number) => {
     const response = await api.get<Video>(`crawler/videos/${video_id}`);
     return response;
   },
-  makeVideoCrawler: async (video_id: number, payload: MakeVideoCrawlerPayload) => {
+  makeDraftContentPreview: async (video_id: number, payload: MakeDraftContentPreviewPayload) => {
     const response = await api.patch(`crawler/videos/${video_id}/preview`, payload);
     return response;
   },

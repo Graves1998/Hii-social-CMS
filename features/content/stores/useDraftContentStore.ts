@@ -7,7 +7,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-interface ContentState {
+interface DraftContentState {
   // State
   selectedIds: string[];
   viewMode: 'table' | 'grid';
@@ -20,11 +20,10 @@ interface ContentState {
 /**
  * Auth Store với persistence
  */
-export const useContentStore = create<ContentState>()(
+export const useDraftContentStore = create<DraftContentState>()(
   persist(
     (set) => ({
       selectedIds: [],
-      contentDetails: null,
       viewMode: 'grid',
       setViewMode: (mode: 'table' | 'grid') => set({ viewMode: mode }),
 
@@ -33,7 +32,7 @@ export const useContentStore = create<ContentState>()(
       resetSelectedIds: () => set({ selectedIds: [] }),
     }),
     {
-      name: 'content-storage', // localStorage key
+      name: 'draft-content-storage', // localStorage key
       storage: createJSONStorage(() => localStorage),
     }
   )
@@ -42,4 +41,4 @@ export const useContentStore = create<ContentState>()(
 /**
  * Selectors - Tối ưu re-renders
  */
-export const useContent = () => useContentStore((state) => state);
+export const useDraftContent = () => useDraftContentStore((state) => state);

@@ -1,14 +1,15 @@
-import { ContentCrawlDetailPageComponent } from '@/features/content';
+import { DraftContentDetailPageComponent, draftContentSearchSchema } from '@/features/content';
 import { createRoute } from '@tanstack/react-router';
 import { ContentProvider } from '@/features/content/components';
 import { mainLayoutRoute } from './_main';
 
-export const reviewDetailRoute = createRoute({
+export const draftContentDetailRoute = createRoute({
   getParentRoute: () => mainLayoutRoute,
-  path: '/review/detail/$contentId',
+  path: '/draft/detail/$contentId',
   component: () => (
     <ContentProvider>
-      <ContentCrawlDetailPageComponent />
+      <DraftContentDetailPageComponent />
     </ContentProvider>
   ),
+  validateSearch: draftContentSearchSchema,
 });

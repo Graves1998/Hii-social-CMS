@@ -2,7 +2,6 @@ import { cn } from '@/lib';
 import { ContentItem, ContentStatus, STATUS_LABELS, Typography } from '@/shared';
 import { useNavigate } from '@tanstack/react-router';
 import { Check, ListVideo } from 'lucide-react';
-import { useCrawlStore } from '../stores/useCrawlStore';
 
 type QueueListProps = {
   queueItems: ContentItem[];
@@ -57,11 +56,9 @@ interface QueueItemProps {
 
 function QueueItem({ qItem, activeItem, isSelected, onToggleSelect }: QueueItemProps) {
   const navigate = useNavigate();
-  const { setContentDetails } = useCrawlStore();
   const isPending = qItem.status === ContentStatus.PENDING_REVIEW;
 
   const handleClick = () => {
-    setContentDetails(qItem);
     navigate({
       to: `${qItem.details_link}/$contentId`,
       params: { contentId: qItem.id },
