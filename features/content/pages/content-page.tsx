@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import ContentTable from '@/features/content/components/content-table';
-import { ApproveContentBatchPayload, ContentItem, ContentStatus } from '@/features/content/types';
+import { ContentItem, ContentStatus } from '@/shared';
 import { useAddVideoToPlaylist, useCreatePlaylist } from '@/features/playlist/hooks/usePlaylist';
 import { ContentGrid, ContentGridSkeleton, ContentTableSkeleton } from '@/shared/components';
 import { useNavigate, useRouteContext, useSearch } from '@tanstack/react-router';
@@ -17,6 +17,7 @@ import Media from '../components/media';
 import { useApproveContents, useContent, useRejectContents } from '../hooks/useContent';
 import { ContentSearchSchema } from '../schemas';
 import { useContentStore } from '../stores/useContentStore';
+import { ApproveContentBatchPayload } from '../types';
 
 function ContentPageComponent() {
   const navigate = useNavigate();

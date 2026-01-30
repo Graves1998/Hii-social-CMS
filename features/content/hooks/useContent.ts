@@ -1,6 +1,7 @@
 import { queryClient } from '@/lib';
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { useSearch } from '@tanstack/react-router';
+import { ContentStatus } from '@/shared';
 import { queryKeys } from '../query-keys';
 import { ContentSearchSchema } from '../schemas/content-search.schema';
 import { ContentSchema } from '../schemas/content.schema';
@@ -8,7 +9,6 @@ import { contentService } from '../services/content-service';
 import {
   ApproveContentBatchPayload,
   ApproveContentPayload,
-  ContentStatus,
   GetContentResponse,
   PublishContentPayload,
   RejectContentBatchPayload,

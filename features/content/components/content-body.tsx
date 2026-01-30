@@ -1,7 +1,5 @@
-import { VideoPlayer } from '@/shared';
+import { VideoPlayer, MediaType, ContentItem } from '@/shared';
 import { MediaCarousel } from './media-carousel';
-import type { ContentItem } from '../types';
-import { MediaType } from '../types';
 
 interface ContentBodyProps {
   content: ContentItem;

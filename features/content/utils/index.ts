@@ -2,25 +2,11 @@ import {
   ContentItem,
   ContentStatus,
   MediaType,
-  Reel,
   SourcePlatform,
   SourceType,
-  Video,
-} from '../types';
-
-const checkScheduledAtValidTime = (scheduledAt: string) => {
-  return new Date(scheduledAt).getTime() > new Date().getTime();
-};
-
-const contentStatus = (content: Reel) => {
-  if (checkScheduledAtValidTime(content.scheduled_at)) {
-    return ContentStatus.SCHEDULED;
-  }
-  if (content.status === ContentStatus.PUBLISHED) {
-    return ContentStatus.PUBLISHED;
-  }
-  return content.approving_status as ContentStatus;
-};
+  STATUS_LABELS,
+} from '@/shared';
+import { Reel, Video } from '../types';
 
 export const transformCrawlContent = (content: Video): ContentItem => {
   return {
@@ -75,18 +61,6 @@ export const transformReelContent = (content: Reel): ContentItem => {
   };
 };
 
-export const LABEL_STATUS = {
-  [ContentStatus.PENDING_REVIEW]: 'Chờ Duyệt',
-  [ContentStatus.APPROVED]: 'Đã Duyệt',
-  [ContentStatus.SCHEDULED]: 'Đã Lên Lịch',
-  [ContentStatus.PUBLISHED]: 'Đã Đăng',
-  [ContentStatus.REJECTED]: 'Bị Từ Chối',
-  [ContentStatus.ALL]: 'Tất cả',
-  [ContentStatus.DRAFT]: 'Nháp',
-  [ContentStatus.ARCHIVED]: 'Lưu Trữ',
-  [ContentStatus.PRIVATE]: 'Riêng Tư',
-};
-
 export const transformStatusLabel = (status: string) => {
-  return LABEL_STATUS[status as ContentStatus];
+  return STATUS_LABELS[status as ContentStatus];
 };

@@ -1,7 +1,7 @@
 import { Filter, Hash, Layers, LayoutGrid, Rows, Search } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
-import { ContentStatus } from '@/features/content/types';
+import { ContentStatus } from '@/shared';
 import { FilterSkeleton } from '@/shared/components';
 import {
   Input,

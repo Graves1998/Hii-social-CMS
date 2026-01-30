@@ -1,4 +1,4 @@
-import { Media } from '@/features/content';
+import type { Media } from '@/features/content';
 
 export enum ContentStatus {
   ALL = '',
