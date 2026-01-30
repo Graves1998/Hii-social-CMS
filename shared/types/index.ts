@@ -1,3 +1,5 @@
+import { Media } from '@/features/content';
+
 export enum ContentStatus {
   ALL = '',
   PENDING_REVIEW = 'pending',
@@ -16,6 +18,7 @@ export enum MediaType {
   TEXT = 'article',
   IMAGE = 'image',
   LINK = 'link',
+  REEL = 'reel',
 }
 
 export enum SourceType {
@@ -65,6 +68,7 @@ export interface ContentItem {
   details_link?: string;
   scheduled_at?: string;
   categories?: string[];
+  media?: Media[];
 }
 export interface User {
   id: string;

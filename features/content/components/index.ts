@@ -17,3 +17,5 @@ export { FloatingBatchActionBar } from './floating-batch-action-bar';
 export { default as ContentHeader } from './content-header';
 export { default as DraftContentHeader } from './draft-content-header';
 export { default as DraftContentTable } from './draft-content-table';
+export { default as ContentBody } from './content-body';
+export { MediaCarousel } from './media-carousel';

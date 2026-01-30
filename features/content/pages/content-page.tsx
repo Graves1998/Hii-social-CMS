@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import ContentTable from '@/features/content/components/content-table';
 import { ApproveContentBatchPayload, ContentItem, ContentStatus } from '@/features/content/types';
 import { ContentGrid, ContentGridSkeleton, ContentTableSkeleton } from '@/shared/components';
-// import { useInfiniteScroll } from '@/shared/hooks';
 import { useNavigate, useRouteContext, useSearch } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import useInfiniteScroll from 'react-infinite-scroll-hook';
@@ -171,11 +170,18 @@ function ContentPageComponent() {
     );
   };
 
-  // Count items eligible for approve (PENDING_REVIEW only)
+  // Count items eligible for approve (PENDING_REVIEW)
   const batchApproveCount = items?.filter((i: ContentItem) => selectedIds.includes(i.id)).length;
 
-  // Count items eligible for reject (PENDING_REVIEW or APPROVED)
+  // Count items eligible for reject (PENDING_REVIEW)
   const batchRejectCount = items?.filter((i: ContentItem) => selectedIds.includes(i.id)).length;
+
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    return () => {
+      setSelectedIds([]);
+    };
+  }, []);
 
   return (
     <div className="relative flex h-full flex-col space-y-8">

@@ -54,7 +54,7 @@ export const transformReelContent = (content: Reel): ContentItem => {
     short_description: content.description,
     thumbnail_url: content.thumbnail.url,
     content_id: content.id,
-    media_type: content.media?.[0].type as MediaType,
+    media_type: content.type as MediaType,
     media_url: content.media?.[0].url,
     source_type: SourceType.MANUAL,
     source_platform: content.type as SourcePlatform,
@@ -71,6 +71,7 @@ export const transformReelContent = (content: Reel): ContentItem => {
     details_link: `/content/detail`,
     scheduled_at: content.scheduled_at,
     categories: content.categories || [],
+    media: content.media || [],
   };
 };
 
