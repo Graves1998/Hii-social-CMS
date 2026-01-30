@@ -1,7 +1,7 @@
 import { Filter, Hash, Layers, LayoutGrid, Rows, Search } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
-import { ContentStatus } from '@/features/content/types';
+import { ContentStatus } from '@/shared';
 import { FilterSkeleton } from '@/shared/components';
 import {
   Input,
@@ -29,7 +29,7 @@ function ContentHeader() {
 
   const filters: ContentSearchSchema = useSearch({ strict: false });
 
-  const { viewMode, setViewMode } = useContentStore();
+  const { viewMode, setViewMode, resetSelectedIds } = useContentStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const updateFilters = useMemo(() => {
@@ -72,6 +72,13 @@ function ContentHeader() {
     }
   };
 
+  const handleFilterStatus = (status: string) => {
+    setFilters('approving_status', status);
+    if (status !== ContentStatus.APPROVED) {
+      resetSelectedIds();
+    }
+  };
+
   const statusTabs = useMemo(() => {
     const tabs = approvingStatus
       ?.filter((tab) => tab.slug !== 'draft')
@@ -99,7 +106,7 @@ function ContentHeader() {
               <button
                 key={tab.slug}
                 type="button"
-                onClick={() => setFilters('approving_status', tab.slug)}
+                onClick={() => handleFilterStatus(tab.slug)}
                 className={`flex items-center gap-2 border px-4 py-2 font-mono text-[10px] uppercase transition-all ${
                   filters.approving_status === tab.slug
                     ? 'border-white bg-white text-black'

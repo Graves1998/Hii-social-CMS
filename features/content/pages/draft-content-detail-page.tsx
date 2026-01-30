@@ -179,19 +179,14 @@ function DetailPageComponent() {
           {/* UI Overlay */}
           <div className="ui-overlay">
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-[#00ff66] shadow-[0_0_10px_#00ff66]" />{' '}
-                GHI
-              </span>
-              <span>{new Date().toLocaleTimeString()}</span>
+              <div />
+              <Badge>{new Date(contentDetails.created_at).toLocaleTimeString()}</Badge>
             </div>
             <div className="scanline" />
             <div className="text-right">
               <span>
                 {contentDetails.media_type?.toUpperCase()} {/* HD */}
               </span>
-              <br />
-              <span>BITRATE: 45MBPS</span>
             </div>
           </div>
 
@@ -201,7 +196,7 @@ function DetailPageComponent() {
             url={contentDetails.media_url}
             poster={contentDetails.thumbnail_url}
             title={contentDetails.title}
-            aspectRatio="16/9"
+            aspectRatio="9/16"
             className="video-mock"
           />
         </div>

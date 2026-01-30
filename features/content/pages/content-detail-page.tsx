@@ -1,13 +1,19 @@
 import { STATUS_LABELS } from '@/shared';
-import { DetailPageSkeleton, QueueSkeleton, VideoPlayer } from '@/shared/components';
+import { DetailPageSkeleton, QueueSkeleton } from '@/shared/components';
 import { ContentStatus } from '@/shared/types';
 import { Badge, Button, Typography } from '@/shared/ui';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { AlertTriangle, Globe, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
 import useInfiniteScroll from 'react-infinite-scroll-hook';
-import { Queue, RejectConfirmationModal, ScheduleModal, WorkflowSteps } from '../components';
+import { toast } from 'sonner';
+import {
+  Queue,
+  RejectConfirmationModal,
+  ScheduleModal,
+  WorkflowSteps,
+  ContentBody,
+} from '../components';
 import {
   useApproveContents,
   useContent,
@@ -358,27 +364,13 @@ function DetailPageComponent() {
                 GHI
               </span> */}
               <div />
-              <span>{new Date(item.created_at).toLocaleTimeString()}</span>
+              <Badge>{new Date(item.created_at).toLocaleTimeString()}</Badge>
             </div>
             <div className="scanline" />
-            <div className="text-right">
-              <span>
-                {item.media_type?.toUpperCase()} {/* HD */}
-              </span>
-              <br />
-              <span>BITRATE: 45MBPS</span>
-            </div>
           </div>
 
           {/* Media Content */}
-          {/* <video src={item.media_url} className="video-mock" autoPlay muted loop /> */}
-          <VideoPlayer
-            url={item.media_url}
-            poster={item.thumbnail_url}
-            title={item.title}
-            aspectRatio="16/9"
-            className="video-mock"
-          />
+          <ContentBody content={item} />
         </div>
 
         {/* Close Button */}

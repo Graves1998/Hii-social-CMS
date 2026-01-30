@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import Media from '@/features/content/components/media';
-import { ContentItem } from '@/features/content/types';
+import { ContentItem } from '@/shared';
 import { ContentGridSkeleton, ContentTableSkeleton } from '@/shared/components';
 import ContentGrid from '@/shared/components/content-grid';
 import { Button } from '@/shared/ui';

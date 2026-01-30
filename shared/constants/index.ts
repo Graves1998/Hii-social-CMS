@@ -13,13 +13,13 @@ export const STATUS_COLORS: Record<ContentStatus, string> = {
 };
 
 export const STATUS_LABELS: Record<ContentStatus, string> = {
-  [ContentStatus.ALL]: 'Tất Cả',
-  [ContentStatus.DRAFT]: 'Nháp',
   [ContentStatus.PENDING_REVIEW]: 'Chờ Duyệt',
   [ContentStatus.APPROVED]: 'Đã Duyệt',
   [ContentStatus.SCHEDULED]: 'Đã Lên Lịch',
-  [ContentStatus.REJECTED]: 'Bị Từ Chối',
   [ContentStatus.PUBLISHED]: 'Đã Đăng',
+  [ContentStatus.REJECTED]: 'Bị Từ Chối',
+  [ContentStatus.ALL]: 'Tất cả',
+  [ContentStatus.DRAFT]: 'Nháp',
   [ContentStatus.ARCHIVED]: 'Lưu Trữ',
   [ContentStatus.PRIVATE]: 'Riêng Tư',
 };
