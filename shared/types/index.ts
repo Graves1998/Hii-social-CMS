@@ -36,6 +36,11 @@ export enum UserRole {
   ADMIN = 'Quản Trị Viên',
 }
 
+export enum SortOrder {
+  ASC = 'asc',
+  DESC = 'desc',
+}
+
 export interface ContentItem {
   id: string;
   content_id: string;

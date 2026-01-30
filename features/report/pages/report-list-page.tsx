@@ -1,10 +1,10 @@
+import { RejectConfirmationModal } from '@/features/content/components';
 import { useInfiniteScroll } from '@/shared/hooks';
 import { Button, Input, Typography } from '@/shared/ui';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { AlertTriangle, Check, Filter, Search, Tag, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { RejectConfirmationModal } from '@/features/content/components';
 import { AcceptConfirmationModal, ReportCard } from '../components';
 import {
   useAcceptReport,
@@ -13,29 +13,19 @@ import {
   useReportReasons,
   useReports,
 } from '../hooks/useReport';
-import { useReportStore } from '../stores/useReportStore';
+import { ReportSearchSchema } from '../schema';
 import { ReportStatus } from '../types';
 import { REPORT_STATUS_LABELS } from '../utils';
 
 function ReportListPage() {
   const navigate = useNavigate();
-  const { filters, setFilters } = useReportStore();
   const [searchQuery] = useState('');
   const [selectedVideoIds, setSelectedVideoIds] = useState<string[]>([]);
   const [isAcceptModalOpen, setIsAcceptModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
-  const {
-    data: reports,
-    isLoading,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-  } = useReports({
-    cursor: filters.cursor || undefined,
-    limit: filters.limit || undefined,
-    status: filters.status || undefined,
-  });
+  const filters: ReportSearchSchema = useSearch({ strict: false });
+  const { data: reports, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useReports();
 
   const loadMoreRef = useInfiniteScroll({
     hasNextPage,
@@ -43,6 +33,16 @@ function ReportListPage() {
     isFetchingNextPage,
     threshold: 300,
   });
+
+  const handleFilterStatus = (status: ReportStatus) => {
+    navigate({
+      to: '/report',
+      search: {
+        ...filters,
+        status,
+      },
+    });
+  };
 
   // const debounceFn = useMemo(
   //   () => debounce((value: string) => setFilters('search', value), 500),
@@ -158,7 +158,6 @@ function ReportListPage() {
   };
 
   const statusOptions = [
-    { value: '', label: REPORT_STATUS_LABELS.all },
     { value: ReportStatus.PENDING, label: REPORT_STATUS_LABELS[ReportStatus.PENDING] },
     { value: ReportStatus.RESOLVED, label: REPORT_STATUS_LABELS[ReportStatus.RESOLVED] },
     { value: ReportStatus.REJECTED, label: REPORT_STATUS_LABELS[ReportStatus.REJECTED] },
@@ -214,7 +213,7 @@ function ReportListPage() {
               <button
                 key={option.value}
                 type="button"
-                onClick={() => setFilters('status', option.value as any)}
+                onClick={() => handleFilterStatus(option.value as ReportStatus)}
                 className={`border px-4 py-2 font-mono text-[10px] uppercase transition-all ${
                   filters.status === option.value
                     ? 'border-white bg-white text-black'
@@ -239,7 +238,7 @@ function ReportListPage() {
                 type="button"
                 // onClick={() => setFilters('status', option.id as any)}
                 className={`border px-4 py-2 font-mono text-[10px] uppercase transition-all ${
-                  filters.cursor === option.id
+                  filters.status === option.id
                     ? 'border-white bg-white text-black'
                     : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
                 }`}

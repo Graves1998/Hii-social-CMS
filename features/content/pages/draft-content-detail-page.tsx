@@ -1,19 +1,18 @@
 import { useUser } from '@/features/auth/stores/useAuthStore';
 import { STATUS_LABELS } from '@/shared';
-import { DetailPageSkeleton, VideoPlayer } from '@/shared/components';
+import { DetailPageSkeleton, FilterSkeleton, VideoPlayer } from '@/shared/components';
 import { useInfiniteScroll } from '@/shared/hooks/useInfiniteScroll';
 import { ContentStatus, UserRole } from '@/shared/types';
 import { Badge, Button, Textarea, Typography } from '@/shared/ui';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { AlertTriangle, Globe, Hash, X } from 'lucide-react';
+import { AlertTriangle, Globe, X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { useEffect, useRef } from 'react';
 import { Queue, useContentContext, WorkflowSteps } from '../components';
 import { useCreateContent } from '../hooks/useContent';
-import { useCrawlContent, useGetContentCrawlerDetails } from '../hooks/useCrawlContent';
+import { useDraftContent, useGetDraftContentDetails } from '../hooks/useDraftContent';
 import { ContentSchema } from '../schemas/content.schema';
-import { useCrawlStore } from '../stores/useCrawlStore';
 
 function DetailPageComponent() {
   const { contentId } = useParams({ strict: false });
@@ -23,7 +22,7 @@ function DetailPageComponent() {
     hasNextPage,
     isFetchingNextPage,
     isLoading: isLoadingCrawlContent,
-  } = useCrawlContent();
+  } = useDraftContent();
 
   // Infinite scroll for queue
   const loadMoreRef = useInfiniteScroll({
@@ -34,14 +33,17 @@ function DetailPageComponent() {
   });
 
   const { mutate: createContent } = useCreateContent();
-  const { selectedIds } = useCrawlStore();
 
   const navigate = useNavigate();
   const currentUser = useUser();
 
   const { platforms, categories } = useContentContext();
 
-  const { data: contentDetails, isFetched } = useGetContentCrawlerDetails(Number(contentId));
+  const {
+    data: contentDetails,
+    isFetched,
+    isLoading: isLoadingContentDetails,
+  } = useGetDraftContentDetails(Number(contentId));
   const firstFetch = useRef(false);
 
   useEffect(() => {
@@ -117,11 +119,11 @@ function DetailPageComponent() {
           const nextItem = crawlContent?.[itemIndex + 1];
           if (nextItem) {
             navigate({
-              to: '/review/detail/$contentId',
+              to: '/draft/detail/$contentId',
               params: { contentId: nextItem.id },
             });
           } else {
-            navigate({ to: '/review' });
+            navigate({ to: '/draft' });
           }
         },
         onError: () => {
@@ -132,16 +134,11 @@ function DetailPageComponent() {
     );
   };
 
-  if (!contentDetails) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center font-mono text-zinc-500 uppercase">
-        <AlertTriangle size={48} className="mb-4 opacity-50" />
-        <p className="font-semibold">KHÔNG TÌM THẤY TÀI NGUYÊN</p>
-        <Button variant="link" onClick={() => navigate({ to: '/content' })}>
-          QUAY LẠI DANH SÁCH
-        </Button>
-      </div>
-    );
+  if (isLoadingCrawlContent || isLoadingContentDetails) {
+    return <DetailPageSkeleton />;
+  }
+  if (!crawlContent || !contentDetails) {
+    return <EmptyDetailPage />;
   }
 
   const isEditable =
@@ -157,18 +154,9 @@ function DetailPageComponent() {
 
   const currentStepIndex = workflowSteps.findIndex((s) => s.id === contentDetails.status);
   const isRejected = contentDetails.status === ContentStatus.REJECTED;
-  const isArchived = contentDetails.status === ContentStatus.ARCHIVED;
 
   let activeIndex = currentStepIndex;
   if (isRejected) activeIndex = 1;
-  if (isArchived) activeIndex = 5;
-
-  if (isLoadingCrawlContent) {
-    return <DetailPageSkeleton />;
-  }
-  if (!crawlContent) {
-    return <EmptyDetailPage />;
-  }
 
   return (
     <div className="detail-layout animate-in fade-in duration-300">
@@ -180,7 +168,6 @@ function DetailPageComponent() {
           loadMoreRef={loadMoreRef}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
-          selectedIds={selectedIds}
         />
       </aside>
 
@@ -224,7 +211,7 @@ function DetailPageComponent() {
         <Button
           variant="ghost"
           className="absolute top-4 right-4 z-40 text-zinc-500 hover:text-white"
-          onClick={() => navigate({ to: '/review' })}
+          onClick={() => navigate({ to: '/draft' })}
         >
           <X size={20} />
         </Button>
@@ -251,46 +238,54 @@ function DetailPageComponent() {
         </div>
 
         {/* DISTRIBUTION NETWORKS */}
-        <div className="flex flex-col gap-2">
-          <Typography variant="tiny" className="text-muted-foreground font-medium">
-            MẠNG LƯỚI PHÂN PHỐI
-          </Typography>
-          <div className="flex flex-wrap gap-1.5">
-            {platforms?.map((platform) => (
-              <Badge
-                key={platform.id}
-                variant={watchPlatforms.includes(platform.api_key) ? 'default' : 'outline'}
-                onClick={() => handleUpdateMetadata('platforms', platform.api_key)}
-                className="cursor-pointer transition-colors"
-              >
-                <Globe size={10} />
-                {platform.api_key}
-              </Badge>
-            ))}
+        {platforms.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            <Typography variant="tiny" className="text-muted-foreground font-medium">
+              MẠNG LƯỚI PHÂN PHỐI
+            </Typography>
+            <div className="flex flex-wrap gap-1.5">
+              {platforms?.map((platform) => (
+                <Badge
+                  key={platform.id}
+                  variant={watchPlatforms?.includes(platform.api_key) ? 'default' : 'outline'}
+                  onClick={() => handleUpdateMetadata('platforms', platform.api_key)}
+                  className="cursor-pointer transition-colors"
+                >
+                  <Globe size={10} />
+                  {platform.api_key}
+                </Badge>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <FilterSkeleton count={3} />
+        )}
 
-        <div className="space-y-3">
-          <Typography variant="tiny" className="text-muted-foreground font-medium">
-            DANH MỤC
-          </Typography>
-          <div className="flex flex-wrap gap-1">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => handleUpdateMetadata('categories', cat.name)}
-                className={`border px-3 py-1 font-mono text-[10px] transition-all ${
-                  watchCategories.includes(cat.name)
-                    ? 'border-white bg-white text-black'
-                    : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
+        {categories.length > 0 ? (
+          <div className="space-y-3">
+            <Typography variant="tiny" className="text-muted-foreground font-medium">
+              DANH MỤC
+            </Typography>
+            <div className="flex flex-wrap gap-1">
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => handleUpdateMetadata('categories', cat.name)}
+                  className={`border px-3 py-1 font-mono text-[10px] transition-all ${
+                    watchCategories?.includes(cat.name)
+                      ? 'border-white bg-white text-black'
+                      : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <FilterSkeleton count={3} />
+        )}
 
         {/* TAGS */}
         <div className="flex flex-col gap-2">
@@ -350,7 +345,7 @@ function EmptyDetailPage() {
     <div className="flex h-full flex-col items-center justify-center font-mono text-zinc-500 uppercase">
       <AlertTriangle size={48} className="mb-4 opacity-50" />
       <p className="font-semibold">KHÔNG TÌM THẤY TÀI NGUYÊN</p>
-      <Button variant="link" onClick={() => navigate({ to: '/content/crawl' })}>
+      <Button variant="link" onClick={() => navigate({ to: '/draft' })}>
         QUAY LẠI DANH SÁCH
       </Button>
     </div>

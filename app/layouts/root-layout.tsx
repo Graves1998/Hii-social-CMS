@@ -11,8 +11,8 @@ import {
   registerRoute,
   reportDetailRoute,
   reportRoute,
-  reviewDetailRoute,
-  reviewRoute,
+  draftContentDetailRoute,
+  draftContentRoute,
 } from '../routes';
 import { mainLayoutRoute } from '../routes/_main';
 import { rootRoute, type RouterContext } from '../routes/_root';
@@ -39,8 +39,8 @@ const routeTree = rootRoute.addChildren([
     contentDetailRoute,
     auditRoute,
     createContentRoute,
-    reviewRoute,
-    reviewDetailRoute,
+    draftContentRoute,
+    draftContentDetailRoute,
     reportRoute,
     reportDetailRoute,
   ]),

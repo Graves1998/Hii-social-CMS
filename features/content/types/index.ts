@@ -114,7 +114,7 @@ export interface PaginatedResponse {
   videos: Video[];
   pagination: Pagination;
 }
-export interface MakeVideoCrawlerPayload {
+export interface MakeDraftContentPreviewPayload {
   is_previewed: boolean;
   message: string;
   video_id: number;

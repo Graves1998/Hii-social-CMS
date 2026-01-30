@@ -21,7 +21,7 @@ function DashboardPage() {
   const handleNavigate = (filter: { status?: string; source?: string }) => {
     if (filter.status === ContentStatus.DRAFT) {
       navigate({
-        to: '/review',
+        to: '/draft',
       });
     } else {
       navigate({

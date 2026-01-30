@@ -178,7 +178,7 @@ function ContentPageComponent() {
   const batchRejectCount = items?.filter((i: ContentItem) => selectedIds.includes(i.id)).length;
 
   return (
-    <div className="relative space-y-8">
+    <div className="relative flex h-full flex-col space-y-8">
       <ContentHeader />
       {isLoading && viewMode === 'table' && <ContentTableSkeleton rows={10} />}
       {isLoading && viewMode === 'grid' && <ContentGridSkeleton count={12} />}

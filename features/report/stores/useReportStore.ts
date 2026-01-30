@@ -8,27 +8,6 @@ interface ReportFilters {
   search: string;
 }
 
-interface ReportStore {
-  filters: ReportFilters;
-  setFilters: <K extends keyof ReportFilters>(key: K, value: ReportFilters[K]) => void;
-  resetFilters: () => void;
-}
+interface ReportStore {}
 
-const initialFilters: ReportFilters = {
-  cursor: '',
-  limit: 20,
-  status: '',
-  search: '',
-};
-
-export const useReportStore = create<ReportStore>((set) => ({
-  filters: initialFilters,
-  setFilters: (key, value) =>
-    set((state) => ({
-      filters: {
-        ...state.filters,
-        [key]: value,
-      },
-    })),
-  resetFilters: () => set({ filters: initialFilters }),
-}));
+export const useReportStore = create<ReportStore>((set) => ({}));

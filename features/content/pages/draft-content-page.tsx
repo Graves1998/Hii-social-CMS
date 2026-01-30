@@ -1,27 +1,17 @@
-import { Filter, LayoutGrid, Rows, Search } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import Media from '@/features/content/components/media';
 import { ContentItem } from '@/features/content/types';
 import { ContentGridSkeleton, ContentTableSkeleton } from '@/shared/components';
 import ContentGrid from '@/shared/components/content-grid';
 import { useInfiniteScroll } from '@/shared/hooks';
-import {
-  Button,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Typography,
-} from '@/shared/ui';
+import { Button } from '@/shared/ui';
 import { useNavigate } from '@tanstack/react-router';
-import { debounce } from 'lodash';
 import { toast } from 'sonner';
 import { ContentTable, RejectConfirmationModal } from '../components';
-import { useCrawlContent, useMakeVideoCrawler } from '../hooks/useCrawlContent';
-import { useCrawlStore } from '../stores/useCrawlStore';
+import DraftContentHeader from '../components/draft-content-header';
+import { useDraftContent, useMakeDraftContentPreview } from '../hooks/useDraftContent';
+import { useDraftContentStore } from '../stores/useDraftContentStore';
 
 function ContentCrawlPageComponent() {
   const navigate = useNavigate();
@@ -33,7 +23,7 @@ function ContentCrawlPageComponent() {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useCrawlContent();
+  } = useDraftContent();
 
   // Infinite scroll
   const loadMoreRef = useInfiniteScroll({
@@ -43,16 +33,14 @@ function ContentCrawlPageComponent() {
     threshold: 300,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
   const [isBatchRejectModalOpen, setIsBatchRejectModalOpen] = useState(false);
 
-  const { setContentDetails, resetFilters } = useCrawlStore();
+  const { viewMode } = useDraftContentStore();
 
-  const { mutate: makeVideoCrawler } = useMakeVideoCrawler();
+  const { mutate: makeDraftContentPreview } = useMakeDraftContentPreview();
 
   const handleNavigateToDetail = (item: ContentItem) => {
-    makeVideoCrawler({
+    makeDraftContentPreview({
       payload: {
         is_previewed: true,
         message: 'Ok',
@@ -60,7 +48,6 @@ function ContentCrawlPageComponent() {
       },
       video_id: Number(item.id),
     });
-    setContentDetails(item);
     navigate({
       to: `${item.details_link}/$contentId`,
       params: { contentId: item.id },
@@ -83,7 +70,7 @@ function ContentCrawlPageComponent() {
 
     // Make all videos as previewed (approve for crawl)
     const promises = eligibleApprovals.map((item: ContentItem) =>
-      makeVideoCrawler({
+      makeDraftContentPreview({
         payload: {
           is_previewed: true,
           message: 'Approved by admin',
@@ -136,7 +123,7 @@ function ContentCrawlPageComponent() {
 
     // Make all videos as rejected
     const promises = eligibleRejections.map((item: ContentItem) =>
-      makeVideoCrawler({
+      makeDraftContentPreview({
         payload: {
           is_previewed: false,
           message: reason,
@@ -163,119 +150,15 @@ function ContentCrawlPageComponent() {
       });
   };
 
-  const { filters, setFilters } = useCrawlStore();
-
-  const debounceFn = useMemo(
-    () => debounce((value: string) => setFilters('search', value), 500),
-    [setFilters]
-  );
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    setSearchQuery(value);
-    debounceFn(value);
-  };
-
-  const sortOrderOptions = [
-    { id: 'asc', label: 'Mới nhất' },
-    { id: 'desc', label: 'Cũ nhất' },
-  ];
-
-  const categoryOptions = [
-    { id: 'false', label: 'Chưa xem trước' },
-    { id: 'true', label: 'Đã xem trước' },
-  ];
-
   // Count selected items for approve/reject
   const batchApproveCount = crawlContent.filter((i: ContentItem) =>
     selectedIds.includes(i.id)
   ).length;
   const batchRejectCount = batchApproveCount; // Same for crawl page
 
-  useEffect(() => {
-    return () => {
-      resetFilters();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
-    <div className="relative space-y-8">
-      <div className="flex flex-col gap-6">
-        {/* Status Filter */}
-        <div className="space-y-3">
-          <Typography variant="tiny" className="flex items-center gap-2 font-mono text-zinc-500">
-            <Filter size={10} /> Lọc Xem Trước
-          </Typography>
-          <div className="flex flex-wrap gap-1">
-            {categoryOptions?.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setFilters('is_previewed', tab.id)}
-                className={`flex items-center gap-2 border px-4 py-2 font-mono text-[10px] uppercase transition-all ${
-                  filters.is_previewed === tab.id
-                    ? 'border-white bg-white text-black'
-                    : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col gap-4 md:flex-row">
-          <div className="flex-1">
-            <div className="group relative">
-              <Search className="absolute top-2.5 left-3 h-4 w-4 text-zinc-600 transition-colors group-hover:text-white" />
-              <Input
-                placeholder="TÌM KIẾM..."
-                className="h-10 border-white/10 bg-black pl-10 font-mono text-xs text-white uppercase focus:border-white"
-                value={searchQuery}
-                onChange={handleSearch}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select
-              value={filters.sort_order}
-              onValueChange={(value) => setFilters('sort_order', value)}
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Sắp xếp theo" />
-              </SelectTrigger>
-
-              <SelectContent>
-                {sortOrderOptions.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="flex border border-white/10 bg-black p-1">
-              <button
-                type="button"
-                className={`flex h-8 w-8 items-center justify-center transition-colors ${
-                  viewMode === 'grid' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'
-                }`}
-                onClick={() => setViewMode('grid')}
-              >
-                <LayoutGrid size={16} />
-              </button>
-              <button
-                type="button"
-                className={`flex h-8 w-8 items-center justify-center transition-colors ${
-                  viewMode === 'table' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'
-                }`}
-                onClick={() => setViewMode('table')}
-              >
-                <Rows size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="relative flex h-full flex-col space-y-8">
+      <DraftContentHeader />
 
       {_isLoadingCrawlContent && viewMode === 'table' && <ContentTableSkeleton rows={10} />}
       {_isLoadingCrawlContent && viewMode === 'grid' && <ContentGridSkeleton count={12} />}
