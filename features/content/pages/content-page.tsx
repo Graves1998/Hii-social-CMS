@@ -2,11 +2,17 @@ import { useEffect, useState } from 'react';
 
 import ContentTable from '@/features/content/components/content-table';
 import { ApproveContentBatchPayload, ContentItem, ContentStatus } from '@/features/content/types';
+import { useAddVideoToPlaylist, useCreatePlaylist } from '@/features/playlist/hooks/usePlaylist';
 import { ContentGrid, ContentGridSkeleton, ContentTableSkeleton } from '@/shared/components';
 import { useNavigate, useRouteContext, useSearch } from '@tanstack/react-router';
-import { toast } from 'sonner';
 import useInfiniteScroll from 'react-infinite-scroll-hook';
-import { ContentHeader, FloatingBatchActionBar, RejectConfirmationModal } from '../components';
+import { toast } from 'sonner';
+import {
+  AddToPlaylistModal,
+  ContentHeader,
+  FloatingBatchActionBar,
+  RejectConfirmationModal,
+} from '../components';
 import Media from '../components/media';
 import { useApproveContents, useContent, useRejectContents } from '../hooks/useContent';
 import { ContentSearchSchema } from '../schemas';
@@ -37,6 +43,7 @@ function ContentPageComponent() {
   const { selectedIds, setSelectedIds, viewMode } = useContentStore((state) => state);
 
   const [isBatchRejectModalOpen, setIsBatchRejectModalOpen] = useState(false);
+  const [isAddToPlaylistModalOpen, setIsAddToPlaylistModalOpen] = useState(false);
 
   // Infinite scroll for Grid view
   const [loadMoreRef] = useInfiniteScroll({
@@ -48,6 +55,8 @@ function ContentPageComponent() {
   // Batch mutations
   const { mutate: approveContents, isPending: isApprovingBatch } = useApproveContents();
   const { mutate: rejectContents, isPending: isRejectingBatch } = useRejectContents();
+  const { mutate: addVideoToPlaylist } = useAddVideoToPlaylist();
+  const { mutate: createPlaylist } = useCreatePlaylist();
 
   const handleNavigateToDetail = (item: ContentItem) => {
     navigate({
@@ -120,8 +129,7 @@ function ContentPageComponent() {
   const handleBatchReject = () => {
     const eligibleRejections = items?.filter(
       (item: ContentItem) =>
-        selectedIds.includes(item.id) &&
-        (item.status === ContentStatus.PENDING_REVIEW || item.status === ContentStatus.APPROVED)
+        selectedIds.includes(item.id) && item.status === ContentStatus.PENDING_REVIEW
     );
 
     if (!eligibleRejections || eligibleRejections.length === 0) {
@@ -138,8 +146,7 @@ function ContentPageComponent() {
   const handleConfirmBatchReject = (reason: string) => {
     const eligibleRejections = items?.filter(
       (item: ContentItem) =>
-        selectedIds.includes(item.id) &&
-        (item.status === ContentStatus.PENDING_REVIEW || item.status === ContentStatus.APPROVED)
+        selectedIds.includes(item.id) && item.status === ContentStatus.PENDING_REVIEW
     );
 
     if (!eligibleRejections || eligibleRejections.length === 0) return;
@@ -171,16 +178,93 @@ function ContentPageComponent() {
   };
 
   // Count items eligible for approve (PENDING_REVIEW)
-  const batchApproveCount = items?.filter((i: ContentItem) => selectedIds.includes(i.id)).length;
+  const batchApproveCount = items?.filter(
+    (i: ContentItem) => selectedIds.includes(i.id) && i.status === ContentStatus.PENDING_REVIEW
+  ).length;
 
   // Count items eligible for reject (PENDING_REVIEW)
-  const batchRejectCount = items?.filter((i: ContentItem) => selectedIds.includes(i.id)).length;
+  const batchRejectCount = items?.filter(
+    (i: ContentItem) => selectedIds.includes(i.id) && i.status === ContentStatus.PENDING_REVIEW
+  ).length;
+
+  // Add to Playlist handlers
+  const handleOpenAddToPlaylist = () => {
+    if (selectedIds.length === 0) {
+      toast.error('Vui lòng chọn ít nhất 1 video');
+      return;
+    }
+
+    // Check if all selected videos are published
+    const selectedItems = items?.filter((item) => selectedIds.includes(item.id)) || [];
+    const hasNonPublished = selectedItems.some(
+      (item) => item.approving_status !== ContentStatus.PUBLISHED
+    );
+
+    if (hasNonPublished) {
+      toast.error('Chỉ có thể thêm video đã đăng vào playlist');
+      return;
+    }
+
+    setIsAddToPlaylistModalOpen(true);
+  };
+
+  const handleAddToPlaylist = (playlistId: string) => {
+    // Add each selected video to the playlist
+    let successCount = 0;
+    const totalCount = selectedIds.length;
+
+    selectedIds.forEach((videoId, index) => {
+      addVideoToPlaylist(
+        {
+          playlistId,
+          payload: { video_id: videoId },
+        },
+        {
+          onSuccess: () => {
+            successCount += 1;
+            // Show toast only after last video
+            if (index === totalCount - 1) {
+              toast.success(`Đã thêm ${successCount} video vào playlist`);
+              setSelectedIds([]);
+            }
+          },
+          onError: () => {
+            // Show toast only after last video
+            if (index === totalCount - 1) {
+              if (successCount > 0) {
+                toast.warning(`Đã thêm ${successCount}/${totalCount} video vào playlist`);
+              } else {
+                toast.error('Thêm video thất bại');
+              }
+              setSelectedIds([]);
+            }
+          },
+        }
+      );
+    });
+  };
+
+  const handleCreatePlaylistWithVideos = (name: string, description: string) => {
+    createPlaylist(
+      {
+        name,
+        description: description || undefined,
+        video_ids: selectedIds,
+      },
+      {
+        onSuccess: () => {
+          setSelectedIds([]);
+        },
+      }
+    );
+  };
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     return () => {
       setSelectedIds([]);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -195,12 +279,14 @@ function ContentPageComponent() {
           onView={handleNavigateToDetail}
           selectedIds={selectedIds}
           onToggleSelect={
-            filters.approving_status === ContentStatus.PENDING_REVIEW
+            filters.approving_status === ContentStatus.PENDING_REVIEW ||
+            filters.approving_status === ContentStatus.PUBLISHED
               ? handleToggleSelect
               : undefined
           }
           onToggleAll={
-            filters.approving_status === ContentStatus.PENDING_REVIEW
+            filters.approving_status === ContentStatus.PENDING_REVIEW ||
+            filters.approving_status === ContentStatus.PUBLISHED
               ? () => handleSelectAll(items || [])
               : undefined
           }
@@ -218,13 +304,14 @@ function ContentPageComponent() {
           isFetchingNextPage={isFetchingNextPage}
         >
           {items?.map((item: ContentItem) => {
-            const isPending = item.status === ContentStatus.PENDING_REVIEW;
+            const canSelect = item.approving_status === filters.approving_status;
+
             return (
               <Media
                 item={item}
                 onView={() => handleNavigateToDetail(item)}
                 isSelected={selectedIds.includes(item.id)}
-                onToggleSelect={isPending ? handleToggleSelect : undefined}
+                onToggleSelect={canSelect ? handleToggleSelect : undefined}
                 key={item.content_id}
               />
             );
@@ -233,24 +320,47 @@ function ContentPageComponent() {
       )}
 
       {/* Floating Batch Action Bar */}
-      <FloatingBatchActionBar
-        selectedCount={selectedIds.length}
-        approveCount={batchApproveCount}
-        rejectCount={batchRejectCount}
-        isApproving={isApprovingBatch}
-        isRejecting={isRejectingBatch}
-        onApprove={handleBatchApprove}
-        onReject={handleBatchReject}
-        onCancel={() => {
-          setSelectedIds([]);
-        }}
-      />
+      {selectedIds.length > 0 && (
+        <FloatingBatchActionBar
+          selectedCount={selectedIds.length}
+          approveCount={
+            filters.approving_status === ContentStatus.PENDING_REVIEW
+              ? batchApproveCount
+              : undefined
+          }
+          rejectCount={
+            filters.approving_status === ContentStatus.PENDING_REVIEW ? batchRejectCount : undefined
+          }
+          isApproving={isApprovingBatch}
+          isRejecting={isRejectingBatch}
+          onApprove={handleBatchApprove}
+          onReject={handleBatchReject}
+          onCancel={() => {
+            setSelectedIds([]);
+          }}
+          // Add to Playlist action (only for PUBLISHED status)
+          onAddToPlaylist={
+            filters.approving_status === ContentStatus.PUBLISHED
+              ? handleOpenAddToPlaylist
+              : undefined
+          }
+        />
+      )}
 
       {/* Batch Reject Confirmation Modal */}
       <RejectConfirmationModal
         isOpen={isBatchRejectModalOpen}
         onClose={() => setIsBatchRejectModalOpen(false)}
         onConfirm={handleConfirmBatchReject}
+      />
+
+      {/* Add to Playlist Modal */}
+      <AddToPlaylistModal
+        isOpen={isAddToPlaylistModalOpen}
+        onClose={() => setIsAddToPlaylistModalOpen(false)}
+        onAddToPlaylist={handleAddToPlaylist}
+        onCreatePlaylist={handleCreatePlaylistWithVideos}
+        selectedCount={selectedIds.length}
       />
     </div>
   );

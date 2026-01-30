@@ -15,11 +15,13 @@ export interface FloatingBatchActionBarProps {
   onApprove: () => void;
   onReject: () => void;
   onCancel: () => void;
+  onAddToPlaylist?: () => void; // NEW: Add to playlist action
 
   // Customization
   approveLabel?: string;
   rejectLabel?: string;
   cancelLabel?: string;
+  addToPlaylistLabel?: string;
 }
 
 /**
@@ -49,9 +51,11 @@ export function FloatingBatchActionBar({
   onApprove,
   onReject,
   onCancel,
+  onAddToPlaylist,
   approveLabel = 'DUYỆT',
   rejectLabel = 'TỪ CHỐI',
   cancelLabel = 'HỦY',
+  addToPlaylistLabel = 'THÊM VÀO PLAYLIST',
 }: FloatingBatchActionBarProps) {
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -97,6 +101,17 @@ export function FloatingBatchActionBar({
           disabled={rejectCount === 0 || isRejecting}
         >
           {isRejecting ? `ĐANG ${rejectLabel}...` : `${rejectLabel} (${rejectCount || 0})`}
+        </Button>
+      )}
+
+      {/* Add to Playlist Button */}
+      {onAddToPlaylist && (
+        <Button
+          variant="default"
+          onClick={onAddToPlaylist}
+          className="border-white bg-white text-black hover:bg-zinc-200"
+        >
+          {addToPlaylistLabel}
         </Button>
       )}
 

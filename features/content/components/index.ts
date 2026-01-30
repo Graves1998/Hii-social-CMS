@@ -19,3 +19,4 @@ export { default as DraftContentHeader } from './draft-content-header';
 export { default as DraftContentTable } from './draft-content-table';
 export { default as ContentBody } from './content-body';
 export { MediaCarousel } from './media-carousel';
+export { AddToPlaylistModal } from './add-to-playlist-modal';
