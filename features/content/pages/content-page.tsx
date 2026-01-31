@@ -309,7 +309,9 @@ function ContentPageComponent() {
           isFetchingNextPage={isFetchingNextPage}
         >
           {items?.map((item: ContentItem) => {
-            const canSelect = item.approving_status === filters.approving_status;
+            const canSelect =
+              filters.approving_status === ContentStatus.PUBLISHED ||
+              filters.approving_status === ContentStatus.PENDING_REVIEW;
 
             return (
               <Media
