@@ -2,13 +2,17 @@ import { Typography } from '@/shared/ui';
 import { useNavigate } from '@tanstack/react-router';
 import { ListVideo, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { CreatePlaylistModal, DeleteConfirmationModal, PlaylistCard } from '../components';
-// import { useCreatePlaylist, useDeletePlaylist, usePlaylists } from '../hooks/usePlaylist';
+import useInfiniteScroll from 'react-infinite-scroll-hook';
+import { toast } from '@/shared';
 import {
-  useMockCreatePlaylist,
-  useMockDeletePlaylist,
-  useMockPlaylists,
-} from '../mocks/use-mock-service';
+  CreatePlaylistModal,
+  DeleteConfirmationModal,
+  PlaylistCard,
+  PlaylistCardSkeleton,
+  PlaylistGridSkeleton,
+} from '../components';
+import { CreatePlaylistDto } from '../dto';
+import { useCreatePlaylist, useDeletePlaylist, usePlaylists } from '../hooks/usePlaylist';
 import type { Playlist } from '../types';
 
 function PlaylistListPage() {
@@ -18,15 +22,36 @@ function PlaylistListPage() {
   const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
 
   // Queries
-  // const { data: playlists, isLoading } = usePlaylists();
-  const { data: playlists, isLoading } = useMockPlaylists();
+  const {
+    data: playlists,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = usePlaylists({
+    limit: 10,
+  });
+
+  const [loadMoreRef] = useInfiniteScroll({
+    hasNextPage,
+    onLoadMore: fetchNextPage,
+    loading: isFetchingNextPage,
+  });
 
   // Mutations
-  const { mutate: createPlaylist, isPending: isCreating } = useMockCreatePlaylist();
-  const { mutate: deletePlaylist, isPending: isDeleting } = useMockDeletePlaylist();
+  const { mutate: createPlaylist, isPending: isCreating } = useCreatePlaylist();
+  const { mutate: deletePlaylist, isPending: isDeleting } = useDeletePlaylist();
 
-  const handleCreatePlaylist = (payload: any) => {
-    createPlaylist(payload);
+  const handleCreatePlaylist = (payload: CreatePlaylistDto, onSuccess?: () => void) => {
+    createPlaylist(payload, {
+      onSuccess: () => {
+        onSuccess?.();
+        toast.success('Tạo danh sách phát thành công');
+      },
+      onError: () => {
+        toast.error('Tạo danh sách phát thất bại');
+      },
+    });
   };
 
   const handleViewPlaylist = (playlist: Playlist) => {
@@ -38,10 +63,14 @@ function PlaylistListPage() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = (onSuccess?: () => void) => {
     if (playlistToDelete) {
-      deletePlaylist(playlistToDelete.id);
-      setPlaylistToDelete(null);
+      deletePlaylist(playlistToDelete.id, {
+        onSuccess: () => {
+          setPlaylistToDelete(null);
+          onSuccess?.();
+        },
+      });
     }
   };
 
@@ -51,7 +80,7 @@ function PlaylistListPage() {
       <div className="flex items-center justify-between">
         <div>
           <Typography variant="h2" className="font-mono uppercase">
-            Playlists
+            Danh sách phát
           </Typography>
           <Typography variant="small" className="mt-2 font-mono text-zinc-500">
             Quản lý danh sách phát video
@@ -70,16 +99,7 @@ function PlaylistListPage() {
       </div>
 
       {/* Loading State */}
-      {isLoading && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={`playlist-skeleton-${i + 1}`}
-              className="h-80 animate-pulse border border-white/10 bg-zinc-900"
-            />
-          ))}
-        </div>
-      )}
+      {isLoading && <PlaylistGridSkeleton count={8} />}
 
       {/* Empty State */}
       {!isLoading && (!playlists || playlists.length === 0) && (
@@ -105,14 +125,33 @@ function PlaylistListPage() {
       {/* Playlist Grid */}
       {!isLoading && playlists && playlists.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {isCreating && <PlaylistCardSkeleton />}
           {playlists.map((playlist) => (
             <PlaylistCard
               key={playlist.id}
               playlist={playlist}
               onView={handleViewPlaylist}
               onDelete={handleDeletePlaylist}
+              isDeleting={isDeleting}
             />
           ))}
+          {hasNextPage && (
+            <div ref={loadMoreRef} className="h-10">
+              {isFetchingNextPage && (
+                <>
+                  <PlaylistCardSkeleton />
+                  <PlaylistCardSkeleton />
+                  <PlaylistCardSkeleton />
+                  <PlaylistCardSkeleton />
+                </>
+              )}
+              {!isFetchingNextPage && hasNextPage && (
+                <div className="font-mono text-xs text-zinc-600 uppercase">
+                  Cuộn xuống để tải thêm
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -121,9 +160,11 @@ function PlaylistListPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreatePlaylist}
+        isCreating={isCreating}
       />
 
       <DeleteConfirmationModal
+        isDeleting={isDeleting}
         isOpen={isDeleteModalOpen}
         onClose={() => {
           setIsDeleteModalOpen(false);

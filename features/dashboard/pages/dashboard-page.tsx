@@ -73,15 +73,11 @@ function DashboardPage() {
       {/* Header Section */}
       <div className="mb-20 flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
         <div className="flex flex-col gap-2">
-          <Typography variant="tiny">KHÔNG GIAN LÀM VIỆC ALPHA</Typography>
-
-          <Typography
-            variant="h1"
-            className="text-foreground font-mono font-black tracking-tighter uppercase"
-          >
-            Luồng
-            <br />
-            Nội Dung.
+          <Typography variant="h2" className="text-white">
+            TỔNG QUAN
+          </Typography>
+          <Typography variant="small" className="text-muted-foreground font-mono">
+            Tổng quan về tình hình hoạt động của hệ thống
           </Typography>
         </div>
 

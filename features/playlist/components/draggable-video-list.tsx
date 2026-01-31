@@ -18,14 +18,14 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Play, Trash2 } from 'lucide-react';
-import type { PlaylistVideo } from '../types';
+import type { PlaylistContent } from '../types';
 
 interface DraggableVideoListProps {
-  videos: PlaylistVideo[];
+  videos: PlaylistContent[];
   activeVideoId: string | null;
-  onReorder: (videos: PlaylistVideo[]) => void;
-  onPlayVideo: (video: PlaylistVideo) => void;
-  onRemoveVideo: (video: PlaylistVideo) => void;
+  onReorder: (videos: PlaylistContent[]) => void;
+  onPlayVideo: (video: PlaylistContent) => void;
+  onRemoveVideo: (video: PlaylistContent) => void;
 }
 
 export function DraggableVideoList({
@@ -51,7 +51,7 @@ export function DraggableVideoList({
 
       const reorderedVideos = arrayMove(videos, oldIndex, newIndex).map((video, index) => ({
         ...video,
-        position: index,
+        position: index + 1,
       }));
 
       onReorder(reorderedVideos);
@@ -88,10 +88,10 @@ export function DraggableVideoList({
 }
 
 interface SortableVideoItemProps {
-  video: PlaylistVideo;
+  video: PlaylistContent;
   isActive: boolean;
-  onPlay: (video: PlaylistVideo) => void;
-  onRemove: (video: PlaylistVideo) => void;
+  onPlay: (video: PlaylistContent) => void;
+  onRemove: (video: PlaylistContent) => void;
 }
 
 function SortableVideoItem({ video, isActive, onPlay, onRemove }: SortableVideoItemProps) {
@@ -127,7 +127,7 @@ function SortableVideoItem({ video, isActive, onPlay, onRemove }: SortableVideoI
       {/* Position */}
       <div className="flex h-8 w-8 items-center justify-center">
         <Typography variant="small" className="font-mono text-zinc-500">
-          {video.position + 1}
+          {video.position}
         </Typography>
       </div>
 
