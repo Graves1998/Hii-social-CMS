@@ -8,3 +8,6 @@ export { CreatePlaylistModal } from './create-playlist-modal';
 export { PlaylistForm } from './playlist-form';
 export { AddVideosModal } from './add-videos-modal';
 export { DeleteConfirmationModal } from './delete-confirmation-modal';
+
+// Skeletons
+export * from './skeletons';

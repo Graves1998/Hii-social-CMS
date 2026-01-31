@@ -44,8 +44,8 @@ class PlaylistService {
   /**
    * Create new playlist
    */
-  async createPlaylist(payload: CreatePlaylistDto): Promise<PlaylistDetailResponseDto> {
-    const response = await api.post<PlaylistDetailResponseDto>(this.baseUrl, payload);
+  async createPlaylist(payload: CreatePlaylistDto): Promise<PlaylistDto> {
+    const response = await api.post<PlaylistDto>(this.baseUrl, payload);
     return response;
   }
 

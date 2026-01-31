@@ -168,12 +168,11 @@ function ReportListPage() {
       {/* Header */}
       <div className="sticky top-0 z-10 flex items-center justify-between bg-black/80 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <AlertTriangle className="h-8 w-8 text-red-500" />
           <div>
             <Typography variant="h2" className="text-white">
               BÁO CÁO VI PHẠM
             </Typography>
-            <Typography variant="small" className="text-muted-foreground font-mono">
+            <Typography variant="small" className="text-muted-foreground mt-2 font-mono">
               Quản lý các báo cáo vi phạm từ người dùng
             </Typography>
           </div>

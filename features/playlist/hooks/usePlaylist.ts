@@ -13,7 +13,9 @@ import {
   AddVideosToPlaylistsDto,
   CreatePlaylistDto,
   DeleteVideoFromPlaylistDto,
+  PlaylistDto,
   PlaylistListQueryParamsDto,
+  PlaylistListResponseDto,
   ReorderPlaylistDto,
   UpdatePlaylistDto,
 } from '../dto';
@@ -66,10 +68,6 @@ export function useCreatePlaylist() {
     mutationFn: (payload: CreatePlaylistDto) => playlistService.createPlaylist(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: playlistKeys.lists() });
-      toast.success('TẠO PLAYLIST THÀNH CÔNG');
-    },
-    onError: () => {
-      toast.error('TẠO PLAYLIST THẤT BẠI');
     },
   });
 }

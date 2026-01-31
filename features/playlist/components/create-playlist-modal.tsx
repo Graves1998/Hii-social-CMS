@@ -8,7 +8,7 @@ import { PlaylistForm } from './playlist-form';
 interface CreatePlaylistModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (payload: CreatePlaylistDto) => void;
+  onSubmit: (payload: CreatePlaylistDto, onSuccess?: () => void) => void;
   selectedVideoIds?: string[];
 }
 
@@ -41,14 +41,14 @@ export function CreatePlaylistModal({
   };
 
   const onSubmitForm = (data: CreatePlaylistSchema) => {
-    onSubmit({
-      ...data,
-      video_ids: selectedVideoIds,
-      thumbnail: data.thumbnail || '',
-    });
-
-    // Reset form
-    handleClose();
+    onSubmit(
+      {
+        ...data,
+        video_ids: selectedVideoIds,
+        thumbnail: data.thumbnail || '',
+      },
+      handleClose
+    );
   };
 
   return (

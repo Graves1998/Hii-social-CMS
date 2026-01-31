@@ -4,20 +4,18 @@ import FormField from '@/shared/ui/form-field';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { ArrowLeft, Plus, Save, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { AddVideosModal, DeleteConfirmationModal, DraggableVideoList } from '../components';
-// import {
-//   useAddVideoToPlaylist,
-//   usePlaylist,
-//   useRemoveVideoFromPlaylist,
-//   useReorderPlaylist,
-//   useUpdatePlaylist,
-//   useDeletePlaylist,
-// } from '../hooks/usePlaylist';
-import { UpdatePlaylistDto } from '../dto';
+import {
+  AddVideosModal,
+  DeleteConfirmationModal,
+  DraggableVideoList,
+  DraggableVideoListSkeleton,
+  PlaylistDetailSkeleton,
+  PlaylistFormSkeleton,
+} from '../components';
+
 import { useDeletePlaylist, usePlaylist, useUpdatePlaylist } from '../hooks/usePlaylist';
-import { useMockRemoveVideoFromPlaylist } from '../mocks/use-mock-service';
 import { updatePlaylistSchema, UpdatePlaylistSchema } from '../schema/update-playlist.schema';
 import { usePlaylistStore } from '../stores/usePlaylistStore';
 import type { PlaylistVideo } from '../types';
@@ -49,8 +47,6 @@ function PlaylistDetailPage() {
     video: null,
   });
 
-  // Queries
-  // const { data: playlist, isLoading } = usePlaylist(playlistId!);
   const { data: playlist, isLoading } = usePlaylist(playlistId!);
   const initialRender = useRef(false);
 
@@ -80,7 +76,7 @@ function PlaylistDetailPage() {
     mode: 'all',
   });
 
-  const watchedVideoIds = watch('video_ids') || [];
+  const watchedVideoIds = useMemo(() => watch('video_ids') || [], [watch]);
 
   useEffect(() => {
     if (playlist?.videos && !initialRender.current) {
@@ -164,7 +160,6 @@ function PlaylistDetailPage() {
   const handleReorder = (reorderedVideos: PlaylistVideo[]) => {
     if (!playlistId) return;
 
-    // Update local state immediately for smooth UI
     setPlaylistVideos(reorderedVideos);
     setValue(
       'video_ids',
@@ -173,12 +168,12 @@ function PlaylistDetailPage() {
         shouldDirty: true,
       }
     );
-
-    // Save to backend
   };
 
   // Get active video
   const activeVideo = playlist?.videos?.find((v) => v.id === activeVideoId);
+
+  if (isLoading) return <PlaylistDetailSkeleton />;
 
   return (
     <div className="flex h-full flex-col space-y-6">
@@ -193,21 +188,14 @@ function PlaylistDetailPage() {
         </button>
         <div className="flex-1">
           <Typography variant="h2" className="font-mono uppercase">
-            Chi Tiết Playlist
+            Chi tiết danh sách phát
           </Typography>
         </div>
       </div>
 
-      {/* Loading */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-20">
-          <Typography className="font-mono text-zinc-500">Đang tải...</Typography>
-        </div>
-      )}
-
       {/* Content */}
       {!isLoading && playlist && (
-        <form onSubmit={handleSubmit(handleSave)} className="grid flex-1 gap-6 lg:grid-cols-2">
+        <div className="grid flex-1 gap-6 lg:grid-cols-2">
           {/* Left: Video Player & Info */}
           <div className="space-y-6">
             {/* Video Player */}
@@ -246,97 +234,97 @@ function PlaylistDetailPage() {
                 </div>
               </div>
             )}
-
-            {/* Playlist Info Form */}
-            <div className="space-y-4 border border-white/10 bg-black p-6">
-              <Typography variant="h4" className="font-mono uppercase">
-                Thông Tin Playlist
-              </Typography>
-
-              {/* Name */}
-              <div className="space-y-2">
-                <FormField
-                  control={control}
-                  label="Tên Playlist"
-                  placeholder="Nhập tên đăng nhập..."
-                  {...register('name')}
-                />
-              </div>
-
-              {/* Description */}
-              <div className="space-y-2">
-                <Label className="font-mono text-xs text-zinc-400 uppercase">Mô Tả</Label>
-                <Textarea
-                  {...register('description')}
-                  onChange={(e) => setValue('description', e.target.value, { shouldDirty: true })}
-                  defaultValue={watch('description')}
-                  className="border-white/20"
-                  placeholder="Nhập mô tả..."
-                  rows={3}
-                />
-              </div>
-
-              {/* Thumbnail */}
-              <div className="space-y-2">
-                <Label className="font-mono text-xs text-zinc-400 uppercase">Thumbnail</Label>
-                <ThumbnailUpload
-                  value={watch('thumbnail')}
-                  onChange={(base64: string) =>
-                    setValue('thumbnail', base64, { shouldDirty: true })
-                  }
-                />
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-3 border-t border-white/10 pt-4">
+            {/* Right: Video List */}
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <Typography variant="h4" className="font-mono uppercase">
+                  Danh Sách Video ({playlistVideos.length})
+                </Typography>
                 <Button
-                  type="submit"
-                  disabled={!isDirty || isUpdating}
-                  className="flex-1 border-white bg-white font-mono text-black uppercase hover:bg-zinc-200 disabled:opacity-50"
+                  size="sm"
+                  onClick={() => setIsAddVideoModalOpen(true)}
+                  className="border-white bg-white font-mono text-xs text-black uppercase hover:bg-zinc-200"
                 >
-                  <Save size={16} className="mr-2" />
-                  Lưu
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={handleCancel}
-                  disabled={!isDirty}
-                  className="flex-1 font-mono uppercase hover:bg-white/10 disabled:opacity-50"
-                >
-                  <X size={16} className="mr-2" />
-                  Bỏ Qua
+                  <Plus size={14} className="mr-2" />
+                  Thêm Video
                 </Button>
               </div>
+
+              {/* Draggable List */}
+              <DraggableVideoList
+                videos={playlistVideos}
+                activeVideoId={activeVideoId}
+                onReorder={handleReorder}
+                onPlayVideo={handlePlayVideo}
+                onRemoveVideo={handleRemoveVideo}
+              />
             </div>
           </div>
 
-          {/* Right: Video List */}
-          <div className="space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <Typography variant="h4" className="font-mono uppercase">
-                Danh Sách Video ({playlistVideos.length})
-              </Typography>
+          {/* Playlist Info Form */}
+          <form
+            onSubmit={handleSubmit(handleSave)}
+            className="h-fit space-y-4 border border-white/10 bg-black p-6"
+          >
+            <Typography variant="h4" className="font-mono uppercase">
+              Thông Tin Playlist
+            </Typography>
+
+            {/* Name */}
+            <div className="space-y-2">
+              <FormField
+                control={control}
+                label="Tên Playlist"
+                placeholder="Nhập tên đăng nhập..."
+                {...register('name')}
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label className="font-mono text-xs text-zinc-400 uppercase">Mô Tả</Label>
+              <Textarea
+                {...register('description')}
+                onChange={(e) => setValue('description', e.target.value, { shouldDirty: true })}
+                defaultValue={watch('description')}
+                className="border-white/20"
+                placeholder="Nhập mô tả..."
+                rows={3}
+              />
+            </div>
+
+            {/* Thumbnail */}
+            <div className="space-y-2">
+              <Label className="font-mono text-xs text-zinc-400 uppercase">Thumbnail</Label>
+              <ThumbnailUpload
+                value={watch('thumbnail')}
+                onChange={(base64: string) => setValue('thumbnail', base64, { shouldDirty: true })}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 border-t border-white/10 pt-4">
               <Button
-                size="sm"
-                onClick={() => setIsAddVideoModalOpen(true)}
-                className="border-white bg-white font-mono text-xs text-black uppercase hover:bg-zinc-200"
+                type="submit"
+                disabled={!isDirty || isUpdating}
+                className="flex-1 border-white bg-white font-mono text-black uppercase hover:bg-zinc-200 disabled:opacity-50"
               >
-                <Plus size={14} className="mr-2" />
-                Thêm Video
+                <Save size={16} className="mr-2" />
+                Lưu
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={handleCancel}
+                disabled={!isDirty}
+                className="flex-1 font-mono uppercase hover:bg-white/10 disabled:opacity-50"
+              >
+                <X size={16} className="mr-2" />
+                Bỏ Qua
               </Button>
             </div>
-
-            {/* Draggable List */}
-            <DraggableVideoList
-              videos={playlistVideos}
-              activeVideoId={activeVideoId}
-              onReorder={handleReorder}
-              onPlayVideo={handlePlayVideo}
-              onRemoveVideo={handleRemoveVideo}
-            />
-          </div>
-        </form>
+          </form>
+        </div>
       )}
 
       {/* Modals */}
