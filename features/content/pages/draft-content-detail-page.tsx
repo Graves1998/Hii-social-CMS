@@ -5,10 +5,10 @@ import { ContentStatus, UserRole } from '@/shared/types';
 import { Badge, Button, Textarea, Typography } from '@/shared/ui';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { AlertTriangle, Globe, X } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import useInfiniteScroll from 'react-infinite-scroll-hook';
+import { toast } from 'sonner';
 import { Queue, useContentContext, WorkflowSteps } from '../components';
 import { useCreateContent } from '../hooks/useContent';
 import { useDraftContent, useGetDraftContentDetails } from '../hooks/useDraftContent';
@@ -68,14 +68,12 @@ function DetailPageComponent() {
     }
   }, [contentDetails, crawlContent, hasNextPage, fetchNextPage, isFetched]);
 
-  const allTags = contentDetails?.tags;
   const { register, handleSubmit, setValue, watch } = useForm<ContentSchema>({
     values: contentDetails
       ? {
           title: contentDetails?.title || '',
           description: contentDetails?.short_description || '',
           is_allow_comment: true,
-          tags: contentDetails?.tags || undefined,
           media: [contentDetails?.media_url || ''],
           thumbnail: contentDetails?.thumbnail_url || '',
           platforms: platforms?.map((p) => p.api_key) || [],
@@ -87,10 +85,17 @@ function DetailPageComponent() {
   });
 
   const watchPlatforms = watch('platforms');
-  const watchTags = watch('tags');
   const watchCategories = watch('categories');
+  const watchTitle = watch('title');
 
-  const handleUpdateMetadata = (key: 'platforms' | 'tags' | 'categories', value: any) => {
+  const allTags = useMemo(() => {
+    if (!watchTitle) return [];
+
+    const matches = watchTitle?.match(/#[\p{L}\p{N}_]+/gu);
+    return matches ?? [];
+  }, [watchTitle]);
+
+  const handleUpdateMetadata = (key: 'platforms' | 'categories', value: any) => {
     const isExist = watch(key).includes(value);
     if (isExist) {
       setValue(
@@ -108,7 +113,10 @@ function DetailPageComponent() {
 
     createContent(
       {
-        data: rest,
+        data: {
+          ...rest,
+          tags: allTags,
+        },
       },
       {
         onSuccess: () => {
@@ -220,15 +228,33 @@ function DetailPageComponent() {
           </Typography>
           {isEditable ? (
             <Textarea
-              {...register('description')}
-              value={watch('description')}
+              {...register('title')}
+              value={watch('title')}
+              onChange={(e) => {
+                setValue('title', e.target.value, { shouldDirty: true });
+              }}
               className="readout h-32 resize-none border border-white/10 bg-transparent p-2 transition-colors focus:border-white"
             />
           ) : (
             <p className="readout border border-transparent p-2">
-              &ldquo;{contentDetails.short_description}&rdquo;
+              &ldquo;{contentDetails.title}&rdquo;
             </p>
           )}
+        </div>
+
+        {/* TAGS */}
+        <div className="flex flex-col gap-2">
+          <Typography variant="tiny" className="text-muted-foreground font-medium">
+            THẺ PHÂN LOẠI
+          </Typography>
+          <div className="flex flex-wrap gap-1.5">
+            {!allTags?.length && <p className="text-muted-foreground">Không có thẻ phân loại</p>}
+            {allTags?.map((tag: string) => (
+              <Badge key={tag} variant="default">
+                {tag}
+              </Badge>
+            ))}
+          </div>
         </div>
 
         {/* DISTRIBUTION NETWORKS */}
@@ -262,44 +288,20 @@ function DetailPageComponent() {
             </Typography>
             <div className="flex flex-wrap gap-1">
               {categories.map((cat) => (
-                <button
+                <Badge
                   key={cat.id}
-                  type="button"
+                  variant={watchCategories?.includes(cat.name) ? 'default' : 'outline'}
                   onClick={() => handleUpdateMetadata('categories', cat.name)}
-                  className={`border px-3 py-1 font-mono text-[10px] transition-all ${
-                    watchCategories?.includes(cat.name)
-                      ? 'border-white bg-white text-black'
-                      : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
-                  }`}
+                  className="cursor-pointer transition-colors"
                 >
                   {cat.name}
-                </button>
+                </Badge>
               ))}
             </div>
           </div>
         ) : (
           <FilterSkeleton count={3} />
         )}
-
-        {/* TAGS */}
-        <div className="flex flex-col gap-2">
-          <Typography variant="tiny" className="text-muted-foreground font-medium">
-            THẺ PHÂN LOẠI
-          </Typography>
-          <div className="flex flex-wrap gap-1.5">
-            {!allTags?.length && <p className="text-muted-foreground">Không có thẻ phân loại</p>}
-            {allTags?.map((tag: string) => (
-              <Badge
-                key={tag}
-                variant={watchTags?.includes(tag) ? 'default' : 'outline'}
-                onClick={() => handleUpdateMetadata('tags', tag)}
-                className="cursor-pointer transition-colors"
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        </div>
 
         {/* WORKFLOW STATUS PROGRESS */}
         <WorkflowSteps
@@ -321,7 +323,6 @@ function DetailPageComponent() {
               contentDetails.status === ContentStatus.APPROVED ||
               contentDetails.status === ContentStatus.PUBLISHED ||
               !watchPlatforms?.length ||
-              !watchTags?.length ||
               !watchCategories?.length
             }
           >

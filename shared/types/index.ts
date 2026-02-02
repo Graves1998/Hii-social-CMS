@@ -34,7 +34,6 @@ export enum SourcePlatform {
 }
 
 export enum UserRole {
-  EDITOR = 'Biên Tập Viên',
   REVIEWER = 'Kiểm Duyệt Viên',
   ADMIN = 'Quản Trị Viên',
 }
@@ -53,7 +52,7 @@ export interface ContentItem {
   media_url: string;
   source_type: SourceType;
   source_platform: SourcePlatform;
-  target_platforms: SourcePlatform[];
+  target_platforms: string[];
   original_source_url: string;
   created_at: string;
   created_by: string;
@@ -69,6 +68,7 @@ export interface ContentItem {
   scheduled_at?: string;
   categories?: string[];
   media?: Media[];
+  is_allow_comment?: boolean;
 }
 export interface User {
   id: string;

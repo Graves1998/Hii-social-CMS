@@ -1,3 +1,5 @@
+import { UpdateReelSchema } from '../schemas';
+
 export interface Media {
   download_url: string;
   duration: number;
@@ -75,6 +77,7 @@ export interface GetContentPayload {
 export interface ApproveContentPayload {
   reason: string;
   reel_id: string;
+  update_reels?: UpdateReelSchema;
 }
 
 export interface ApproveContentBatchPayload {
