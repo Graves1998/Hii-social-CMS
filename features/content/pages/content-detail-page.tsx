@@ -1,28 +1,30 @@
 import { STATUS_LABELS } from '@/shared';
 import { DetailPageSkeleton, QueueSkeleton } from '@/shared/components';
 import { ContentStatus } from '@/shared/types';
-import { Badge, Button, Typography } from '@/shared/ui';
+import { Badge, Button, Textarea, Typography } from '@/shared/ui';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { AlertTriangle, Globe, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import useInfiniteScroll from 'react-infinite-scroll-hook';
 import { toast } from 'sonner';
 import {
+  ContentBody,
   Queue,
   RejectConfirmationModal,
   ScheduleModal,
+  useContentContext,
   WorkflowSteps,
-  ContentBody,
 } from '../components';
 import {
-  useApproveContents,
+  useApproveContent,
   useContent,
   useContentDetails,
   usePublishContent,
   useRejectContents,
 } from '../hooks/useContent';
 import { useScheduleContent } from '../hooks/useSchedule';
-import { ContentDetailSearchSchema } from '../schemas';
+import { ContentDetailSearchSchema, UpdateReelSchema } from '../schemas';
 import { useContentStore } from '../stores/useContentStore';
 
 function DetailPageComponent() {
@@ -41,9 +43,12 @@ function DetailPageComponent() {
     approving_status: searchParams?.approving_status as string,
   });
 
-  // Batch operations
-  const { mutate: approveContents, isPending: isApprovingBatch } = useApproveContents();
+  // Mutate
   const { mutate: rejectContents, isPending: isRejectingBatch } = useRejectContents();
+  const { mutate: scheduleContent, isPending: isSchedulingContent } = useScheduleContent();
+  const { mutate: publishContent, isPending: isPublishingContent } = usePublishContent();
+  const { mutate: approveContent, isPending: isApprovingContent } = useApproveContent();
+  // Store
   const { selectedIds, setSelectedIds } = useContentStore((state) => state);
 
   const [loadMoreRef] = useInfiniteScroll({
@@ -94,21 +99,67 @@ function DetailPageComponent() {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [_pendingRejectId, setPendingRejectId] = useState<string | null>(null);
 
-  const { mutate: scheduleContent, isPending: isSchedulingContent } = useScheduleContent();
-  const { mutate: publishContent, isPending: isPublishingContent } = usePublishContent();
+  const {
+    register,
+    handleSubmit,
+    formState: { isDirty, dirtyFields },
+    watch,
+    setValue,
+  } = useForm<UpdateReelSchema>({
+    values: item
+      ? {
+          title: item?.title || '',
+          platforms: item?.target_platforms || [],
+          categories: item?.categories || [],
+          tags: item?.tags || [],
+          is_allow_comment: item?.is_allow_comment || true,
+        }
+      : undefined,
+  });
 
-  const handleApproveContent = () => {
+  const { categories, platforms } = useContentContext();
+  const watchTitle = watch('title');
+  const watchPlatforms = watch('platforms');
+  const watchCategories = watch('categories');
+  // const watchIsAllowComment = watch('is_allow_comment');
+  const watchTags = useMemo(() => {
+    if (!watchTitle) return [];
+
+    return watchTitle.match(/#(\w+)/g) || [];
+  }, [watchTitle]);
+
+  const handleChangeMetadata = (key: 'platforms' | 'categories', value: any) => {
+    const isExits = watch(key)?.includes(value);
+    if (isExits) {
+      setValue(
+        key,
+        watch(key)?.filter((i) => i !== value),
+        { shouldDirty: true }
+      );
+    } else {
+      setValue(key, [...(watch(key) || []), value], { shouldDirty: true });
+    }
+  };
+
+  const handleApproveContent = (data: UpdateReelSchema) => {
     if (!item) return;
     const toastId = toast.loading(`Đang duyệt nội dung...`);
 
-    approveContents(
+    const payload: UpdateReelSchema = {
+      tags: watchTags,
+    };
+
+    Object.keys(dirtyFields || {}).forEach((key) => {
+      const typedKey = key as keyof UpdateReelSchema;
+      // @ts-expect-error - Dynamic key assignment from form data
+      payload[typedKey] = data[typedKey];
+    });
+
+    approveContent(
       {
-        reel_ids: [
-          {
-            reel_id: item.id,
-          },
-        ],
+        reel_id: item.id,
         reason: 'Ok',
+        update_reels: payload,
       },
       {
         onSuccess: () => {
@@ -304,9 +355,6 @@ function DetailPageComponent() {
       case ContentStatus.REJECTED:
         setIsRejectModalOpen(true);
         break;
-      case ContentStatus.APPROVED:
-        handleApproveContent();
-        break;
       case ContentStatus.PUBLISHED:
         handlePublishContent();
         break;
@@ -333,6 +381,7 @@ function DetailPageComponent() {
   const isRejected = item?.status === ContentStatus.REJECTED;
   const isArchived = item?.status === ContentStatus.ARCHIVED;
 
+  const canEdit = item?.status === ContentStatus.PENDING_REVIEW;
   let activeIndex = currentStepIndex;
   if (isRejected) activeIndex = 1;
   if (isArchived) activeIndex = 5;
@@ -387,28 +436,60 @@ function DetailPageComponent() {
       </section>
 
       {/* RIGHT: INSPECTOR SECTION */}
-      <aside className="inspector">
+      <form onSubmit={handleSubmit(handleApproveContent)} className="inspector">
         {/* DESCRIPTION */}
         <div className="flex flex-col gap-2">
           <Typography variant="tiny" className="text-muted-foreground font-medium">
             NHẬT KÝ PHIÊN DỊCH
           </Typography>
-          <p className="readout border border-transparent p-2">
-            &ldquo;{item.short_description}&rdquo;
-          </p>
+          {canEdit ? (
+            <Textarea
+              {...register('title')}
+              value={watchTitle}
+              onChange={(e) => {
+                setValue('title', e.target.value, { shouldDirty: true });
+              }}
+              className="readout h-32 resize-none border border-white/10 bg-transparent p-2 transition-colors focus:border-white"
+            />
+          ) : (
+            <p className="readout border border-transparent p-2">&ldquo;{item.title}&rdquo;</p>
+          )}
         </div>
 
+        {/* TAGS */}
+        {!!watchTags?.length && (
+          <div className="flex flex-col gap-2">
+            <Typography variant="tiny" className="text-muted-foreground font-medium">
+              THẺ PHÂN LOẠI
+            </Typography>
+            <div className="flex flex-wrap gap-1.5">
+              {watchTags.map((tag: string) => (
+                <Badge key={tag} variant="outline">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* DISTRIBUTION NETWORKS */}
-        {!!item.target_platforms?.length && (
+        {!!platforms && (
           <div className="flex flex-col gap-2">
             <Typography variant="tiny" className="text-muted-foreground font-medium">
               MẠNG LƯỚI PHÂN PHỐI
             </Typography>
             <div className="flex flex-wrap gap-1.5">
-              {item.target_platforms?.map((platform: string) => (
-                <Badge variant="outline" key={platform}>
+              {platforms.map((platform) => (
+                <Badge
+                  variant={watchPlatforms?.includes(platform.name) ? 'default' : 'outline'}
+                  key={platform.id}
+                  onClick={
+                    canEdit ? () => handleChangeMetadata('platforms', platform.name) : undefined
+                  }
+                  className={canEdit ? 'cursor-pointer' : ''}
+                >
                   <Globe size={10} />
-                  {platform}
+                  {platform.name}
                 </Badge>
               ))}
             </div>
@@ -416,31 +497,22 @@ function DetailPageComponent() {
         )}
 
         {/* CATEGORIES */}
-        {!!item.categories?.length && (
+        {!!categories?.length && (
           <div className="flex flex-col gap-2">
             <Typography variant="tiny" className="text-muted-foreground font-medium">
               DANH MỤC
             </Typography>
             <div className="flex flex-wrap gap-1.5">
-              {item.categories.map((category: string) => (
-                <Badge variant="outline" key={category}>
-                  {category}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAGS */}
-        {!!item.tags?.length && (
-          <div className="flex flex-col gap-2">
-            <Typography variant="tiny" className="text-muted-foreground font-medium">
-              THẺ PHÂN LOẠI
-            </Typography>
-            <div className="flex flex-wrap gap-1.5">
-              {item.tags?.map((tag: string) => (
-                <Badge key={tag} variant="outline">
-                  {tag}
+              {categories.map((category) => (
+                <Badge
+                  variant={watchCategories?.includes(category.name) ? 'default' : 'outline'}
+                  key={category.id}
+                  onClick={
+                    canEdit ? () => handleChangeMetadata('categories', category.name) : undefined
+                  }
+                  className={canEdit ? 'cursor-pointer' : ''}
+                >
+                  {category.name}
                 </Badge>
               ))}
             </div>
@@ -486,16 +558,12 @@ function DetailPageComponent() {
             </Button>
           )}
           {item.status === ContentStatus.PENDING_REVIEW && (
-            <Button
-              variant="default"
-              onClick={() => handleUpdateStatus(ContentStatus.APPROVED)}
-              disabled={isApprovingBatch}
-            >
-              {isApprovingBatch ? 'ĐANG DUYỆT...' : 'DUYỆT'}
+            <Button variant="default" type="submit" disabled={isApprovingContent}>
+              {isApprovingContent ? 'ĐANG DUYỆT...' : 'DUYỆT'}
             </Button>
           )}
         </div>
-      </aside>
+      </form>
 
       <RejectConfirmationModal
         isOpen={isRejectModalOpen}
