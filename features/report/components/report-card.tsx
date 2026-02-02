@@ -61,7 +61,7 @@ function ReportCard({ report, onView, isSelected, onToggleSelect }: ReportCardPr
 
         {/* Report Count & Status */}
         <div className="flex items-center gap-2">
-          <Badge variant="destructive" className="font-mono text-[10px] uppercase">
+          <Badge variant="destructive" className="font-mono text-xs uppercase">
             {report.report_count} BÁO CÁO
           </Badge>
           {/* <Badge variant="outline" className={`font-mono text-[10px] uppercase ${statusColor}`}>
@@ -70,8 +70,8 @@ function ReportCard({ report, onView, isSelected, onToggleSelect }: ReportCardPr
         </div>
 
         {/* Latest Reporter Info */}
-        <div className="flex items-center gap-2 font-mono text-xs text-zinc-500">
-          <User size={12} />
+        <div className="flex items-center gap-2 font-mono text-sm text-zinc-500">
+          <User size={14} />
           <span className="flex-1">
             {report.reports[0].reporter_info?.name || report.reports[0].user_reporter}
           </span>
@@ -82,7 +82,7 @@ function ReportCard({ report, onView, isSelected, onToggleSelect }: ReportCardPr
 
         {/* Latest Report Time */}
         <div className="flex items-center gap-2 font-mono text-xs text-zinc-500">
-          <Clock size={12} />
+          <Clock size={14} />
           <span>Báo cáo mới nhất: {formatDate(report.latest_report)}</span>
         </div>
 

@@ -17,11 +17,11 @@ function KPICard({
       {/* Hover Top Border Effect */}
       <div className="absolute top-0 left-0 h-[1px] w-full origin-left scale-x-0 transform bg-white transition-transform duration-500 group-hover:scale-x-100" />
 
-      <Typography variant="tiny" className="mb-4 text-zinc-500 uppercase" as="p">
+      <Typography variant="small" className="mb-4 text-zinc-500 uppercase" as="p">
         {subtext}
       </Typography>
 
-      <Typography variant="h3" size="xxxlarge" className="mb-2 text-white">
+      <Typography variant="h2" className="mb-2 text-white">
         {count}
       </Typography>
     </div>

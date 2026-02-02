@@ -17,8 +17,8 @@ import { debounce } from 'lodash';
 
 import { useApprovingStatus } from '../hooks/useContent';
 import { ContentSearchSchema } from '../schemas';
-import { transformStatusLabel } from '../utils';
 import { useContentStore } from '../stores/useContentStore';
+import { transformStatusLabel } from '../utils';
 import { useContentContext } from './content-context';
 
 function ContentHeader() {
@@ -98,8 +98,8 @@ function ContentHeader() {
         <FilterSkeleton count={6} />
       ) : (
         <div className="space-y-3">
-          <Typography variant="tiny" className="flex items-center gap-2 font-mono text-zinc-500">
-            <Filter size={10} /> Lọc Trạng Thái
+          <Typography variant="small" className="flex items-center gap-2 font-mono text-zinc-500">
+            <Filter size={14} /> Lọc Trạng Thái
           </Typography>
           <div className="flex flex-wrap gap-1">
             {statusTabs?.map((tab) => (
@@ -107,7 +107,7 @@ function ContentHeader() {
                 key={tab.slug}
                 type="button"
                 onClick={() => handleFilterStatus(tab.slug)}
-                className={`flex items-center gap-2 border px-4 py-2 font-mono text-[10px] uppercase transition-all ${
+                className={`flex items-center gap-2 border px-4 py-2 font-mono text-xs uppercase transition-all ${
                   filters.approving_status === tab.slug
                     ? 'border-white bg-white text-black'
                     : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
@@ -125,8 +125,8 @@ function ContentHeader() {
         <FilterSkeleton count={5} />
       ) : (
         <div className="space-y-3">
-          <Typography variant="tiny" className="flex items-center gap-2 font-mono text-zinc-500">
-            <Hash size={10} /> Lọc Danh Mục
+          <Typography variant="small" className="flex items-center gap-2 font-mono text-zinc-500">
+            <Hash size={14} /> Lọc Danh Mục
           </Typography>
           <div className="flex flex-wrap gap-1">
             <button
@@ -145,7 +145,7 @@ function ContentHeader() {
                 key={cat.id}
                 type="button"
                 onClick={() => toggleCategory(cat.name)}
-                className={`border px-3 py-1 font-mono text-[10px] uppercase transition-all ${
+                className={`border px-3 py-1 font-mono text-xs uppercase transition-all ${
                   filters.categories.includes(cat.name)
                     ? 'border-white bg-white text-black'
                     : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'

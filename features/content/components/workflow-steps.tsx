@@ -1,5 +1,4 @@
 import { Typography } from '@/shared/ui';
-import React from 'react';
 
 type WorkflowStepsProps = {
   isRejected: boolean;
@@ -10,7 +9,7 @@ type WorkflowStepsProps = {
 function WorkflowSteps({ isRejected, item, workflowSteps, activeIndex }: WorkflowStepsProps) {
   return (
     <div className="flex flex-col gap-2">
-      <Typography variant="tiny" className="text-muted-foreground font-medium">
+      <Typography variant="small" className="text-muted-foreground font-medium">
         TRẠNG THÁI // QUY TRÌNH
       </Typography>
 
@@ -43,7 +42,7 @@ function WorkflowSteps({ isRejected, item, workflowSteps, activeIndex }: Workflo
                   } ${stateClass.split(' ')[1]}`}
                 />
                 <span
-                  className={`font-mono text-[9px] font-bold tracking-widest transition-colors duration-500 ${
+                  className={`text-xs font-bold tracking-widest transition-colors duration-500 ${
                     index <= activeIndex
                       ? isRejected && index === activeIndex
                         ? 'text-red-500'

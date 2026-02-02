@@ -1,11 +1,11 @@
-import { Badge, Button, Typography } from '@/shared/ui';
-import { VideoPlayer } from '@/shared/components';
-import { useNavigate, useParams } from '@tanstack/react-router';
-import { AlertTriangle, MessageSquare, Video, X, XCircle, Check } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
 import { RejectConfirmationModal } from '@/features/content/components';
 import { ContentStatus, STATUS_LABELS } from '@/shared';
+import { VideoPlayer } from '@/shared/components';
+import { Badge, Button, Typography } from '@/shared/ui';
+import { useNavigate, useParams } from '@tanstack/react-router';
+import { AlertTriangle, ArrowLeft, Check, MessageSquare, Video, XCircle } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { AcceptConfirmationModal, ReportItem } from '../components';
 import {
   useAcceptReport,
@@ -130,31 +130,26 @@ function ReportDetailPage() {
     <div className="animate-in fade-in grid w-full grid-cols-1 gap-6 duration-300 md:grid-cols-2">
       {/* Header */}
       <div className="col-span-2 flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <AlertTriangle className="h-8 w-8 text-red-500" />
-          <div>
-            <Typography variant="h2" className="text-white">
-              CHI TIẾT VIDEO BỊ BÁO CÁO
-            </Typography>
-            <Typography variant="small" className="text-muted-foreground font-mono">
-              Video ID: {report.video_info.id}
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => navigate({ to: '/report' })}
+            className="flex h-10 w-10 items-center justify-center border border-white/20 text-white transition-colors hover:bg-white hover:text-black"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div className="flex-1">
+            <Typography variant="h2" className="font-mono uppercase">
+              Chi tiết báo cáo
             </Typography>
           </div>
         </div>
-
-        <Button
-          variant="ghost"
-          onClick={() => navigate({ to: '/report' })}
-          className="text-zinc-500 hover:text-white"
-        >
-          <X size={20} />
-        </Button>
       </div>
       {/* LEFT: Video Preview */}
       <aside className="queue-sidebar">
         <div className="flex h-full flex-col">
-          <Typography variant="tiny" className="mb-4 font-mono text-zinc-500 uppercase">
-            <Video size={12} className="mr-2 inline" />
+          <Typography variant="small" className="mb-4 font-mono text-zinc-500 uppercase">
+            <Video size={16} className="mr-2 inline" />
             VIDEO BỊ BÁO CÁO
           </Typography>
 
@@ -197,24 +192,27 @@ function ReportDetailPage() {
               THÔNG TIN VIDEO
             </Typography>
             <div className="space-y-2 border border-white/10 bg-black/50 p-4">
-              <div className="font-mono text-sm text-white">{report.video_info.title}</div>
+              <Typography variant="p" className="font-mono text-white">
+                {report.video_info.title}
+              </Typography>
               {report.video_info.description && (
-                <div className="font-mono text-xs text-zinc-400">
+                <Typography variant="small" className="font-mono text-zinc-400">
                   {report.video_info.description}
-                </div>
+                </Typography>
               )}
-              <div className="flex items-center gap-4 pt-2 font-mono text-xs text-zinc-600">
-                <span>Tạo: {formatDate(report.video_info.created_at)}</span>
-                <span>•</span>
-                <span>Owner: {report.video_info.owner_id}</span>
+              <div className="flex flex-col gap-2 pt-2 font-mono text-sm text-zinc-600">
+                <Typography variant="small">Người đăng: {report.video_info.owner.email}</Typography>
+                <Typography variant="small">
+                  Ngày tạo: {formatDate(report.video_info.created_at)}
+                </Typography>
               </div>
             </div>
           </div>
 
           {/* All Reports Section */}
           <div className="space-y-4 border-t border-white/10 pt-6">
-            <Typography variant="tiny" className="font-mono text-zinc-500 uppercase">
-              <MessageSquare size={12} className="mr-2 inline" />
+            <Typography variant="small" className="font-mono text-zinc-500 uppercase">
+              <MessageSquare size={14} className="mr-2 inline" />
               DANH SÁCH BÁO CÁO ({reportCount})
             </Typography>
 
