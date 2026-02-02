@@ -1,8 +1,8 @@
 import { Badge, Typography } from '@/shared/ui';
 import { AlertTriangle, Calendar, Check, Clock, MessageSquare, User } from 'lucide-react';
 import type { Report } from '../types';
-import { formatDate, getReportStatusColor, REPORT_STATUS_LABELS } from '../utils';
 import { ReportStatus } from '../types';
+import { formatDate, getReportStatusColor, REPORT_STATUS_LABELS } from '../utils';
 
 interface ReportItemProps {
   report: Report;
@@ -51,7 +51,7 @@ function ReportItem({ report, index, isSelected, onToggleSelect }: ReportItemPro
           </div>
         </div>
 
-        <Badge variant="outline" className={`font-mono text-[10px] uppercase ${statusColor}`}>
+        <Badge variant="outline" className={`font-mono text-xs uppercase ${statusColor}`}>
           {REPORT_STATUS_LABELS[report.status as ReportStatus]}
         </Badge>
       </div>
@@ -64,10 +64,10 @@ function ReportItem({ report, index, isSelected, onToggleSelect }: ReportItemPro
         </div>
 
         {/* Reason */}
-        <div className="flex items-center gap-2 font-mono text-xs text-zinc-400">
+        <div className="flex items-center gap-2 font-mono text-sm text-zinc-400">
           <AlertTriangle size={12} className="text-red-500" />
           <span>Lý do: </span>
-          <Badge variant="destructive" className="font-mono text-[9px] uppercase">
+          <Badge variant="destructive" className="font-mono text-xs uppercase">
             {report.reason.description}
           </Badge>
         </div>
@@ -76,8 +76,8 @@ function ReportItem({ report, index, isSelected, onToggleSelect }: ReportItemPro
       {/* Description */}
       {report.description && (
         <div className="mb-4 space-y-2">
-          <div className="flex items-center gap-2 font-mono text-[10px] text-zinc-600 uppercase">
-            <MessageSquare size={10} />
+          <div className="flex items-center gap-2 font-mono text-xs text-zinc-600 uppercase">
+            <MessageSquare size={12} />
             <span>Mô Tả</span>
           </div>
           <div className="border-l-2 border-white/5 pl-4">
@@ -89,7 +89,7 @@ function ReportItem({ report, index, isSelected, onToggleSelect }: ReportItemPro
       )}
 
       {/* Timestamps */}
-      <div className="flex flex-wrap items-center gap-4 border-t border-white/5 pt-4 font-mono text-[10px] text-zinc-600">
+      <div className="flex flex-wrap items-center gap-4 border-t border-white/5 pt-4 font-mono text-xs text-zinc-600">
         <div className="flex items-center gap-1.5">
           <Calendar size={10} />
           <span>Tạo: {formatDate(report.created_at)}</span>

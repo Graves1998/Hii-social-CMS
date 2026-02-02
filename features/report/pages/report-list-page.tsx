@@ -3,8 +3,8 @@ import { Button, Input, Typography } from '@/shared/ui';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { AlertTriangle, Check, Filter, Search, Tag, XCircle } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import useInfiniteScroll from 'react-infinite-scroll-hook';
+import { toast } from 'sonner';
 import { AcceptConfirmationModal, ReportCard } from '../components';
 import {
   useAcceptReport,
@@ -166,14 +166,14 @@ function ReportListPage() {
   return (
     <div className="relative flex h-full flex-col space-y-8">
       {/* Header */}
-      <div className="sticky top-0 z-50 flex flex-col gap-4 bg-black/80 py-4 backdrop-blur-md">
+      <div className="sticky top-0 z-50 flex flex-col gap-6 bg-black/80 py-4 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div>
               <Typography variant="h2" className="text-white">
                 BÁO CÁO VI PHẠM
               </Typography>
-              <Typography variant="small" className="text-muted-foreground mt-2 font-mono">
+              <Typography variant="p" className="text-muted-foreground mt-2 font-mono">
                 Quản lý các báo cáo vi phạm từ người dùng
               </Typography>
             </div>
@@ -184,7 +184,7 @@ function ReportListPage() {
             <button
               type="button"
               onClick={handleSelectAll}
-              className="flex items-center gap-2 font-mono text-xs text-zinc-400 transition-colors hover:text-white"
+              className="flex items-center gap-2 font-mono text-sm text-zinc-400 transition-colors hover:text-white"
             >
               <div
                 className={`flex h-5 w-5 items-center justify-center border transition-all ${
@@ -193,7 +193,7 @@ function ReportListPage() {
                     : 'border-white/20 bg-transparent hover:border-white'
                 }`}
               >
-                {allSelected && <Check size={12} className="text-black" />}
+                {allSelected && <Check size={14} className="text-black" />}
               </div>
               <span className="uppercase">{allSelected ? 'Bỏ Chọn Tất Cả' : 'Chọn Tất Cả'}</span>
             </button>
@@ -204,8 +204,8 @@ function ReportListPage() {
         <div className="flex flex-col gap-4">
           {/* Status Filter */}
           <div className="space-y-3">
-            <Typography variant="tiny" className="flex items-center gap-2 font-mono text-zinc-500">
-              <Filter size={10} /> Lọc Trạng Thái
+            <Typography variant="small" className="flex items-center gap-2 font-mono text-zinc-500">
+              <Filter size={14} /> Lọc Trạng Thái
             </Typography>
             <div className="flex flex-wrap gap-1">
               {statusOptions.map((option) => (
@@ -213,7 +213,7 @@ function ReportListPage() {
                   key={option.value}
                   type="button"
                   onClick={() => handleFilterStatus(option.value as ReportStatus)}
-                  className={`border px-4 py-2 font-mono text-[10px] uppercase transition-all ${
+                  className={`border px-4 py-2 font-mono text-xs uppercase transition-all ${
                     filters.status === option.value
                       ? 'border-white bg-white text-black'
                       : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
@@ -227,8 +227,8 @@ function ReportListPage() {
 
           {/* Reason Filter */}
           <div className="space-y-3">
-            <Typography variant="tiny" className="flex items-center gap-2 font-mono text-zinc-500">
-              <Tag size={10} /> Lọc Lý Do
+            <Typography variant="small" className="flex items-center gap-2 font-mono text-zinc-500">
+              <Tag size={14} /> Lọc Lý Do
             </Typography>
             <div className="flex flex-wrap gap-1">
               {data?.reasons?.map((option) => (
@@ -236,7 +236,7 @@ function ReportListPage() {
                   key={option.id}
                   type="button"
                   // onClick={() => setFilters('status', option.id as any)}
-                  className={`border px-4 py-2 font-mono text-[10px] uppercase transition-all ${
+                  className={`border px-4 py-2 font-mono text-xs uppercase transition-all ${
                     filters.status === option.id
                       ? 'border-white bg-white text-black'
                       : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'

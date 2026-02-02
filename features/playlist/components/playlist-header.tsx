@@ -46,13 +46,13 @@ function PlaylistHeader({ onOpenCreateModal }: PlaylistHeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 flex flex-col gap-4 bg-black/80 py-4 backdrop-blur">
+    <header className="sticky top-0 z-50 flex flex-col gap-6 bg-black/80 py-4 backdrop-blur">
       <div className="flex items-center justify-between">
         <div>
           <Typography variant="h2" className="font-mono uppercase">
             Danh sách phát
           </Typography>
-          <Typography variant="small" className="mt-2 font-mono text-zinc-500">
+          <Typography variant="p" className="mt-2 font-mono text-zinc-500">
             Quản lý danh sách phát video
           </Typography>
         </div>

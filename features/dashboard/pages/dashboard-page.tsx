@@ -76,7 +76,7 @@ function DashboardPage() {
           <Typography variant="h2" className="text-white">
             TỔNG QUAN
           </Typography>
-          <Typography variant="small" className="text-muted-foreground font-mono">
+          <Typography className="text-muted-foreground font-mono">
             Tổng quan về tình hình hoạt động của hệ thống
           </Typography>
         </div>
@@ -96,7 +96,7 @@ function DashboardPage() {
 
           <div className="mb-6 flex items-start justify-between">
             <div className="flex flex-col gap-1">
-              <Typography variant="h3" size="xlarge" className="text-white">
+              <Typography variant="h3" className="text-white">
                 Tốc Độ Xử Lý
               </Typography>
               <Typography variant="small" className="font-mono text-zinc-500">
@@ -140,15 +140,15 @@ function DashboardPage() {
           <div className="absolute top-0 left-0 h-[1px] w-full origin-left scale-x-0 transform bg-white transition-transform duration-500 group-hover:scale-x-100" />
 
           <div className="mb-12 flex items-start justify-between">
-            <Typography variant="tiny" className="text-zinc-500 uppercase">
+            <Typography variant="small" className="font-medium text-zinc-500 uppercase">
               CHỜ DUYỆT
             </Typography>
             <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
           </div>
-          <Typography variant="h3" size="xxxlarge" className="mb-4 text-white">
+          <Typography variant="h3" className="mb-4 text-white">
             {stats?.total_pending || 0}
           </Typography>
-          <Typography variant="small" className="mb-8 leading-relaxed text-zinc-500" as="p">
+          <Typography variant="p" className="mb-8 leading-relaxed text-zinc-500" as="p">
             Nội dung đang chờ quy trình phê duyệt. Cần hành động ngay để duy trì tốc độ luồng.
           </Typography>
 
@@ -202,10 +202,10 @@ function DashboardPage() {
             <Zap className="h-4 w-4 text-black" />
           </div>
           <div>
-            <Typography variant="h3" size="xlarge" className="mb-1 text-black">
+            <Typography variant="h3" className="mb-1 text-black">
               Tạo Mới
             </Typography>
-            <Typography size="small" className="font-mono text-zinc-600 uppercase">
+            <Typography variant="small" className="font-mono text-zinc-600 uppercase">
               THỦ CÔNG
             </Typography>
           </div>

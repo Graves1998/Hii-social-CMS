@@ -12,7 +12,7 @@ function Sidebar() {
   const menuItems = [
     { id: 'dashboard', path: '/dashboard', label: 'Tổng Quan' },
     { id: 'content', path: '/content', label: 'Tài Nguyên' },
-    { id: 'review', path: '/draft', label: 'Xét duyệt tài nguyên' },
+    { id: 'review', path: '/draft', label: 'Kiểm Duyệt' },
     { id: 'playlists', path: '/playlists', label: 'Danh sách phát' },
     { id: 'report', path: '/report', label: 'Báo Cáo Vi Phạm' },
     { id: 'audit', path: '/audit', label: 'Nhật Ký Hệ Thống' },
@@ -38,7 +38,7 @@ function Sidebar() {
               <li key={item.id}>
                 <Link
                   to={item.path}
-                  className={`group flex cursor-pointer items-center font-mono text-xs tracking-widest uppercase transition-all duration-300 hover:translate-x-2 hover:text-white ${isActive ? 'text-white' : 'text-zinc-500'}`}
+                  className={`group flex cursor-pointer items-center font-mono tracking-widest uppercase transition-all duration-300 hover:translate-x-2 hover:text-white ${isActive ? 'text-white' : 'text-zinc-500'}`}
                 >
                   {item.label}
                   {isActive && (
@@ -58,7 +58,7 @@ function Sidebar() {
         {/* Role Selector (Optional - for demo purposes) */}
         {currentUser && setCurrentUser && (
           <div className="space-y-1">
-            <label className="mb-2 block font-mono text-[10px] text-zinc-600 uppercase">
+            <label className="mb-2 block font-mono text-xs text-zinc-600 uppercase">
               System Access
             </label>
             <div className="relative">
@@ -67,7 +67,7 @@ function Sidebar() {
                 onChange={(e) =>
                   setCurrentUser({ ...currentUser, role: e.target.value as UserRole })
                 }
-                className="w-full cursor-pointer appearance-none rounded-none border border-white/10 bg-transparent px-3 py-2 font-mono text-xs text-zinc-400 uppercase transition-colors hover:border-zinc-500 focus:border-white focus:outline-none"
+                className="w-full cursor-pointer appearance-none rounded-none border border-white/10 bg-transparent px-3 py-2 font-mono text-sm text-zinc-400 uppercase transition-colors hover:border-zinc-500 focus:border-white focus:outline-none"
               >
                 {roles.map((r) => (
                   <option key={r} value={r} className="bg-black text-white">
@@ -81,8 +81,8 @@ function Sidebar() {
 
         {/* Status */}
         <div className="flex items-end justify-between font-mono">
-          <div className="text-[10px] text-zinc-600">STATUS</div>
-          <div className="text-[10px] text-white">SYNC // 100%</div>
+          <div className="text-xs text-zinc-600">STATUS</div>
+          <div className="text-xs text-white">SYNC // 100%</div>
         </div>
       </div>
     </aside>

@@ -436,10 +436,10 @@ function DetailPageComponent() {
       </section>
 
       {/* RIGHT: INSPECTOR SECTION */}
-      <form onSubmit={handleSubmit(handleApproveContent)} className="inspector">
+      <form onSubmit={handleSubmit(handleApproveContent)} className="flex flex-col gap-4 py-4">
         {/* DESCRIPTION */}
         <div className="flex flex-col gap-2">
-          <Typography variant="tiny" className="text-muted-foreground font-medium">
+          <Typography variant="small" className="text-muted-foreground font-medium">
             NHẬT KÝ PHIÊN DỊCH
           </Typography>
           {canEdit ? (
@@ -449,17 +449,17 @@ function DetailPageComponent() {
               onChange={(e) => {
                 setValue('title', e.target.value, { shouldDirty: true });
               }}
-              className="readout h-32 resize-none border border-white/10 bg-transparent p-2 transition-colors focus:border-white"
+              className="h-32 resize-none border border-white/10 bg-transparent p-2 transition-colors focus:border-white"
             />
           ) : (
-            <p className="readout border border-transparent p-2">&ldquo;{item.title}&rdquo;</p>
+            <p className="font-base border border-transparent">&ldquo;{item.title}&rdquo;</p>
           )}
         </div>
 
         {/* TAGS */}
         {!!watchTags?.length && (
           <div className="flex flex-col gap-2">
-            <Typography variant="tiny" className="text-muted-foreground font-medium">
+            <Typography variant="small" className="text-muted-foreground font-medium">
               THẺ PHÂN LOẠI
             </Typography>
             <div className="flex flex-wrap gap-1.5">
@@ -475,7 +475,7 @@ function DetailPageComponent() {
         {/* DISTRIBUTION NETWORKS */}
         {!!platforms && (
           <div className="flex flex-col gap-2">
-            <Typography variant="tiny" className="text-muted-foreground font-medium">
+            <Typography variant="small" className="text-muted-foreground font-medium">
               MẠNG LƯỚI PHÂN PHỐI
             </Typography>
             <div className="flex flex-wrap gap-1.5">
@@ -499,7 +499,7 @@ function DetailPageComponent() {
         {/* CATEGORIES */}
         {!!categories?.length && (
           <div className="flex flex-col gap-2">
-            <Typography variant="tiny" className="text-muted-foreground font-medium">
+            <Typography variant="small" className="text-muted-foreground font-medium">
               DANH MỤC
             </Typography>
             <div className="flex flex-wrap gap-1.5">

@@ -10,14 +10,14 @@ import {
   SelectValue,
   Typography,
 } from '@/shared/ui';
-import { debounce } from 'lodash';
 import { useNavigate, useSearch } from '@tanstack/react-router';
-import { useDraftContentStore } from '../stores/useDraftContentStore';
+import { debounce } from 'lodash';
 import {
   DRAFT_CONTENT_SEARCH_IS_PREVIEWED_OPTIONS,
   DRAFT_CONTENT_SEARCH_SORT_OPTIONS,
 } from '../constants';
 import { DraftContentSearchSchema } from '../schemas';
+import { useDraftContentStore } from '../stores/useDraftContentStore';
 
 function DraftContentHeader() {
   const navigate = useNavigate();
@@ -55,8 +55,8 @@ function DraftContentHeader() {
     <div className="sticky top-0 z-50 flex flex-col gap-6 bg-black/80 py-4 backdrop-blur">
       {/* Status Filter */}
       <div className="space-y-3">
-        <Typography variant="tiny" className="flex items-center gap-2 font-mono text-zinc-500">
-          <Filter size={10} /> Lọc Xem Trước
+        <Typography variant="small" className="flex items-center gap-2 font-mono text-zinc-500">
+          <Filter size={14} /> Lọc Xem Trước
         </Typography>
         <div className="flex flex-wrap gap-1">
           {DRAFT_CONTENT_SEARCH_IS_PREVIEWED_OPTIONS?.map((tab) => (
@@ -64,7 +64,7 @@ function DraftContentHeader() {
               key={tab.id}
               type="button"
               onClick={() => updateFilters('is_previewed', tab.id)}
-              className={`flex items-center gap-2 border px-4 py-2 font-mono text-[10px] uppercase transition-all ${
+              className={`flex items-center gap-2 border px-4 py-2 font-mono text-xs uppercase transition-all ${
                 filters.is_previewed === tab.id
                   ? 'border-white bg-white text-black'
                   : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
@@ -75,7 +75,7 @@ function DraftContentHeader() {
           ))}
         </div>
       </div>
-      <div className="flex flex-col gap-4 md:flex-row">
+      <div className="flex flex-col gap-4 border-t border-white/10 pt-6 md:flex-row">
         <div className="flex-1">
           <div className="group relative">
             <Search className="absolute top-2.5 left-3 h-4 w-4 text-zinc-600 transition-colors group-hover:text-white" />

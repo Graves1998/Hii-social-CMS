@@ -31,6 +31,14 @@ export interface Metadata {
   targetUrl: string;
 }
 
+export interface Owner {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  avatar: string;
+}
+
 export interface VideoInfo {
   approving_status: string;
   content: string;
@@ -55,6 +63,7 @@ export interface VideoInfo {
   type: string;
   updated_at: string;
   updated_by: string;
+  owner: Owner;
 }
 
 export enum ReportStatus {
