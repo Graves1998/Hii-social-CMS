@@ -1,20 +1,18 @@
+import { MediaCarousel } from '@/features/content';
+import { MediaType, toast } from '@/shared';
 import { ThumbnailUpload, VideoPlayer } from '@/shared/components';
-import { Button, CarouselContent, Label, Textarea, Typography } from '@/shared/ui';
+import { Button, Label, Textarea, Typography } from '@/shared/ui';
 import FormField from '@/shared/ui/form-field';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { ArrowLeft, Plus, Save, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { MediaType } from '@/shared';
-import { MediaCarousel } from '@/features/content';
 import {
   AddVideosModal,
   DeleteConfirmationModal,
   DraggableVideoList,
-  DraggableVideoListSkeleton,
   PlaylistDetailSkeleton,
-  PlaylistFormSkeleton,
 } from '../components';
 
 import { useDeletePlaylist, usePlaylist, useUpdatePlaylist } from '../hooks/usePlaylist';
@@ -75,10 +73,10 @@ function PlaylistDetailPage() {
         }
       : undefined,
     resolver: zodResolver(updatePlaylistSchema),
-    mode: 'all',
+    mode: 'onChange',
   });
 
-  const watchedVideoIds = useMemo(() => watch('video_ids') || [], [watch]);
+  const watchedVideoIds = useMemo(() => watch('video_ids') || [], [watch, playlist]);
 
   useEffect(() => {
     if (playlist?.contents && !initialRender.current) {
@@ -109,10 +107,26 @@ function PlaylistDetailPage() {
       payload[typedKey] = data[typedKey];
     });
 
-    updatePlaylist({
-      id: playlistId,
-      payload,
-    });
+    updatePlaylist(
+      {
+        id: playlistId,
+        payload,
+      },
+      {
+        onSuccess: () => {
+          reset({
+            name: playlist?.name || '',
+            description: playlist?.description || '',
+            video_ids: playlist?.contents?.map((v) => v.video_id) || [],
+            thumbnail: playlist?.thumbnail_url || '',
+          });
+          toast.success('Cập nhật thành công');
+        },
+        onError: () => {
+          toast.error('Cập nhật thất bại');
+        },
+      }
+    );
   };
 
   const handleCancel = () => {
@@ -286,8 +300,8 @@ function PlaylistDetailPage() {
             <div className="space-y-2">
               <FormField
                 control={control}
-                label="Tên Danh Sách Phát"
-                placeholder="Nhập tên đăng nhập..."
+                label="Tiêu đề"
+                placeholder="Nhập tiêu đề..."
                 {...register('name')}
               />
             </div>
@@ -318,7 +332,8 @@ function PlaylistDetailPage() {
             <div className="flex items-center gap-3 border-t border-white/10 pt-4">
               <Button
                 type="submit"
-                disabled={!isDirty || isUpdating}
+                isLoading={isUpdating}
+                disabled={!isDirty}
                 className="flex-1 border-white bg-white font-mono text-black uppercase hover:bg-zinc-200 disabled:opacity-50"
               >
                 <Save size={16} className="mr-2" />
