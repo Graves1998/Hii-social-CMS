@@ -146,7 +146,7 @@ function DetailPageComponent() {
     const toastId = toast.loading(`Đang duyệt nội dung...`);
 
     const payload: UpdateReelSchema = {
-      tags: watchTags,
+      tags: watchTags.length > 0 ? watchTags : undefined,
     };
 
     Object.keys(dirtyFields || {}).forEach((key) => {
