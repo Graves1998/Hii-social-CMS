@@ -198,7 +198,7 @@ export function DataTable<T>({
                 <TableHead
                   key={column.id}
                   className={cn(
-                    'h-10 px-6 font-mono text-[10px] tracking-wider text-zinc-500 uppercase',
+                    'h-10 px-6 font-mono text-xs tracking-wider text-zinc-500 uppercase',
                     getAlignClass(column.headerAlign),
                     column.className
                   )}
@@ -207,7 +207,7 @@ export function DataTable<T>({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="group -ml-3 h-8 px-3 font-mono text-[10px] tracking-wider text-zinc-500 uppercase hover:bg-transparent hover:text-zinc-300"
+                      className="group -ml-3 h-8 px-3 font-mono text-xs tracking-wider text-zinc-500 uppercase hover:bg-transparent hover:text-zinc-300"
                       onClick={() => handleSort(column)}
                     >
                       {column.header}

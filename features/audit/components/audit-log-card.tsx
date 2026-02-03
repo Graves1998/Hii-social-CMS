@@ -4,11 +4,11 @@
  * Card view for individual audit log
  */
 
-import { Badge, Card, CardContent, Typography } from '@/shared/ui';
+import { Card, CardContent, Typography } from '@/shared/ui';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Activity, AlertCircle, CheckCircle, Clock } from 'lucide-react';
-import { AUDIT_ACTION_COLORS, AUDIT_ACTION_LABELS, RESOURCE_TYPE_LABELS } from '../constants';
+import { AUDIT_ACTION_COLORS, AUDIT_ACTION_LABELS } from '../constants';
 import { AuditLog, AuditStatus } from '../types';
 
 interface AuditLogCardProps {
@@ -49,17 +49,14 @@ export function AuditLogCard({ log, onView }: AuditLogCardProps) {
 
         {/* Resource Info */}
         <div className="mb-3 flex items-center gap-2">
-          <Badge variant="outline" className="border-white/20 text-zinc-400">
-            {RESOURCE_TYPE_LABELS[log.resource_type]}
-          </Badge>
-          <Typography variant="tiny" className="text-zinc-600">
-            ID: {log.resource_id.slice(0, 8)}...
+          <Typography variant="small" className="line-clamp-2 text-zinc-600">
+            {log.resources.map((resource) => resource.title).join(', ')}
           </Typography>
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-white/10 pt-3">
-          <Typography variant="tiny" className="text-zinc-600">
+          <Typography variant="small" className="text-zinc-600">
             {formatDistanceToNow(new Date(log.created_at), {
               addSuffix: true,
               locale: vi,

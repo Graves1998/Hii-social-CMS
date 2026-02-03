@@ -5,12 +5,12 @@
  */
 
 import { z } from 'zod';
-import { AuditAction } from '../types';
 
 export const auditSearchSchema = z.object({
   limit: z.number().optional(),
   page: z.number().optional(),
-  action: z.nativeEnum(AuditAction).optional(),
+  actions: z.string().array().default([]),
+  platforms: z.string().array().default([]),
   from_date: z.string().optional(),
   to_date: z.string().optional(),
   search: z.string().optional(),

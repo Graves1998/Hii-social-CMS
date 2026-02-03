@@ -4,12 +4,12 @@
  * Detail view for a single audit log entry
  */
 
-import { Badge, Button, Card, CardContent, Typography } from '@/shared/ui';
+import { Button, Card, CardContent, Typography } from '@/shared/ui';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Activity, AlertCircle, ArrowLeft, CheckCircle, Clock, User } from 'lucide-react';
-import { AUDIT_ACTION_COLORS, AUDIT_ACTION_LABELS, RESOURCE_TYPE_LABELS } from '../constants';
+import { AUDIT_ACTION_COLORS, AUDIT_ACTION_LABELS } from '../constants';
 import { useAuditLogDetail } from '../hooks';
 import { AuditStatus } from '../types';
 
@@ -99,13 +99,20 @@ function AuditLogDetailPage() {
             <Typography variant="tiny" className="mb-2 text-zinc-600">
               TÀI NGUYÊN
             </Typography>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="border-white/20 text-zinc-400">
-                {RESOURCE_TYPE_LABELS[log.resource_type]}
-              </Badge>
-              <Typography variant="small" className="font-mono text-zinc-500">
-                {log.resource_id}
-              </Typography>
+            <div className="flex flex-col gap-3">
+              {log.resources.map((resource) => (
+                <div
+                  key={resource.id}
+                  className="flex flex-col gap-2 border-b border-white/10 pb-2 last:border-none last:pb-0"
+                >
+                  <Typography variant="p" className="text-white">
+                    {resource.title}
+                  </Typography>
+                  <Typography variant="small" className="font-mono text-zinc-500">
+                    {resource.id}
+                  </Typography>
+                </div>
+              ))}
             </div>
           </div>
 

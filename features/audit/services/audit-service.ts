@@ -6,24 +6,19 @@
 
 import { api } from '@/services';
 import queryString from 'query-string';
-import type { LogResponseDataDto } from '../dto';
+import type { LogEntryDto, LogResponseDataDto } from '../dto';
 import type { AuditLogDetail, GetAuditLogsPayload, GetAuditLogsResponse } from '../types';
-import { mapLogResponseToAuditLogsResponse } from '../utils/dto-mappers';
+import {
+  mapLogEntryToAuditLogDetail,
+  mapLogResponseToAuditLogsResponse,
+} from '../utils/dto-mappers';
 
 export const auditService = {
   // Get audit logs with filters
   getAuditLogs: async (payload: GetAuditLogsPayload): Promise<GetAuditLogsResponse> => {
     // Map payload to API params
-    const apiParams = {
-      page: payload.page || 1,
-      per_page: payload.limit || 20,
-      action: payload.action,
-      from_date: payload.from_date,
-      to_date: payload.to_date,
-      search: payload.search,
-    };
 
-    const searchParams = queryString.stringify(apiParams);
+    const searchParams = queryString.stringify(payload);
     const response = await api.get<LogResponseDataDto>(`logs?${searchParams}`);
 
     // Map DTO to domain type
@@ -32,8 +27,8 @@ export const auditService = {
 
   // Get audit log detail
   getAuditLogDetail: async (logId: string): Promise<AuditLogDetail> => {
-    const response = await api.get<AuditLogDetail>(`logs/${logId}`);
-    return response;
+    const response = await api.get<LogEntryDto>(`logs/${logId}`);
+    return mapLogEntryToAuditLogDetail(response);
   },
 
   // Export audit logs

@@ -1,3 +1,5 @@
+import { usePlatforms } from '@/features/content/hooks/usePlatform';
+import { useDebounceSearch } from '@/shared/hooks/use-debounce-search';
 import {
   Button,
   Calendar,
@@ -5,6 +7,11 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Typography,
 } from '@/shared/ui';
 import { useNavigate, useSearch } from '@tanstack/react-router';
@@ -30,10 +37,18 @@ import { AuditAction } from '../types';
 function AuditPageComponent() {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
-  const [searchQuery, setSearchQuery] = useState('');
 
   const filters: AuditSearchSchema = useSearch({ strict: false });
+
+  const { value, handleChange } = useDebounceSearch((inputValue: string) => {
+    navigate({
+      to: '/audit',
+      search: { ...filters, search: inputValue },
+    });
+  }, 500);
   const { data: logs, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useAuditLogs();
+
+  const { data: platforms } = usePlatforms();
 
   const [loadMoreRef] = useInfiniteScroll({
     hasNextPage,
@@ -42,9 +57,20 @@ function AuditPageComponent() {
   });
 
   const handleFilterAction = (action: AuditAction) => {
+    const isExist = filters.actions?.includes(action);
+    const actions = isExist
+      ? filters.actions?.filter((item) => item !== action)
+      : [...(filters.actions || []), action];
     navigate({
       to: '/audit',
-      search: { ...filters, action },
+      search: { ...filters, actions },
+    });
+  };
+
+  const handleFilterPlatform = (platform: string) => {
+    navigate({
+      to: '/audit',
+      search: { ...filters, platforms: [platform] },
     });
   };
 
@@ -138,7 +164,7 @@ function AuditPageComponent() {
                     type="button"
                     onClick={() => handleFilterAction(action)}
                     className={`border px-4 py-2 font-mono text-xs uppercase transition-all ${
-                      filters.action === action
+                      filters.actions?.includes(action)
                         ? 'border-white bg-white text-black'
                         : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500'
                     }`}
@@ -150,16 +176,34 @@ function AuditPageComponent() {
           </div>
 
           {/* Search */}
-          <div className="border-t border-white/10 pt-6">
-            <div className="group relative">
+          <div className="flex justify-between gap-5 border-t border-white/10 pt-6">
+            <div className="group relative flex-1">
               <Search className="absolute top-2.5 left-3 h-4 w-4 text-zinc-600 transition-colors group-hover:text-white" />
               <Input
                 placeholder="TÌM KIẾM..."
                 className="h-10 border-white/10 bg-black pl-10 font-mono text-xs text-white uppercase focus:border-white"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={value}
+                onChange={(e) => handleChange(e.target.value)}
               />
             </div>
+            <Select
+              value={filters.platforms.join(', ')}
+              onValueChange={(selectedValue) => handleFilterPlatform(selectedValue)}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Tất cả nền tảng" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem defaultChecked value="all">
+                  Tất cả nền tảng
+                </SelectItem>
+                {platforms?.applications.map((p) => (
+                  <SelectItem key={p.id} value={p.api_key}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Date Range Filter */}
@@ -249,13 +293,13 @@ function AuditPageComponent() {
             </div>
 
             {/* Clear Filters Button */}
-            {(filters.action || filters.from_date || filters.to_date || searchQuery) && (
+            {(filters.actions?.length || filters.from_date || filters.to_date || value) && (
               <Button
                 variant="ghost"
                 size="sm"
                 className="w-full border border-white/10 font-mono text-xs text-zinc-500 hover:text-white"
                 onClick={() => {
-                  setSearchQuery('');
+                  handleChange('');
                   navigate({ to: '/audit', search: {} });
                 }}
               >
@@ -281,7 +325,13 @@ function AuditPageComponent() {
       {!isLoading && !!logs?.length && (
         <>
           {viewMode === 'table' ? (
-            <AuditLogTable logs={logs} onRowClick={(log) => handleViewDetail(log.id)} />
+            <AuditLogTable
+              logs={logs}
+              onRowClick={(log) => handleViewDetail(log.id)}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              loadMoreRef={loadMoreRef}
+            />
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {logs.map((log) => (
@@ -290,8 +340,8 @@ function AuditPageComponent() {
             </div>
           )}
 
-          {/* Infinite Scroll Trigger */}
-          {hasNextPage && (
+          {/* Infinite Scroll Trigger for Grid View */}
+          {viewMode === 'grid' && hasNextPage && (
             <div ref={loadMoreRef} className="flex justify-center py-8">
               {isFetchingNextPage && (
                 <Typography variant="small" className="font-mono text-zinc-500">

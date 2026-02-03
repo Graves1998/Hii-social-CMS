@@ -14,56 +14,51 @@ export interface LogEntryDto {
   id: string;
   who: string;
   email: string;
+  ip_address: string;
   action: string;
-  before: any | null;
-  after: ReelAfterStateDto;
+  status: string;
+  before: {
+    items: ReelStateDto[];
+  };
+  after: {
+    items: ReelStateDto[];
+  };
+  reason: string;
   created_at: string;
   updated_at: string;
 }
 
-export interface ReelAfterStateDto {
-  reelbaseinfo: ReelBaseInfoDto;
-  owner: any | null;
-  likes: number;
-  dislikes: number;
-  views: number;
-  total_unread_comments: number;
-  totalcomments: number;
-  oldest_unread_comment: any | null;
-  liked: boolean;
-  is_trending: boolean;
-}
-
-export interface ReelBaseInfoDto {
-  _id: string;
+export interface ReelStateDto {
+  id: string;
   title: string;
   type: string;
   description: string;
   owner_id: string;
   content: string;
   language: string;
+  status: string; // Vd: "private" ở before và "published" ở after
+  approving_status: string;
   categories: string[];
   platforms: string[];
-  media: MediaAssetDto[];
-  thumbnail: MediaAssetDto;
-  sound: MediaAssetDto;
   tags: string[];
-  status: string;
-  approving_status: string;
-  participants: any[];
+  media: MediaDetailsDto[];
+  thumbnail: MediaDetailsDto;
+  sound: MediaDetailsDto;
+  metadata: ReelMetadataDto;
+  is_internal_owner: boolean;
   is_allow_comment: boolean;
   is_hidden: boolean;
+  peer_tube_video_uuid: string;
+  crawler_id: string;
+  notification_status: string;
   created_at: string;
   updated_at: string;
   updated_by: string | null;
   scheduled_at: string | null;
-  notification_status: string;
-  crawler_id: string;
-  is_internal_owner: boolean;
-  metadata: ReelMetadataDto;
+  participants: any[];
 }
 
-export interface MediaAssetDto {
+export interface MediaDetailsDto {
   type: string;
   url: string;
   duration: number | null;
