@@ -19,6 +19,7 @@ export interface Video {
   thumbnail_url: string;
   video_id: string;
   video_metadata: VideoMetadata;
+  is_created: boolean;
 }
 
 export interface PublishMetadata {

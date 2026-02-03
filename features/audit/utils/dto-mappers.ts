@@ -4,8 +4,8 @@
  * Map API DTOs to domain types
  */
 
-import type { LogEntryDto, LogResponseDataDto } from '../dto';
-import type { AuditLog, GetAuditLogsResponse } from '../types';
+import type { LogEntryDto, LogResponseDataDto, ReelStateDto } from '../dto';
+import type { AuditLog, AuditLogDetail, GetAuditLogsResponse, Resource } from '../types';
 import { AuditAction, AuditStatus, ResourceType } from '../types';
 
 /**
@@ -19,13 +19,21 @@ function mapAction(action: string): AuditAction {
 /**
  * Determine resource type from log entry
  */
-function determineResourceType(log: LogEntryDto): ResourceType {
+function determineResourceType(type: string): ResourceType {
   // Check if it's a reel/content based on the after state
-  if (log.after?.reelbaseinfo) {
+  if (type === 'reel') {
     return ResourceType.CONTENT;
   }
   // Default to CONTENT for now
   return ResourceType.CONTENT;
+}
+
+function mapResource(item: ReelStateDto): Resource {
+  return {
+    title: item.title,
+    type: determineResourceType(item.type),
+    id: item.id,
+  };
 }
 
 /**
@@ -35,23 +43,21 @@ export function mapLogEntryToAuditLog(dto: LogEntryDto): AuditLog {
   return {
     id: dto.id,
     action: mapAction(dto.action),
-    resource_type: determineResourceType(dto),
-    // eslint-disable-next-line no-underscore-dangle
-    resource_id: dto.after?.reelbaseinfo?._id || dto.id,
-    actor_id: dto.id, // Use log id as actor id for now
+    resources: dto.after.items.map(mapResource),
+    actor_id: dto.id,
     actor_name: dto.who,
     actor_email: dto.email,
-    status: AuditStatus.SUCCESS, // Default to success
-    ip_address: 'N/A', // Not provided in DTO
+    status: dto.status as AuditStatus,
     user_agent: 'N/A', // Not provided in DTO
+    ip_address: dto.ip_address,
     metadata: {
       before: dto.before,
       after: dto.after,
     },
     changes: dto.before
       ? {
-          before: dto.before,
-          after: dto.after,
+          before: dto.before.items,
+          after: dto.after.items,
         }
       : undefined,
     created_at: dto.created_at,
@@ -71,5 +77,34 @@ export function mapLogResponseToAuditLogsResponse(dto: LogResponseDataDto): GetA
       dto.meta.current_page < dto.meta.total_pages ? String(dto.meta.current_page + 1) : '',
     number_of_items: dto.logs.length,
     total: dto.meta.total_items,
+  };
+}
+
+/**
+ * Map LogEntryDto to AuditLogDetail
+ */
+export function mapLogEntryToAuditLogDetail(dto: LogEntryDto): AuditLogDetail {
+  return {
+    id: dto.id,
+    action: mapAction(dto.action),
+    resources: dto.after.items.map(mapResource),
+    actor_id: dto.id,
+    actor_name: dto.who,
+    actor_email: dto.email,
+    status: dto.status as AuditStatus,
+    user_agent: 'N/A', // Not provided in DTO
+    ip_address: dto.ip_address,
+    metadata: {
+      before: dto.before,
+      after: dto.after,
+    },
+    changes: dto.before
+      ? {
+          before: dto.before.items,
+          after: dto.after.items,
+        }
+      : undefined,
+    created_at: dto.created_at,
+    error_message: dto.reason,
   };
 }

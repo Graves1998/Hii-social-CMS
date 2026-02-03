@@ -15,6 +15,7 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   [AuditAction.REJECT_REELS_BATCH]: 'Từ Chối Nhiều Reel',
   [AuditAction.LIKE_REEL]: 'Thích Reel',
   [AuditAction.UNLIKE_REEL]: 'Bỏ Thích Reel',
+  [AuditAction.PUBLISHED_REEL]: 'Công khai Reel',
 
   // Schedule Actions
   [AuditAction.CREATE_REEL_SCHEDULE]: 'Tạo Lịch Reel',
@@ -56,6 +57,7 @@ export const AUDIT_ACTION_COLORS: Record<AuditAction, string> = {
   [AuditAction.REJECT_REELS_BATCH]: 'text-red-400',
   [AuditAction.LIKE_REEL]: 'text-pink-500',
   [AuditAction.UNLIKE_REEL]: 'text-gray-500',
+  [AuditAction.PUBLISHED_REEL]: 'text-green-500',
 
   // Schedule Actions
   [AuditAction.CREATE_REEL_SCHEDULE]: 'text-blue-500',

@@ -23,6 +23,7 @@ export const useAuditLogs = () => {
         ...filters,
         page: pageParam,
         limit: filters.limit || 20,
+        platforms: filters.platforms.includes('all') ? [] : filters.platforms,
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => (lastPage.has_next ? Number(lastPage.next_cursor) : undefined),

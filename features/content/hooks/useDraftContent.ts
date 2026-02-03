@@ -37,7 +37,9 @@ const useDraftContent = () => {
   return {
     ...crawlContentQuery,
     data:
-      crawlContentQuery.data?.pages.flatMap((page) => page.videos.map(transformCrawlContent)) || [],
+      crawlContentQuery.data?.pages.flatMap((page) =>
+        page.videos.filter((video) => !video.is_created).map(transformCrawlContent)
+      ) || [],
   };
 };
 

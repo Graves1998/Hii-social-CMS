@@ -13,6 +13,7 @@ export enum AuditAction {
   REJECT_REELS_BATCH = 'reject_reels_batch',
   LIKE_REEL = 'like_reel',
   UNLIKE_REEL = 'unlike_reel',
+  PUBLISHED_REEL = 'published_reels',
 
   // Schedule Actions
   CREATE_REEL_SCHEDULE = 'create_reel_schedule',
@@ -48,8 +49,7 @@ export enum AuditStatus {
 export interface AuditLog {
   id: string;
   action: AuditAction;
-  resource_type: ResourceType;
-  resource_id: string;
+  resources: Resource[];
   actor_id: string;
   actor_name: string;
   actor_email: string;
@@ -58,20 +58,27 @@ export interface AuditLog {
   user_agent: string;
   metadata: Record<string, any>;
   changes?: {
-    before: Record<string, any>;
-    after: Record<string, any>;
+    before: Record<string, any>[];
+    after: Record<string, any>[];
   };
   created_at: string;
   error_message?: string;
 }
 
+export interface Resource {
+  title: string;
+  type: string;
+  id: string;
+}
+
 export interface GetAuditLogsPayload {
   limit?: number;
   page?: number;
-  action?: AuditAction;
+  actions?: string[];
   from_date?: string;
   to_date?: string;
   search?: string;
+  platforms?: string[];
 }
 
 export interface GetAuditLogsResponse {
