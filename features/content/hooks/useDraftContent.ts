@@ -5,9 +5,9 @@
  */
 
 import { queryClient } from '@/lib/query-client';
+import { SortOrder } from '@/shared';
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { useSearch } from '@tanstack/react-router';
-import { SortOrder } from '@/shared';
 import { queryKeys } from '../query-keys';
 import { DraftContentSearchSchema } from '../schemas';
 import { draftContentService } from '../services/draft-content-service';
@@ -15,7 +15,6 @@ import { MakeDraftContentPreviewPayload, PaginatedResponse } from '../types';
 import { transformCrawlContent } from '../utils';
 
 const useDraftContent = () => {
-  // const filters = useDraftContentFilters();
   const filters: DraftContentSearchSchema = useSearch({ strict: false });
 
   const crawlContentQuery = useInfiniteQuery({

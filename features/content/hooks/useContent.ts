@@ -14,19 +14,12 @@ import {
 import { transformReelContent } from '../utils';
 
 export const useContent = (filters: Partial<ContentSearchSchema>) => {
-  // const filters: ContentSearchSchema = useSearch({ strict: false });
-
-  // const approvingStatus = overrideStatus || filters.approving_status;
-  const queryKey = queryKeys.content.lists({
-    ...filters,
-    // approving_status: approvingStatus,
-  });
+  const queryKey = queryKeys.content.lists(filters);
   const contentQuery = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam = 1 }) =>
       contentService.getContent({
         ...filters,
-        // approving_status: approvingStatus,
         page: pageParam,
       }),
     getNextPageParam: (lastPage: GetContentResponse, allPages: GetContentResponse[]) => {
@@ -52,7 +45,7 @@ export const useCreateContent = () => {
   return useMutation({
     mutationFn: ({ data }: { data: ContentSchema }) => contentService.createContent(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.contentCrawl.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.contentCrawl.lists() });
       queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
     },
   });
