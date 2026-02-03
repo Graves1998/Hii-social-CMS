@@ -80,6 +80,7 @@ function DetailPageComponent() {
           status: ContentStatus.PRIVATE,
           id: contentDetails?.id || '',
           categories: [],
+          crawler_id: contentDetails?.content_id || '',
         }
       : undefined,
   });

@@ -11,6 +11,7 @@ export const contentSchema = z.object({
   id: z.string().optional(),
   categories: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]).optional(),
+  crawler_id: z.string(),
 });
 
 export type ContentSchema = z.infer<typeof contentSchema>;
