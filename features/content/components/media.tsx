@@ -1,7 +1,17 @@
 import { cn } from '@/lib';
-import { Badge, STATUS_COLORS, STATUS_LABELS, Typography } from '@/shared';
+import {
+  Badge,
+  ContentStatus,
+  Permission,
+  PermissionGate,
+  STATUS_COLORS,
+  STATUS_LABELS,
+  Typography,
+} from '@/shared';
 import { ContentItem, MediaType } from '@/shared/types';
+import { useSearch } from '@tanstack/react-router';
 import { Check, Play } from 'lucide-react';
+import { useMemo } from 'react';
 
 interface MediaProps {
   item: ContentItem;
@@ -22,6 +32,14 @@ function Media({ item, onView, isSelected, onToggleSelect }: MediaProps) {
   const tags = item.tags?.slice(0, limitTags);
   const remainingTags = +(item.tags?.length || 0) - limitTags;
 
+  const { approving_status: approvingStatus } = useSearch({ strict: false });
+  const permission = useMemo(() => {
+    if (approvingStatus === ContentStatus.PENDING_REVIEW) return Permission.REELS_APPROVE;
+    if (approvingStatus === ContentStatus.PUBLISHED) return Permission.REELS_PUBLISH;
+
+    return Permission.NONE;
+  }, [approvingStatus]);
+
   return (
     <button
       type="button"
@@ -33,13 +51,15 @@ function Media({ item, onView, isSelected, onToggleSelect }: MediaProps) {
 
       {/* Selection Checkbox */}
       {onToggleSelect && (
-        <button
-          type="button"
-          onClick={handleCheckboxClick}
-          className="absolute top-3 right-3 z-30 flex h-6 w-6 cursor-pointer items-center justify-center border border-white/20 bg-black/80 backdrop-blur transition-all hover:border-white"
-        >
-          {isSelected && <Check size={14} className="text-white" />}
-        </button>
+        <PermissionGate permission={permission as Permission}>
+          <button
+            type="button"
+            onClick={handleCheckboxClick}
+            className="absolute top-3 right-3 z-30 flex h-6 w-6 cursor-pointer items-center justify-center border border-white/20 bg-black/80 backdrop-blur transition-all hover:border-white"
+          >
+            {isSelected && <Check size={14} className="text-white" />}
+          </button>
+        </PermissionGate>
       )}
 
       {/* Image/Media */}

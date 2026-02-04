@@ -1,10 +1,20 @@
 import { cn } from '@/lib';
-import { Badge, MediaType, STATUS_COLORS, STATUS_LABELS, Typography } from '@/shared';
+import {
+  Badge,
+  ContentStatus,
+  MediaType,
+  Permission,
+  STATUS_COLORS,
+  STATUS_LABELS,
+  Typography,
+} from '@/shared';
+import { usePermission } from '@/shared/hooks/use-permission';
 import { ContentItem } from '@/shared/types';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
+import { useSearch } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import { ImageIcon, LinkIcon, Type, Video } from 'lucide-react';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 interface ContentTableProps {
   items: ContentItem[];
@@ -135,13 +145,6 @@ const contentTableColumns: DataTableColumn<ContentItem>[] = [
     accessorFn: (row) => row.status,
     cell: (row) => <StatusCell row={row} />,
   },
-  // {
-  //   id: 'actions',
-  //   header: 'Thao Tác',
-  //   headerAlign: 'right',
-  //   cellAlign: 'right',
-  //   cell: () => <ActionsCell />,
-  // },
 ];
 
 const ContentTable: React.FC<ContentTableProps> = ({
@@ -155,6 +158,15 @@ const ContentTable: React.FC<ContentTableProps> = ({
   loadMoreRef,
   isPlaceholderData,
 }) => {
+  const { approving_status: approvingStatus } = useSearch({ strict: false });
+  const permission = useMemo(() => {
+    if (approvingStatus === ContentStatus.PENDING_REVIEW) return Permission.REELS_APPROVE;
+    if (approvingStatus === ContentStatus.PUBLISHED) return Permission.REELS_PUBLISH;
+
+    return Permission.NONE;
+  }, [approvingStatus]);
+  const hasPermission = usePermission(permission);
+
   return (
     <DataTable
       data={items}
@@ -162,8 +174,8 @@ const ContentTable: React.FC<ContentTableProps> = ({
       getRowId={(row) => row.id}
       onRowClick={onView}
       selectedIds={selectedIds}
-      onToggleSelect={onToggleSelect}
-      onToggleAll={onToggleAll}
+      onToggleSelect={hasPermission ? onToggleSelect : undefined}
+      onToggleAll={hasPermission ? onToggleAll : undefined}
       stickyHeader
       emptyMessage="Không có dữ liệu hiển thị."
       hasNextPage={hasNextPage}

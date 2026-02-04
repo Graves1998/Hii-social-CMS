@@ -24,6 +24,7 @@ function ContentCrawlPageComponent() {
     fetchNextPage,
     isFetchingNextPage,
     isPlaceholderData,
+    totalItems,
   } = useDraftContent();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -159,7 +160,7 @@ function ContentCrawlPageComponent() {
 
   return (
     <div className="relative flex h-full flex-col space-y-8 p-4 sm:p-10">
-      <DraftContentHeader />
+      <DraftContentHeader totalItems={totalItems} />
 
       {_isLoadingCrawlContent && viewMode === 'table' && <ContentTableSkeleton rows={10} />}
       {_isLoadingCrawlContent && viewMode === 'grid' && <ContentGridSkeleton count={12} />}

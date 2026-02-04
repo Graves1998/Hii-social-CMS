@@ -21,7 +21,10 @@ import { useContentStore } from '../stores/useContentStore';
 import { transformStatusLabel } from '../utils';
 import { useContentContext } from './content-context';
 
-function ContentHeader() {
+type ContentHeaderProps = {
+  totalItems?: number;
+};
+function ContentHeader({ totalItems }: ContentHeaderProps) {
   const navigate = useNavigate();
 
   const { data: approvingStatus, isLoading: isLoadingApprovingStatus } = useApprovingStatus();
@@ -113,7 +116,7 @@ function ContentHeader() {
                     : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                {tab.name}
+                {tab.name} {filters.approving_status === tab.slug && `(${totalItems})`}
               </button>
             ))}
           </div>

@@ -7,19 +7,15 @@
 import { queryClient } from '@/lib/query-client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import React from 'react';
 
+import AppRouterProvider from './app-router-provider';
 import { ThemeProvider } from './theme-provider';
 
-interface ProvidersProps {
-  children: React.ReactNode;
-}
-
-export function Providers({ children }: ProvidersProps) {
+export function Providers() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        {children}
+        <AppRouterProvider />
         <ReactQueryDevtools initialIsOpen={false} position="bottom" />
       </ThemeProvider>
     </QueryClientProvider>

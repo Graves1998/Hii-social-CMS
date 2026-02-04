@@ -80,3 +80,9 @@ export const checkIsPlaylistPlatform = (playlistVideos: ContentItem[]) => {
     return base.some((p, i) => p !== current[i]);
   });
 };
+
+export const detectTags = (title?: string) => {
+  if (!title) return [];
+  const tags = title.match(/#([\p{L}\p{N}_]+)/gu) || [];
+  return tags;
+};

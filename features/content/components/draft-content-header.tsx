@@ -19,7 +19,10 @@ import {
 import { DraftContentSearchSchema } from '../schemas';
 import { useDraftContentStore } from '../stores/useDraftContentStore';
 
-function DraftContentHeader() {
+type DraftContentHeaderProps = {
+  totalItems: number;
+};
+function DraftContentHeader({ totalItems }: DraftContentHeaderProps) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -70,7 +73,7 @@ function DraftContentHeader() {
                   : 'border-zinc-800 bg-transparent text-zinc-500 hover:border-zinc-500 hover:text-zinc-300'
               }`}
             >
-              {tab.label}
+              {tab.label} {filters.is_previewed === tab.id ? `(${totalItems})` : ''}
             </button>
           ))}
         </div>

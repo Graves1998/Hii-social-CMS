@@ -1,7 +1,7 @@
-import React, { useContext, createContext, useMemo } from 'react';
-import { Application, Category } from '../types';
-import { usePlatforms } from '../hooks/usePlatform';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useCategories } from '../hooks/useCategory';
+import { usePlatforms } from '../hooks/usePlatform';
+import { Application, Category } from '../types';
 
 type ContentContextType = {
   platforms: Application[];
@@ -36,4 +36,4 @@ const useContentContext = () => {
   return context;
 };
 
-export { useContentContext, ContentProvider };
+export { ContentProvider, useContentContext };

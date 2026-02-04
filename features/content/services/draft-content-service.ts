@@ -1,20 +1,26 @@
-import { api } from '@/services';
 import { PaginationRequest } from '@/lib/types/api';
+import { api } from '@/services';
 import queryString from 'query-string';
-import { MakeDraftContentPreviewPayload, Video } from '../types';
+import { MakeDraftContentPreviewPayload, PaginatedResponse, Video } from '../types';
 
-export const draftContentService = {
-  getDraftContent: async (payload: PaginationRequest) => {
+class DraftContentService {
+  private baseUrl = 'crawler/videos';
+
+  async getDraftContent(payload: PaginationRequest) {
     const searchParams = queryString.stringify(payload);
-    const response = await api.get('crawler/videos', { searchParams });
+    const response = await api.get<PaginatedResponse>(this.baseUrl, { searchParams });
     return response;
-  },
-  getDraftContentDetails: async (video_id: number) => {
-    const response = await api.get<Video>(`crawler/videos/${video_id}`);
+  }
+
+  async getDraftContentDetails(video_id: number) {
+    const response = await api.get<Video>(`${this.baseUrl}/${video_id}`);
     return response;
-  },
-  makeDraftContentPreview: async (video_id: number, payload: MakeDraftContentPreviewPayload) => {
-    const response = await api.patch(`crawler/videos/${video_id}/preview`, payload);
+  }
+
+  async makeDraftContentPreview(video_id: number, payload: MakeDraftContentPreviewPayload) {
+    const response = await api.patch(`${this.baseUrl}/${video_id}/preview`, payload);
     return response;
-  },
-};
+  }
+}
+
+export const draftContentService = new DraftContentService();

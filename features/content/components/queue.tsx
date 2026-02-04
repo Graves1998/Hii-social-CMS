@@ -129,15 +129,23 @@ type QueueProps = {
   loadMoreRef?: React.Ref<HTMLDivElement>;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
+  totalItems?: number;
 };
 
-function Queue({ queueItems, item, loadMoreRef, hasNextPage, isFetchingNextPage }: QueueProps) {
+function Queue({
+  queueItems,
+  item,
+  loadMoreRef,
+  hasNextPage,
+  isFetchingNextPage,
+  totalItems,
+}: QueueProps) {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <Typography className="flex items-center gap-2 p-4 font-medium" variant="small">
         <ListVideo size={14} />
         <span>HÀNG ĐỢI // {STATUS_LABELS[item.status as ContentStatus]}</span>
-        <span className="ml-auto opacity-50">{queueItems.length}</span>
+        <span className="ml-auto opacity-50">{totalItems}</span>
       </Typography>
       <QueueList
         queueItems={queueItems}

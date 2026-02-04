@@ -1,8 +1,8 @@
 import z from 'zod';
 
 export const contentSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().min(1),
+  title: z.string().min(1).trim(),
+  description: z.string().min(1).trim(),
   is_allow_comment: z.boolean().default(true),
   media: z.array(z.string()),
   thumbnail: z.string().optional(),

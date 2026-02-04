@@ -82,19 +82,4 @@ export const useAuthStore = create<AuthState>()(
 export const useAuth = () => useAuthStore((state) => state);
 export const useUser = () => useAuthStore((state) => state.user);
 export const useIsAuthenticated = () => useAuthStore((state) => state.isAuthenticated);
-
-/**
- * Example usage:
- *
- * // In component
- * const { user, login, logout } = useAuth();
- *
- * // Or use specific selectors
- * const user = useUser();
- * const isAuthenticated = useIsAuthenticated();
- *
- * // Actions
- * login({ id: '1', name: 'John', email: 'john@example.com', role: UserRole.ADMIN }, 'token123');
- * logout();
- * updateUser({ name: 'John Doe' });
- */
+export const usePermissions = () => useAuthStore((state) => state.user?.permissions);

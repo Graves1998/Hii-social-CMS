@@ -1,9 +1,13 @@
 import { api } from '@/services/apiService';
 import { GetCategoriesResponse } from '../types';
 
-export const categoryService = {
-  getCategories: async () => {
-    const response = await api.get<GetCategoriesResponse>('categories/dashboard');
-    return response;
-  },
-};
+class CategoryService {
+  private baseUrl = 'categories';
+
+  async getCategories() {
+    const data = await api.get<GetCategoriesResponse>(`${this.baseUrl}/dashboard`);
+    return data;
+  }
+}
+
+export const categoryService = new CategoryService();

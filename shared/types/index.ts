@@ -70,6 +70,20 @@ export interface ContentItem {
   media?: Media[];
   is_allow_comment?: boolean;
 }
+
+export enum Permission {
+  SUPER_ADMIN = 'super_admin',
+  REELS_REJECT = 'reels.reject',
+  REELS_DELETE = 'reels.delete',
+  USERS_MANAGE = 'users.manage',
+  SYSTEM_MANAGE = 'system.manage',
+  REELS_APPROVE = 'reels.approve',
+  REELS_PUBLISH = 'reels.publish',
+  REELS_ADD_TO_PLAYLIST = 'reels.add_to_playlist',
+  REELS_SCHEDULE = 'reels.schedule',
+  NONE = 'none',
+}
+
 export interface User {
   id: string;
   username: string;
@@ -81,6 +95,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   role?: UserRole;
+  permissions?: Permission[];
 }
 export interface LoginResponse {
   accessToken: string;

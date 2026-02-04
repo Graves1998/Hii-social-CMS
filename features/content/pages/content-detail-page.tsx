@@ -1,5 +1,6 @@
-import { STATUS_LABELS } from '@/shared';
-import { DetailPageSkeleton, QueueSkeleton } from '@/shared/components';
+import { Permission, STATUS_LABELS } from '@/shared';
+import { DetailPageSkeleton, PermissionGate, QueueSkeleton } from '@/shared/components';
+import { usePermission } from '@/shared/hooks/use-permission';
 import { ContentStatus } from '@/shared/types';
 import { Badge, Button, Textarea, Typography } from '@/shared/ui';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
@@ -26,6 +27,7 @@ import {
 import { useScheduleContent } from '../hooks/useSchedule';
 import { ContentDetailSearchSchema, UpdateReelSchema } from '../schemas';
 import { useContentStore } from '../stores/useContentStore';
+import { detectTags } from '../utils';
 
 function DetailPageComponent() {
   const { contentId } = useParams({ strict: false });
@@ -38,6 +40,7 @@ function DetailPageComponent() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    totalItems,
   } = useContent({
     ...searchParams,
     approving_status: searchParams?.approving_status as string,
@@ -118,14 +121,13 @@ function DetailPageComponent() {
   });
 
   const { categories, platforms } = useContentContext();
+
   const watchTitle = watch('title');
   const watchPlatforms = watch('platforms');
   const watchCategories = watch('categories');
   // const watchIsAllowComment = watch('is_allow_comment');
   const watchTags = useMemo(() => {
-    if (!watchTitle) return [];
-
-    return watchTitle.match(/#(\w+)/g) || [];
+    return detectTags(watchTitle);
   }, [watchTitle]);
 
   const handleChangeMetadata = (key: 'platforms' | 'categories', value: any) => {
@@ -363,13 +365,6 @@ function DetailPageComponent() {
     }
   };
 
-  if (isLoadingContentDetails) {
-    return <DetailPageSkeleton />;
-  }
-  if (!item) {
-    return <EmptyDetailPage />;
-  }
-
   const workflowSteps = [
     { id: ContentStatus.PENDING_REVIEW, label: STATUS_LABELS[ContentStatus.PENDING_REVIEW] },
     { id: ContentStatus.APPROVED, label: STATUS_LABELS[ContentStatus.APPROVED] },
@@ -381,10 +376,30 @@ function DetailPageComponent() {
   const isRejected = item?.status === ContentStatus.REJECTED;
   const isArchived = item?.status === ContentStatus.ARCHIVED;
 
-  const canEdit = item?.status === ContentStatus.PENDING_REVIEW;
+  const aprovePermission = usePermission(Permission.REELS_APPROVE);
+  const rejectPermission = usePermission(Permission.REELS_REJECT);
+  const canEdit =
+    item?.status === ContentStatus.PENDING_REVIEW || aprovePermission || rejectPermission;
+
+  const categoryList = useMemo(() => {
+    if (!canEdit) return item?.categories;
+    return categories.map((category) => category.slug);
+  }, [canEdit]);
+  const platformList = useMemo(() => {
+    if (!canEdit) return item?.target_platforms;
+    return platforms.map((platform) => platform.api_key);
+  }, [canEdit]);
+
   let activeIndex = currentStepIndex;
   if (isRejected) activeIndex = 1;
   if (isArchived) activeIndex = 5;
+
+  if (isLoadingContentDetails) {
+    return <DetailPageSkeleton />;
+  }
+  if (!item) {
+    return <EmptyDetailPage />;
+  }
   return (
     <div className="detail-layout animate-in fade-in p-4 duration-300 sm:p-10">
       {/* LEFT: QUEUE SIDEBAR */}
@@ -393,6 +408,7 @@ function DetailPageComponent() {
           <QueueSkeleton count={12} />
         ) : (
           <Queue
+            totalItems={totalItems}
             queueItems={realContent || []}
             item={item}
             hasNextPage={hasNextPage}
@@ -464,7 +480,7 @@ function DetailPageComponent() {
             </Typography>
             <div className="flex flex-wrap gap-1.5">
               {watchTags.map((tag: string) => (
-                <Badge key={tag} variant="outline">
+                <Badge key={tag} variant="default">
                   {tag}
                 </Badge>
               ))}
@@ -473,23 +489,21 @@ function DetailPageComponent() {
         )}
 
         {/* DISTRIBUTION NETWORKS */}
-        {!!platforms && (
+        {!!platformList && (
           <div className="flex flex-col gap-2">
             <Typography variant="small" className="text-muted-foreground font-medium">
               MẠNG LƯỚI PHÂN PHỐI
             </Typography>
             <div className="flex flex-wrap gap-1.5">
-              {platforms.map((platform) => (
+              {platformList.map((platform) => (
                 <Badge
-                  variant={watchPlatforms?.includes(platform.name) ? 'default' : 'outline'}
-                  key={platform.id}
-                  onClick={
-                    canEdit ? () => handleChangeMetadata('platforms', platform.name) : undefined
-                  }
+                  variant={watchPlatforms?.includes(platform) ? 'default' : 'outline'}
+                  key={platform}
+                  onClick={canEdit ? () => handleChangeMetadata('platforms', platform) : undefined}
                   className={canEdit ? 'cursor-pointer' : ''}
                 >
                   <Globe size={10} />
-                  {platform.name}
+                  {platform}
                 </Badge>
               ))}
             </div>
@@ -497,22 +511,20 @@ function DetailPageComponent() {
         )}
 
         {/* CATEGORIES */}
-        {!!categories?.length && (
+        {!!categoryList?.length && (
           <div className="flex flex-col gap-2">
             <Typography variant="small" className="text-muted-foreground font-medium">
               DANH MỤC
             </Typography>
             <div className="flex flex-wrap gap-1.5">
-              {categories.map((category) => (
+              {categoryList.map((category) => (
                 <Badge
-                  variant={watchCategories?.includes(category.name) ? 'default' : 'outline'}
-                  key={category.id}
-                  onClick={
-                    canEdit ? () => handleChangeMetadata('categories', category.name) : undefined
-                  }
+                  variant={watchCategories?.includes(category) ? 'default' : 'outline'}
+                  key={category}
+                  onClick={canEdit ? () => handleChangeMetadata('categories', category) : undefined}
                   className={canEdit ? 'cursor-pointer' : ''}
                 >
-                  {category.name}
+                  {category}
                 </Badge>
               ))}
             </div>
@@ -528,39 +540,54 @@ function DetailPageComponent() {
         />
 
         {/* ACTIONS */}
-        <div className="actions">
+        <div className="mt-auto flex gap-2">
           {item.status === ContentStatus.PENDING_REVIEW && (
-            <Button
-              variant="destructive"
-              onClick={() => handleUpdateStatus(ContentStatus.REJECTED)}
-              disabled={isRejected || isRejectingBatch}
-            >
-              TỪ CHỐI
-            </Button>
+            <PermissionGate permission={Permission.REELS_REJECT}>
+              <Button
+                variant="destructive"
+                onClick={() => handleUpdateStatus(ContentStatus.REJECTED)}
+                disabled={isRejected || isRejectingBatch}
+                className="flex-1"
+              >
+                TỪ CHỐI
+              </Button>
+            </PermissionGate>
           )}
           {item.status !== ContentStatus.PENDING_REVIEW && (
-            <Button
-              variant="outline"
-              onClick={() => setIsScheduleModalOpen(true)}
-              disabled={item.status === ContentStatus.PUBLISHED || isSchedulingContent}
-              className="border-white/20 text-white hover:bg-white/10"
-            >
-              LÊN LỊCH
-            </Button>
+            <PermissionGate permission={Permission.REELS_SCHEDULE}>
+              <Button
+                variant="outline"
+                onClick={() => setIsScheduleModalOpen(true)}
+                disabled={item.status === ContentStatus.PUBLISHED || isSchedulingContent}
+                className="flex-1 border-white/20 text-white hover:bg-white/10"
+              >
+                LÊN LỊCH
+              </Button>
+            </PermissionGate>
           )}
           {item.status !== ContentStatus.PENDING_REVIEW && (
-            <Button
-              variant="default"
-              onClick={() => handleUpdateStatus(ContentStatus.PUBLISHED)}
-              disabled={isPublishingContent || item.status === ContentStatus.PUBLISHED}
-            >
-              Đăng ngay
-            </Button>
+            <PermissionGate permission={Permission.REELS_PUBLISH}>
+              <Button
+                variant="default"
+                className="flex-1"
+                onClick={() => handleUpdateStatus(ContentStatus.PUBLISHED)}
+                disabled={isPublishingContent || item.status === ContentStatus.PUBLISHED}
+              >
+                Đăng ngay
+              </Button>
+            </PermissionGate>
           )}
           {item.status === ContentStatus.PENDING_REVIEW && (
-            <Button variant="default" type="submit" disabled={isApprovingContent}>
-              {isApprovingContent ? 'ĐANG DUYỆT...' : 'DUYỆT'}
-            </Button>
+            <PermissionGate permission={Permission.REELS_APPROVE}>
+              <Button
+                variant="default"
+                type="submit"
+                disabled={isApprovingContent}
+                className="flex-1"
+              >
+                {isApprovingContent ? 'ĐANG DUYỆT...' : 'DUYỆT'}
+              </Button>
+            </PermissionGate>
           )}
         </div>
       </form>

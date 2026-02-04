@@ -40,6 +40,8 @@ const useDraftContent = () => {
       crawlContentQuery.data?.pages.flatMap((page) =>
         page.videos.filter((video) => !video.is_created).map(transformCrawlContent)
       ) || [],
+    totalItems:
+      crawlContentQuery.data?.pages[crawlContentQuery.data.pages.length - 1].pagination.total || 0,
   };
 };
 

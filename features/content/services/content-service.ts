@@ -13,67 +13,61 @@ import {
   ScheduleContentPayload,
 } from '../types';
 
-export const contentService = {
-  createContent: async (data: ContentSchema) => {
-    const { platforms, ...payload } = data;
+class ContentService {
+  private baseUrl = 'reels/dashboard';
+
+  async createContent(dataForm: ContentSchema) {
+    const { platforms, ...payload } = dataForm;
     const searchParams = queryString.stringify({ api_key: platforms });
-    const response = await api.post(`reels/dashboard/?${searchParams}`, payload);
-    return response;
-  },
+    const data = await api.post(`${this.baseUrl}/?${searchParams}`, payload);
+    return data;
+  }
 
-  getContent: async (queryParams: Partial<GetContentPayload>) => {
+  async getContent(queryParams: Partial<GetContentPayload>) {
     const searchParams = queryString.stringify(queryParams);
-    const response = await api.get<GetContentResponse>(`reels/dashboard?${searchParams}`);
-    return response;
-  },
+    const data = await api.get<GetContentResponse>(`${this.baseUrl}?${searchParams}`);
+    return data;
+  }
 
-  getContentDetails: async (id: string, approving_status: string) => {
-    const response = await api.get<Reel>(
-      `reels/dashboard/${id}?approving_status=${approving_status}`
-    );
-    return response;
-  },
+  async getContentDetails(id: string, approving_status: string) {
+    const data = await api.get<Reel>(`${this.baseUrl}/${id}?approving_status=${approving_status}`);
+    return data;
+  }
 
-  getApprovingStatus: async () => {
-    const response = await api.get<ApprovingStatus[]>(`reels/dashboard/approving-status`);
-    return response;
-  },
+  async getApprovingStatus() {
+    const data = await api.get<ApprovingStatus[]>(`${this.baseUrl}/approving-status`);
+    return data;
+  }
 
-  // Schedule Content
+  async scheduleContent(payload: ScheduleContentPayload) {
+    const data = await api.post(`${this.baseUrl}/schedules`, payload);
+    return data;
+  }
 
-  scheduleContent: async (payload: ScheduleContentPayload) => {
-    const response = await api.post(`reels/dashboard/schedules`, payload);
-    return response;
-  },
+  async approveContent(payload: ApproveContentPayload) {
+    const data = await api.post(`${this.baseUrl}/approve`, payload);
+    return data;
+  }
 
-  // Approve Content
+  async approveContents(payload: ApproveContentBatchPayload) {
+    const data = await api.post(`reels/dashboard/approve-batch`, payload);
+    return data;
+  }
 
-  approveContent: async (payload: ApproveContentPayload) => {
-    const response = await api.post(`reels/dashboard/approve`, payload);
-    return response;
-  },
+  async publishContent(payload: PublishContentPayload) {
+    const data = await api.post(`${this.baseUrl}/publish-batch`, payload);
+    return data;
+  }
 
-  approveContents: async (payload: ApproveContentBatchPayload) => {
-    const response = await api.post(`reels/dashboard/approve-batch`, payload);
-    return response;
-  },
+  async rejectContent(payload: ApproveContentPayload) {
+    const data = await api.post(`${this.baseUrl}/reject`, payload);
+    return data;
+  }
 
-  // Publish Content
+  async rejectContents(payload: RejectContentBatchPayload) {
+    const data = await api.post(`reels/dashboard/reject-batch`, payload);
+    return data;
+  }
+}
 
-  publishContent: async (payload: PublishContentPayload) => {
-    const response = await api.post(`reels/dashboard/publish-batch`, payload);
-    return response;
-  },
-
-  // Reject Content
-
-  rejectContent: async (payload: ApproveContentPayload) => {
-    const response = await api.post(`reels/dashboard/reject`, payload);
-    return response;
-  },
-
-  rejectContents: async (payload: RejectContentBatchPayload) => {
-    const response = await api.post(`reels/dashboard/reject-batch`, payload);
-    return response;
-  },
-};
+export const contentService = new ContentService();
