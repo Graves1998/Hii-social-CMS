@@ -379,7 +379,7 @@ function DetailPageComponent() {
   const aprovePermission = usePermission(Permission.REELS_APPROVE);
   const rejectPermission = usePermission(Permission.REELS_REJECT);
   const canEdit =
-    item?.status === ContentStatus.PENDING_REVIEW || aprovePermission || rejectPermission;
+    item?.status === ContentStatus.PENDING_REVIEW && aprovePermission && rejectPermission;
 
   const categoryList = useMemo(() => {
     if (!canEdit) return item?.categories;
