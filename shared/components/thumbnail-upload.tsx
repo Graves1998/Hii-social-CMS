@@ -108,10 +108,10 @@ export function ThumbnailUpload({
             </div>
             <div className="text-center">
               <Typography variant="small" className="font-mono text-zinc-400">
-                Click để upload thumbnail
+                Click để tải lên
               </Typography>
               <Typography variant="tiny" className="mt-1 font-mono text-zinc-600">
-                PNG, JPG, GIF (Max {maxSizeMB}MB)
+                PNG, JPG, GIF (Tối đa {maxSizeMB}MB)
               </Typography>
             </div>
           </div>
