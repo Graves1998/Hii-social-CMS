@@ -121,9 +121,9 @@ function ReportDetailPage() {
   const reportCount = report.reports?.length || 0;
 
   return (
-    <div className="animate-in fade-in grid w-full grid-cols-1 gap-6 p-4 duration-300 sm:p-10 md:grid-cols-2">
+    <div className="animate-in fade-in flex h-dvh w-full flex-col gap-6 overflow-hidden p-4 duration-300 sm:p-10">
       {/* Header */}
-      <div className="col-span-2 flex items-start justify-between">
+      <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -139,116 +139,120 @@ function ReportDetailPage() {
           </div>
         </div>
       </div>
-      {/* LEFT: Video Preview */}
-      <aside className="queue-sidebar">
-        <div className="flex h-full flex-col">
-          <Typography variant="small" className="mb-4 font-mono text-zinc-500 uppercase">
-            <Video size={16} className="mr-2 inline" />
-            VIDEO BỊ BÁO CÁO
-          </Typography>
-
-          {/* Video Player */}
-          {report.video_info.media && report.video_info.media.length > 0 ? (
-            <VideoPlayer
-              url={report.video_info.media[0].url}
-              poster={report.video_info.thumbnail?.url}
-              title={report.video_info.title}
-              aspectRatio="9/16"
-              className="mb-4"
-            />
-          ) : (
-            <div className="relative mb-4 aspect-[9/16] overflow-hidden border border-white/10 bg-black">
-              <div className="flex h-full items-center justify-center">
-                <AlertTriangle className="h-12 w-12 text-zinc-600" />
-              </div>
-            </div>
-          )}
-        </div>
-      </aside>
-
-      {/* CENTER: Report Details */}
-      <section className="relative overflow-y-auto p-8">
-        <div className="space-y-6">
-          {/* Video Status */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className={`font-mono text-sm uppercase ${statusColor}`}>
-              {STATUS_LABELS[report.video_info.status as ContentStatus]}
-            </Badge>
-            <Badge variant="destructive" className="font-mono text-sm">
-              <MessageSquare size={12} className="mr-1" />
-              {reportCount} Báo Cáo
-            </Badge>
-          </div>
-
-          {/* Video Information */}
-          <div className="space-y-3 border-t border-white/10 pt-6">
-            <Typography variant="tiny" className="font-mono text-zinc-500 uppercase">
-              THÔNG TIN VIDEO
+      <div className="flex h-full gap-10">
+        {/* LEFT: Video Preview */}
+        <aside className="queue-sidebar h-full">
+          <div className="flex aspect-[9/16] h-full flex-col pb-10">
+            <Typography variant="small" className="mb-4 font-mono text-zinc-500 uppercase">
+              <Video size={16} className="mr-2 inline" />
+              VIDEO BỊ BÁO CÁO
             </Typography>
-            <div className="space-y-2 border border-white/10 bg-black/50 p-4">
-              <Typography variant="p" className="font-mono text-white">
-                {report.video_info.title}
+
+            {/* Video Player */}
+            {report.video_info.media && report.video_info.media.length > 0 ? (
+              <VideoPlayer
+                url={report.video_info.media[0].url}
+                poster={report.video_info.thumbnail?.url}
+                title={report.video_info.title}
+                aspectRatio="9/16"
+                className="mb-4"
+              />
+            ) : (
+              <div className="relative mb-4 aspect-[9/16] overflow-hidden border border-white/10 bg-black">
+                <div className="flex h-full items-center justify-center">
+                  <AlertTriangle className="h-12 w-12 text-zinc-600" />
+                </div>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* CENTER: Report Details */}
+        <section className="relative overflow-y-auto">
+          <div className="space-y-6">
+            {/* Video Status */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className={`font-mono text-sm uppercase ${statusColor}`}>
+                {STATUS_LABELS[report.video_info.status as ContentStatus]}
+              </Badge>
+              <Badge variant="destructive" className="font-mono text-sm">
+                <MessageSquare size={12} className="mr-1" />
+                {reportCount} Báo Cáo
+              </Badge>
+            </div>
+
+            {/* Video Information */}
+            <div className="space-y-3 border-t border-white/10 pt-6">
+              <Typography variant="tiny" className="font-mono text-zinc-500 uppercase">
+                THÔNG TIN VIDEO
               </Typography>
-              {report.video_info.description && (
-                <Typography variant="small" className="font-mono text-zinc-400">
-                  {report.video_info.description}
+              <div className="space-y-2 border border-white/10 bg-black/50 p-4">
+                <Typography variant="p" className="font-mono text-white">
+                  {report.video_info.title}
                 </Typography>
-              )}
-              <div className="flex flex-col gap-2 pt-2 font-mono text-sm text-zinc-600">
-                <Typography variant="small">Người đăng: {report.video_info.owner.email}</Typography>
-                <Typography variant="small">
-                  Ngày tạo: {formatDate(report.video_info.created_at)}
-                </Typography>
-              </div>
-            </div>
-          </div>
-
-          {/* All Reports Section */}
-          <div className="space-y-4 border-t border-white/10 pt-6">
-            <Typography variant="small" className="font-mono text-zinc-500 uppercase">
-              <MessageSquare size={14} className="mr-2 inline" />
-              DANH SÁCH BÁO CÁO ({reportCount})
-            </Typography>
-
-            <div className="space-y-3">
-              {report.reports && report.reports.length > 0 ? (
-                report.reports.map((reportItem, index) => (
-                  <ReportItem key={reportItem.id} report={reportItem} index={index} />
-                ))
-              ) : (
-                <div className="border border-white/10 bg-black/50 p-8 text-center">
-                  <Typography variant="small" className="text-zinc-500">
-                    Không có báo cáo
+                {report.video_info.description && (
+                  <Typography variant="small" className="font-mono text-zinc-400">
+                    {report.video_info.description}
+                  </Typography>
+                )}
+                <div className="flex flex-col gap-2 pt-2 font-mono text-sm text-zinc-600">
+                  <Typography variant="small">
+                    Người đăng: {report.video_info.owner.email}
+                  </Typography>
+                  <Typography variant="small">
+                    Ngày tạo: {formatDate(report.video_info.created_at)}
                   </Typography>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
 
-          {/* Actions */}
-          {hasPendingReports && (
-            <div className="actions sticky bottom-0 border-t border-white/10 bg-black/95 pt-6 backdrop-blur">
-              <Button
-                variant="default"
-                onClick={() => setIsAcceptModalOpen(true)}
-                disabled={isAccepting || isRejecting}
-                className="bg-yellow-600 hover:bg-yellow-700"
-              >
-                <Check size={16} className="mr-2" />
-                CHẤP NHẬN - ẨN VIDEO
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => setIsRejectModalOpen(true)}
-                disabled={isAccepting || isRejecting}
-              >
-                <XCircle size={16} className="mr-2" />
-                TỪ CHỐI BÁO CÁO
-              </Button>
+            {/* All Reports Section */}
+            <div className="space-y-4 border-t border-white/10 pt-6">
+              <Typography variant="small" className="font-mono text-zinc-500 uppercase">
+                <MessageSquare size={14} className="mr-2 inline" />
+                DANH SÁCH BÁO CÁO ({reportCount})
+              </Typography>
+
+              <div className="space-y-3">
+                {report.reports && report.reports.length > 0 ? (
+                  report.reports.map((reportItem, index) => (
+                    <ReportItem key={reportItem.id} report={reportItem} index={index} />
+                  ))
+                ) : (
+                  <div className="border border-white/10 bg-black/50 p-8 text-center">
+                    <Typography variant="small" className="text-zinc-500">
+                      Không có báo cáo
+                    </Typography>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-      </section>
+
+            {/* Actions */}
+            {hasPendingReports && (
+              <div className="actions sticky bottom-0 border-t border-white/10 bg-black/95 pt-6 backdrop-blur">
+                <Button
+                  variant="default"
+                  onClick={() => setIsAcceptModalOpen(true)}
+                  disabled={isAccepting || isRejecting}
+                  className="bg-yellow-600 hover:bg-yellow-700"
+                >
+                  <Check size={16} className="mr-2" />
+                  CHẤP NHẬN - ẨN VIDEO
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => setIsRejectModalOpen(true)}
+                  disabled={isAccepting || isRejecting}
+                >
+                  <XCircle size={16} className="mr-2" />
+                  TỪ CHỐI BÁO CÁO
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
 
       {/* Modals */}
       <AcceptConfirmationModal

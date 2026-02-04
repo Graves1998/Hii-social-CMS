@@ -1,6 +1,6 @@
-import { Link, useNavigate, useRouter } from '@tanstack/react-router';
-import { AlertTriangle, Home, ArrowLeft } from 'lucide-react';
 import { Button, Typography } from '@/shared/ui';
+import { Link, useNavigate, useRouter } from '@tanstack/react-router';
+import { AlertTriangle, ArrowLeft, Home } from 'lucide-react';
 
 /**
  * 404 Not Found Page Component
@@ -21,7 +21,7 @@ export function NotFoundPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black p-6">
+    <div className="flex h-dvh items-center justify-center bg-black p-6">
       <div className="w-full max-w-2xl">
         {/* Main Card */}
         <div className="relative border border-white/10 bg-black p-12 shadow-2xl">

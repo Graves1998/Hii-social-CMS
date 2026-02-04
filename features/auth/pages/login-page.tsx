@@ -1,7 +1,7 @@
-import { toast } from '@/shared/utils/toast';
 import { Button, Typography } from '@/shared/ui';
 import { FieldGroup } from '@/shared/ui/field';
 import FormField from '@/shared/ui/form-field';
+import { toast } from '@/shared/utils/toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from '@tanstack/react-router';
 import { AlertCircle } from 'lucide-react';
@@ -54,7 +54,7 @@ function LoginPageComponent() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#050505] p-4">
+    <div className="flex h-dvh items-center justify-center bg-[#050505] p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="mb-8 text-center">
