@@ -368,13 +368,15 @@ body {
 
 .shutter-frame {
   position: relative;
-  width: 100%;
   /* Mobile/TikTok Aspect Ratio */
-  max-width: 380px;
+  height: 100%;
   background: #000;
+  aspect-ratio: 9 / 16;
   border: 1px solid var(--border-bright);
   box-shadow: 0 0 100px rgba(0, 0, 0, 1);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Kinetic Shutter Mechanics - Auto Open */

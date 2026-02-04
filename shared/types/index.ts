@@ -96,6 +96,7 @@ export interface User {
   updatedAt: string;
   role?: UserRole;
   permissions?: Permission[];
+  avatarUrl?: string;
 }
 export interface LoginResponse {
   accessToken: string;

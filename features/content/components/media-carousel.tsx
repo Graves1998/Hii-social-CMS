@@ -173,7 +173,7 @@ export function MediaCarousel({
 
   return (
     <div
-      className={cn('flex w-full flex-col', !height && getSizeClass(size), className)}
+      className={cn('flex h-auto w-full flex-1 flex-col', !height && getSizeClass(size), className)}
       style={{
         height,
         width,
@@ -184,7 +184,7 @@ export function MediaCarousel({
           align: 'start',
           loop: true,
         }}
-        className="w-full flex-1"
+        className="flex w-full flex-1 items-center justify-center"
         setApi={(api) => {
           if (!api) return;
           api.on('select', () => {
@@ -224,7 +224,7 @@ export function MediaCarousel({
 
       {/* Indicators */}
       {showIndicators && !showCounter && media.length > 1 && (
-        <div className="mt-6 flex items-center justify-center gap-2">
+        <div className="absolute bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center justify-center gap-2">
           {media.map((_, index) => (
             <button
               key={`carousel-indicator-${index + 1}`}

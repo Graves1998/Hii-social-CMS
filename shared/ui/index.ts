@@ -4,6 +4,7 @@
  * Reusable UI components built with shadcn/ui patterns
  */
 
+export * from './avatar';
 export * from './badge';
 export * from './button';
 export * from './calendar';
