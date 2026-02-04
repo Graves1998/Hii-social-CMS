@@ -160,6 +160,7 @@ function PlaylistDetailPage() {
       video_ids: playlist?.contents?.map((v) => v.video_id) || [],
       thumbnail: playlist?.thumbnail_url || '',
     });
+    setPlaylistVideos(playlist?.contents || []);
   };
 
   const handleAddVideo = (video: PlaylistContent) => {
@@ -174,14 +175,14 @@ function PlaylistDetailPage() {
     });
   };
 
-  const handleRemoveVideo = (video: PlaylistContent) => {
-    const newVideos = playlistVideos.filter((v) => v.id !== video.id);
+  const handleRemoveVideo = (videoId: string) => {
+    const newVideos = playlistVideos.filter((v) => v.id !== videoId);
 
     // Check if it's the last video
     setValue('video_ids', newVideos.map((v) => v.video_id) || [], {
       shouldDirty: true,
     });
-    removeVideoFromPlaylist(playlistId, video.id);
+    removeVideoFromPlaylist(playlistId, videoId);
   };
 
   const handleConfirmDelete = (onSuccess?: () => void) => {
@@ -434,6 +435,7 @@ function PlaylistDetailPage() {
         onClose={() => setIsAddVideoModalOpen(false)}
         onAddVideo={handleAddVideo}
         existingVideoIds={playlistVideos.map((v) => v.video_id)}
+        onRemoveVideo={handleRemoveVideo}
       />
 
       <DeleteConfirmationModal

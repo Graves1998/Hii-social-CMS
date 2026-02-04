@@ -195,13 +195,7 @@ import { MediaCarousel } from '@/features/content/components';
 ### 10. Full Width Gallery
 
 ```tsx
-<MediaCarousel
-  media={media}
-  aspectRatio="landscape"
-  size="full"
-  showCounter
-  className="min-h-screen"
-/>
+<MediaCarousel media={media} aspectRatio="landscape" size="full" showCounter className="h-dvh" />
 ```
 
 **Result:**

@@ -13,6 +13,7 @@ interface AddVideosModalProps {
   onClose: () => void;
   onAddVideo: (video: PlaylistContent) => void;
   existingVideoIds: string[];
+  onRemoveVideo: (videoId: string) => void;
 }
 
 export function AddVideosModal({
@@ -20,6 +21,7 @@ export function AddVideosModal({
   onClose,
   onAddVideo,
   existingVideoIds,
+  onRemoveVideo,
 }: AddVideosModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -57,7 +59,12 @@ export function AddVideosModal({
   const availableVideos = useMemo(() => {
     if (!videos) return [];
 
-    return videos.filter((video) => !existingVideoIds.includes(video.id));
+    return videos.map((video) => {
+      return {
+        ...video,
+        isExisting: existingVideoIds.includes(video.id),
+      };
+    });
   }, [videos, existingVideoIds]);
 
   const handleClose = () => {
@@ -65,10 +72,13 @@ export function AddVideosModal({
     onClose();
   };
 
-  const handleAddVideo = (video: ContentItem) => {
-    const playlistVideo = transformContentToPlaylistVideo(video, availableVideos.length);
-    onAddVideo(playlistVideo);
-    handleClose();
+  const handleToggleVideo = (video: ContentItem) => {
+    if (existingVideoIds.includes(video.id)) {
+      onRemoveVideo(video.id);
+    } else {
+      const playlistVideo = transformContentToPlaylistVideo(video, availableVideos.length);
+      onAddVideo(playlistVideo);
+    }
   };
 
   return (
@@ -148,10 +158,10 @@ export function AddVideosModal({
                   {/* Add Button */}
                   <Button
                     size="sm"
-                    onClick={() => handleAddVideo(video)}
-                    className="border-white bg-white font-mono text-xs text-black uppercase hover:bg-zinc-200"
+                    onClick={() => handleToggleVideo(video)}
+                    variant={video.isExisting ? 'outline' : 'default'}
                   >
-                    Thêm
+                    {video.isExisting ? 'Đã thêm' : 'Thêm'}
                   </Button>
                 </div>
               ))}

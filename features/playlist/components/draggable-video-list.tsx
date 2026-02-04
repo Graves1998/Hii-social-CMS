@@ -25,7 +25,7 @@ interface DraggableVideoListProps {
   activeVideoId: string | null;
   onReorder: (videos: PlaylistContent[]) => void;
   onPlayVideo: (video: PlaylistContent) => void;
-  onRemoveVideo: (video: PlaylistContent) => void;
+  onRemoveVideo: (videoId: string) => void;
 }
 
 export function DraggableVideoList({
@@ -78,7 +78,7 @@ export function DraggableVideoList({
               video={video}
               isActive={video.id === activeVideoId}
               onPlay={onPlayVideo}
-              onRemove={onRemoveVideo}
+              onRemove={() => onRemoveVideo(video.id)}
             />
           ))}
         </div>
@@ -91,7 +91,7 @@ interface SortableVideoItemProps {
   video: PlaylistContent;
   isActive: boolean;
   onPlay: (video: PlaylistContent) => void;
-  onRemove: (video: PlaylistContent) => void;
+  onRemove: (videoId: string) => void;
 }
 
 function SortableVideoItem({ video, isActive, onPlay, onRemove }: SortableVideoItemProps) {
@@ -153,7 +153,7 @@ function SortableVideoItem({ video, isActive, onPlay, onRemove }: SortableVideoI
         {/* Remove Button */}
         <button
           type="button"
-          onClick={() => onRemove(video)}
+          onClick={() => onRemove(video.id)}
           className="flex h-8 w-8 items-center justify-center border border-white/20 bg-transparent text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-900"
         >
           <Trash2 size={14} />
@@ -161,10 +161,4 @@ function SortableVideoItem({ video, isActive, onPlay, onRemove }: SortableVideoI
       </div>
     </div>
   );
-}
-
-function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }

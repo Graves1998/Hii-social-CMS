@@ -13,13 +13,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { isCollapsed } = useSidebarStore();
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex h-dvh w-full">
       <Sidebar />
 
       {/* Main Content */}
       <div
         className={cn(
-          'relative z-10 flex min-h-screen w-full flex-1 flex-col transition-all duration-300',
+          'relative z-10 flex h-dvh w-full flex-1 flex-col transition-all duration-300',
           isCollapsed ? 'sm:pl-20' : 'sm:pl-72'
         )}
       >

@@ -19,7 +19,7 @@ export const authLayoutRoute = createRoute({
 
 function AuthLayoutComponent() {
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background h-dvh">
       <Outlet />
     </div>
   );
