@@ -10,6 +10,7 @@ type FormFieldProps = {
   placeholder?: string;
   autoComplete?: string;
   type?: string;
+  required?: boolean;
 };
 function FormField({
   name,
@@ -19,6 +20,7 @@ function FormField({
   placeholder,
   autoComplete,
   type,
+  required,
 }: FormFieldProps) {
   return (
     <Controller
@@ -26,7 +28,11 @@ function FormField({
       control={control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          {label && <FieldLabel htmlFor={field.name}>{label}</FieldLabel>}
+          {label && (
+            <FieldLabel htmlFor={field.name}>
+              {label} {required && <span className="text-red-500">*</span>}
+            </FieldLabel>
+          )}
           <Input
             {...field}
             id={field.name}

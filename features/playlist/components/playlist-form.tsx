@@ -45,7 +45,13 @@ export function PlaylistForm({
     <div className={`space-y-6 ${className}`}>
       {/* Name Field */}
       <div className="space-y-2">
-        <FormField control={control} name="name" label="Tiêu đề" placeholder="Nhập tiêu đề..." />
+        <FormField
+          control={control}
+          required
+          name="name"
+          label="Tiêu đề"
+          placeholder="Nhập tiêu đề..."
+        />
       </div>
 
       {/* Description Field */}
@@ -65,7 +71,9 @@ export function PlaylistForm({
 
       {/* Thumbnail Upload */}
       <div className="space-y-2">
-        <Label className="text-xs">Ảnh đại diện</Label>
+        <Label className="text-xs">
+          Ảnh đại diện <span className="text-red-500">*</span>
+        </Label>
         <ThumbnailUpload
           value={watch('thumbnail')}
           onChange={(base64: string) =>

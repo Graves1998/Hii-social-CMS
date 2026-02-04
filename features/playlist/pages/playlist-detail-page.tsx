@@ -63,7 +63,7 @@ function PlaylistDetailPage() {
   const {
     register,
     handleSubmit,
-    formState: { isDirty, dirtyFields },
+    formState: { isDirty, dirtyFields, isValid },
     watch,
     reset,
     setValue,
@@ -134,10 +134,10 @@ function PlaylistDetailPage() {
       return;
     }
 
-    const payload: UpdatePlaylistSchema = {};
+    const payload: any = {};
 
     Object.keys(dirtyFields || {}).forEach((key) => {
-      const typedKey = key as keyof UpdatePlaylistSchema;
+      const typedKey = key as keyof any;
       // @ts-expect-error - Dynamic key assignment from form data
       payload[typedKey] = data[typedKey];
     });
@@ -172,6 +172,7 @@ function PlaylistDetailPage() {
     });
     setValue('video_ids', [...watchedVideoIds, video.video_id], {
       shouldDirty: true,
+      shouldValidate: true,
     });
   };
 
@@ -181,6 +182,7 @@ function PlaylistDetailPage() {
     // Check if it's the last video
     setValue('video_ids', newVideos.map((v) => v.video_id) || [], {
       shouldDirty: true,
+      shouldValidate: true,
     });
     removeVideoFromPlaylist(playlistId, videoId);
   };
@@ -209,6 +211,7 @@ function PlaylistDetailPage() {
       reorderedVideos.map((v) => v.video_id),
       {
         shouldDirty: true,
+        shouldValidate: true,
       }
     );
   };
@@ -241,15 +244,20 @@ function PlaylistDetailPage() {
 
             {/* Thumbnail */}
             <div className="space-y-2">
-              <Label className="text-xs">Ảnh đại diện</Label>
+              <Label className="text-xs">
+                Ảnh đại diện <span className="text-red-500">*</span>
+              </Label>
               <ThumbnailUpload
                 value={watch('thumbnail')}
-                onChange={(base64: string) => setValue('thumbnail', base64, { shouldDirty: true })}
+                onChange={(base64: string) =>
+                  setValue('thumbnail', base64, { shouldDirty: true, shouldValidate: true })
+                }
               />
             </div>
             {/* Name */}
             <div className="space-y-2">
               <FormField
+                required
                 control={control}
                 label="Tiêu đề"
                 placeholder="Nhập tiêu đề..."
@@ -262,7 +270,12 @@ function PlaylistDetailPage() {
               <Label className="text-xs">Mô Tả</Label>
               <Textarea
                 {...register('description')}
-                onChange={(e) => setValue('description', e.target.value, { shouldDirty: true })}
+                onChange={(e) =>
+                  setValue('description', e.target.value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
                 defaultValue={watch('description')}
                 className="border-white/20"
                 placeholder="Nhập mô tả..."
@@ -304,7 +317,7 @@ function PlaylistDetailPage() {
           <Button
             type="submit"
             isLoading={isUpdating}
-            disabled={!isDirty}
+            disabled={!isDirty || !isValid}
             className="flex-1 border-white bg-white font-mono text-black uppercase hover:bg-zinc-200 disabled:opacity-50"
           >
             <Save size={16} className="mr-2" />
@@ -444,11 +457,7 @@ function PlaylistDetailPage() {
         onClose={() => setDeleteModal({ isOpen: false, type: null, video: null })}
         onConfirm={handleConfirmDelete}
         title={deleteModal.type === 'playlist' ? 'Xóa Playlist' : 'Xóa Video'}
-        message={
-          deleteModal.type === 'playlist'
-            ? `Đây là video cuối cùng trong playlist. Xóa video này sẽ xóa luôn playlist "${playlist?.name}". Bạn có chắc chắn?`
-            : `Bạn có chắc chắn muốn xóa video "${deleteModal.video?.title}" khỏi playlist?`
-        }
+        message={`Đây là video cuối cùng trong playlist. Xóa video này sẽ xóa luôn playlist "${playlist?.name}". Bạn có chắc chắn?`}
         confirmText={deleteModal.type === 'playlist' ? 'Xóa Playlist' : 'Xóa Video'}
       />
 

@@ -8,8 +8,8 @@ import { cn } from '@/lib';
 import { Button, Dialog, DialogContent, Input, Typography } from '@/shared/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, ListVideo, Plus, Search } from 'lucide-react';
-import { useForm } from 'react-hook-form';
 import { useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 interface AddToPlaylistModalProps {
   isOpen: boolean;

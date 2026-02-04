@@ -115,15 +115,15 @@ export function FloatingBatchActionBar({
 
       {/* Add to Playlist Button */}
       {onAddToPlaylist && (
-        <PermissionGate permission={Permission.REELS_ADD_TO_PLAYLIST}>
-          <Button
-            variant="default"
-            onClick={onAddToPlaylist}
-            className="border-white bg-white text-black hover:bg-zinc-200"
-          >
-            {addToPlaylistLabel}
-          </Button>
-        </PermissionGate>
+        // <PermissionGate permission={Permission.REELS_ADD_TO_PLAYLIST}>
+        <Button
+          variant="default"
+          onClick={onAddToPlaylist}
+          className="border-white bg-white text-black hover:bg-zinc-200"
+        >
+          {addToPlaylistLabel}
+        </Button>
+        // </PermissionGate>
       )}
 
       {/* Cancel Button */}
