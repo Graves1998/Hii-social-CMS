@@ -386,11 +386,11 @@ function DetailPageComponent() {
   const categoryList = useMemo(() => {
     if (!canEdit) return item?.categories;
     return categories.map((category) => category.slug);
-  }, [canEdit]);
+  }, [canEdit, item?.categories]);
   const platformList = useMemo(() => {
     if (!canEdit) return item?.target_platforms;
     return platforms.map((platform) => platform.api_key);
-  }, [canEdit]);
+  }, [canEdit, item?.target_platforms]);
 
   let activeIndex = currentStepIndex;
   if (isRejected) activeIndex = 1;
