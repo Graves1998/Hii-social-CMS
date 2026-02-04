@@ -63,11 +63,12 @@ export const useRegister = () => {
 };
 
 export const useGetCurrentUser = () => {
-  const { updateUser } = useAuthStore();
+  const { updateUser, token } = useAuthStore();
 
   const getCurrentUserQuery = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => authService.getCurrentUser(),
+    enabled: !!token,
   });
 
   useEffect(() => {
