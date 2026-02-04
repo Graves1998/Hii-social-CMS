@@ -71,14 +71,18 @@ export interface ContentItem {
   is_allow_comment?: boolean;
 }
 
-export type Permission =
-  | 'super_admin'
-  | 'reels.reject'
-  | 'reels.delete'
-  | 'users.manage'
-  | 'system.manage'
-  | 'reels.approve'
-  | 'reels.publish';
+export enum Permission {
+  SUPER_ADMIN = 'super_admin',
+  REELS_REJECT = 'reels.reject',
+  REELS_DELETE = 'reels.delete',
+  USERS_MANAGE = 'users.manage',
+  SYSTEM_MANAGE = 'system.manage',
+  REELS_APPROVE = 'reels.approve',
+  REELS_PUBLISH = 'reels.publish',
+  REELS_ADD_TO_PLAYLIST = 'reels.add_to_playlist',
+  REELS_SCHEDULE = 'reels.schedule',
+  NONE = 'none',
+}
 
 export interface User {
   id: string;

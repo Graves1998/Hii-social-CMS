@@ -13,6 +13,7 @@ import { Queue, useContentContext, WorkflowSteps } from '../components';
 import { useCreateContent } from '../hooks/useContent';
 import { useDraftContent, useGetDraftContentDetails } from '../hooks/useDraftContent';
 import { ContentSchema } from '../schemas/content.schema';
+import { detectTags } from '../utils';
 
 function DetailPageComponent() {
   const { contentId } = useParams({ strict: false });
@@ -22,6 +23,7 @@ function DetailPageComponent() {
     hasNextPage,
     isFetchingNextPage,
     isLoading: isLoadingCrawlContent,
+    totalItems,
   } = useDraftContent();
 
   // Infinite scroll for queue
@@ -90,10 +92,7 @@ function DetailPageComponent() {
   const watchTitle = watch('title');
 
   const allTags = useMemo(() => {
-    if (!watchTitle) return [];
-
-    const matches = watchTitle?.match(/#[\p{L}\p{N}_]+/gu);
-    return matches ?? [];
+    return detectTags(watchTitle);
   }, [watchTitle]);
 
   const handleUpdateMetadata = (key: 'platforms' | 'categories', value: any) => {
@@ -176,6 +175,7 @@ function DetailPageComponent() {
           loadMoreRef={loadMoreRef}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
+          totalItems={totalItems}
         />
       </aside>
 

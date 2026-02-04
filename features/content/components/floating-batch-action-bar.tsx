@@ -1,3 +1,4 @@
+import { Permission, PermissionGate } from '@/shared';
 import { Button } from '@/shared/ui';
 import { useEffect, useRef, useState } from 'react';
 
@@ -88,31 +89,41 @@ export function FloatingBatchActionBar({
 
       {/* Approve Button */}
       {approveCount !== undefined && (
-        <Button variant="default" onClick={onApprove} disabled={approveCount === 0 || isApproving}>
-          {isApproving ? `ĐANG ${approveLabel}...` : `${approveLabel} (${approveCount || 0})`}
-        </Button>
+        <PermissionGate permission={Permission.REELS_APPROVE}>
+          <Button
+            variant="default"
+            onClick={onApprove}
+            disabled={approveCount === 0 || isApproving}
+          >
+            {isApproving ? `ĐANG ${approveLabel}...` : `${approveLabel} (${approveCount || 0})`}
+          </Button>
+        </PermissionGate>
       )}
 
       {/* Reject Button */}
       {rejectCount !== undefined && (
-        <Button
-          variant="destructive"
-          onClick={onReject}
-          disabled={rejectCount === 0 || isRejecting}
-        >
-          {isRejecting ? `ĐANG ${rejectLabel}...` : `${rejectLabel} (${rejectCount || 0})`}
-        </Button>
+        <PermissionGate permission={Permission.REELS_REJECT}>
+          <Button
+            variant="destructive"
+            onClick={onReject}
+            disabled={rejectCount === 0 || isRejecting}
+          >
+            {isRejecting ? `ĐANG ${rejectLabel}...` : `${rejectLabel} (${rejectCount || 0})`}
+          </Button>
+        </PermissionGate>
       )}
 
       {/* Add to Playlist Button */}
       {onAddToPlaylist && (
-        <Button
-          variant="default"
-          onClick={onAddToPlaylist}
-          className="border-white bg-white text-black hover:bg-zinc-200"
-        >
-          {addToPlaylistLabel}
-        </Button>
+        <PermissionGate permission={Permission.REELS_ADD_TO_PLAYLIST}>
+          <Button
+            variant="default"
+            onClick={onAddToPlaylist}
+            className="border-white bg-white text-black hover:bg-zinc-200"
+          >
+            {addToPlaylistLabel}
+          </Button>
+        </PermissionGate>
       )}
 
       {/* Cancel Button */}

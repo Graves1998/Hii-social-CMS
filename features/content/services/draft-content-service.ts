@@ -1,14 +1,14 @@
 import { PaginationRequest } from '@/lib/types/api';
 import { api } from '@/services';
 import queryString from 'query-string';
-import { MakeDraftContentPreviewPayload, Video } from '../types';
+import { MakeDraftContentPreviewPayload, PaginatedResponse, Video } from '../types';
 
 class DraftContentService {
   private baseUrl = 'crawler/videos';
 
   async getDraftContent(payload: PaginationRequest) {
     const searchParams = queryString.stringify(payload);
-    const response = await api.get(this.baseUrl, { searchParams });
+    const response = await api.get<PaginatedResponse>(this.baseUrl, { searchParams });
     return response;
   }
 
