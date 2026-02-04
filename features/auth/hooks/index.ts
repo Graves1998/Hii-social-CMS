@@ -1,8 +1,8 @@
+import { UserRole } from '@/shared/types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { UserRole } from '@/shared/types';
-import authService from '../services/auth-service';
 import { LoginFormData, RegisterFormData } from '../schemas/auth.schema';
+import { authService } from '../services/auth-service';
 import { useAuthStore } from '../stores/useAuthStore';
 
 export const useLogin = () => {

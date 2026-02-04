@@ -13,34 +13,32 @@ import {
   mapLogResponseToAuditLogsResponse,
 } from '../utils/dto-mappers';
 
-export const auditService = {
-  // Get audit logs with filters
-  getAuditLogs: async (payload: GetAuditLogsPayload): Promise<GetAuditLogsResponse> => {
-    // Map payload to API params
+class AuditService {
+  private baseUrl = 'logs';
 
+  async getAuditLogs(payload: GetAuditLogsPayload): Promise<GetAuditLogsResponse> {
     const searchParams = queryString.stringify(payload);
-    const response = await api.get<LogResponseDataDto>(`logs?${searchParams}`);
+    const data = await api.get<LogResponseDataDto>(`${this.baseUrl}?${searchParams}`);
 
-    // Map DTO to domain type
-    return mapLogResponseToAuditLogsResponse(response);
-  },
+    return mapLogResponseToAuditLogsResponse(data);
+  }
 
-  // Get audit log detail
-  getAuditLogDetail: async (logId: string): Promise<AuditLogDetail> => {
-    const response = await api.get<LogEntryDto>(`logs/${logId}`);
-    return mapLogEntryToAuditLogDetail(response);
-  },
+  async getAuditLogDetail(logId: string): Promise<AuditLogDetail> {
+    const data = await api.get<LogEntryDto>(`${this.baseUrl}/${logId}`);
+    return mapLogEntryToAuditLogDetail(data);
+  }
 
-  // Export audit logs
-  exportAuditLogs: async (
+  async exportAuditLogs(
     payload: GetAuditLogsPayload,
     format: 'csv' | 'json' = 'csv'
-  ): Promise<Blob> => {
+  ): Promise<Blob> {
     const searchParams = queryString.stringify({ ...payload, format });
-    const response = await api.get(`logs/export?${searchParams}`, {
+    const data = await api.get(`${this.baseUrl}/export?${searchParams}`, {
       // @ts-expect-error - ky supports blob response
       responseType: 'blob',
     });
-    return response as unknown as Blob;
-  },
-};
+    return data as unknown as Blob;
+  }
+}
+
+export const auditService = new AuditService();

@@ -70,6 +70,16 @@ export interface ContentItem {
   media?: Media[];
   is_allow_comment?: boolean;
 }
+
+export type Permission =
+  | 'super_admin'
+  | 'reels.reject'
+  | 'reels.delete'
+  | 'users.manage'
+  | 'system.manage'
+  | 'reels.approve'
+  | 'reels.publish';
+
 export interface User {
   id: string;
   username: string;
@@ -81,6 +91,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   role?: UserRole;
+  permissions?: Permission[];
 }
 export interface LoginResponse {
   accessToken: string;

@@ -11,55 +11,67 @@ import type {
   ReportReasonsResponse,
 } from '../types';
 
-export const reportService = {
-  // Get all reports with filters
-  getReportReasons: async (payload: ReportReasonsPayload): Promise<ReportReasonsResponse> => {
-    const searchParams = queryString.stringify(payload);
-
-    const response = await api.get<ReportReasonsResponse>(
-      `reels/dashboard/report-reasons?${searchParams}`
-    );
-    return response;
-  },
+class ReportService {
+  private baseUrl = 'reels/dashboard';
 
   // Get all reports with filters
-  getReports: async (payload: GetReportsPayload): Promise<GetReportsResponse> => {
+  async getReportReasons(payload: ReportReasonsPayload): Promise<ReportReasonsResponse> {
     const searchParams = queryString.stringify(payload);
 
-    const response = await api.get<GetReportsResponse>(
-      `reels/dashboard/reported-videos?${searchParams}`
+    const data = await api.get<ReportReasonsResponse>(
+      `${this.baseUrl}/report-reasons?${searchParams}`
     );
-    return response;
-  },
+
+    return data;
+  }
+
+  // Get all reports with filters
+  async getReports(payload: GetReportsPayload): Promise<GetReportsResponse> {
+    const searchParams = queryString.stringify(payload);
+
+    const data = await api.get<GetReportsResponse>(
+      `${this.baseUrl}/reported-videos?${searchParams}`
+    );
+
+    return data;
+  }
 
   // Get report detail
-  getReportDetail: async (reportId: string): Promise<ReportDetailResponse> => {
-    const response = await api.get<ReportDetailResponse>(
-      `reels/dashboard/reported-videos/${reportId}/reports`
+  async getReportDetail(reportId: string): Promise<ReportDetailResponse> {
+    const data = await api.get<ReportDetailResponse>(
+      `${this.baseUrl}/reported-videos/${reportId}/reports`
     );
-    return response;
-  },
+    return data;
+  }
 
   // Accept reports - hide videos
-  acceptReport: async (payload: AcceptReportPayload): Promise<void> => {
-    await api.put<void>('reels/dashboard/videos/hidden-batch', {
+  async acceptReport(payload: AcceptReportPayload): Promise<void> {
+    const data = await api.put<void>(`${this.baseUrl}/videos/hidden-batch`, {
       is_hidden: true,
       video_ids: payload.video_ids,
     });
-  },
+
+    return data;
+  }
 
   // Reject reports - keep videos visible
-  rejectReport: async (payload: RejectReportPayload): Promise<void> => {
-    await api.put<void>('reels/dashboard/videos/hidden-batch', {
+  async rejectReport(payload: RejectReportPayload): Promise<void> {
+    const data = await api.put<void>(`${this.baseUrl}/videos/hidden-batch`, {
       is_hidden: false,
       video_ids: payload.video_ids,
     });
-  },
+
+    return data;
+  }
 
   // Mark reports as reviewed
-  markReportsAsReviewed: async (payload: MarkReportsAsReviewedPayload): Promise<void> => {
-    await api.put<void>('reels/dashboard/reports/reviewed', {
+  async markReportsAsReviewed(payload: MarkReportsAsReviewedPayload): Promise<void> {
+    const data = await api.put<void>(`${this.baseUrl}/reports/reviewed`, {
       report_ids: payload.report_ids,
     });
-  },
-};
+
+    return data;
+  }
+}
+
+export const reportService = new ReportService();
