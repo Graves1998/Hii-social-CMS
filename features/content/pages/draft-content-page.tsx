@@ -5,7 +5,7 @@ import { ContentItem } from '@/shared';
 import { ContentGridSkeleton, ContentTableSkeleton } from '@/shared/components';
 import ContentGrid from '@/shared/components/content-grid';
 import { Button } from '@/shared/ui';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import useInfiniteScroll from 'react-infinite-scroll-hook';
 import { toast } from 'sonner';
 import { DraftContentTable, RejectConfirmationModal } from '../components';
@@ -41,6 +41,8 @@ function ContentCrawlPageComponent() {
 
   const { mutate: makeDraftContentPreview } = useMakeDraftContentPreview();
 
+  const { is_previewed: isPreviewed } = useSearch({ strict: false });
+
   const handleNavigateToDetail = (item: ContentItem) => {
     makeDraftContentPreview({
       payload: {
@@ -53,6 +55,7 @@ function ContentCrawlPageComponent() {
     navigate({
       to: `${item.details_link}/$contentId`,
       params: { contentId: item.id },
+      search: { is_previewed: isPreviewed },
     });
   };
 

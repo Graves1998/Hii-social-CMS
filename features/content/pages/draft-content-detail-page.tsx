@@ -314,13 +314,8 @@ function DetailPageComponent() {
             className="flex-1"
             type="submit"
             variant="default"
-            isLoading={isPendingCreateContent}
-            disabled={
-              contentDetails.status === ContentStatus.APPROVED ||
-              contentDetails.status === ContentStatus.PUBLISHED ||
-              !watchPlatforms?.length ||
-              !watchCategories?.length
-            }
+            isLoading={contentDetails.is_pending}
+            disabled={!watchPlatforms?.length || !watchCategories?.length}
           >
             DUYỆT
           </Button>

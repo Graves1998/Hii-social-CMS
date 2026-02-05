@@ -53,6 +53,7 @@ export interface Reel {
   platforms: string[];
   categories: string[];
   reason: string;
+  is_pending: boolean;
 }
 
 export interface PublishContentPayload {

@@ -20,6 +20,7 @@ export interface Video {
   video_id: string;
   video_metadata: VideoMetadata;
   is_created: boolean;
+  is_pending: boolean;
 }
 
 export interface PublishMetadata {

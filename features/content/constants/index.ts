@@ -16,6 +16,6 @@ export const DRAFT_CONTENT_SEARCH_SORT_OPTIONS = [
 ];
 
 export const DRAFT_CONTENT_SEARCH_IS_PREVIEWED_OPTIONS = [
-  { id: 'false', label: 'Chưa xem trước' },
+  { id: '', label: 'Tất cả' },
   { id: 'true', label: 'Đã xem trước' },
 ];

@@ -69,6 +69,7 @@ export interface ContentItem {
   categories?: string[];
   media?: Media[];
   is_allow_comment?: boolean;
+  is_pending?: boolean;
 }
 
 export enum Permission {
