@@ -1,4 +1,5 @@
 import { queryClient } from '@/lib';
+import { ContentStatus } from '@/shared';
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { queryKeys } from '../query-keys';
 import { ContentSearchSchema } from '../schemas/content-search.schema';
@@ -9,9 +10,11 @@ import {
   ApproveContentPayload,
   GetContentResponse,
   PublishContentPayload,
+  Reel,
   RejectContentBatchPayload,
+  Video,
 } from '../types';
-import { transformReelContent } from '../utils';
+import { transformCrawlContent, transformReelContent } from '../utils';
 
 export const useContent = (filters: Partial<ContentSearchSchema>) => {
   const queryKey = queryKeys.content.lists(filters);
@@ -45,9 +48,38 @@ export const useContent = (filters: Partial<ContentSearchSchema>) => {
 export const useCreateContent = () => {
   return useMutation({
     mutationFn: ({ data }: { data: ContentSchema }) => contentService.createContent(data),
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.contentCrawl.detail(variables.data.crawler_id),
+      });
+      const previousData = queryClient.getQueryData(
+        queryKeys.contentCrawl.detail(variables.data.crawler_id)
+      );
+
+      queryClient.setQueryData(
+        queryKeys.contentCrawl.detail(variables.data.crawler_id),
+        (old: Video | undefined) => {
+          if (!old) return old;
+          const updated = { ...old, is_pending: true };
+
+          return transformCrawlContent(updated);
+        }
+      );
+
+      return { previousData };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.contentCrawl.lists() });
       queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
+    },
+    onError: (_err, _variables, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          queryKeys.contentCrawl.detail(_variables.data.id || ''),
+          context.previousData
+        );
+      }
     },
   });
 };
@@ -83,8 +115,31 @@ export const useApprovingStatus = () => {
 export const useApproveContent = () => {
   return useMutation({
     mutationFn: (payload: ApproveContentPayload) => contentService.approveContent(payload),
+    onMutate: async (payload) => {
+      const queryKey = queryKeys.content.details(payload.reel_id, ContentStatus.PENDING_REVIEW);
+      await queryClient.cancelQueries({ queryKey });
+      const previousData = queryClient.getQueryData(queryKey);
+
+      queryClient.setQueriesData(
+        {
+          queryKey,
+        },
+        (old: Reel | undefined) => {
+          if (!old) return old;
+          const updated = { ...old, is_pending: true };
+          return transformReelContent(updated);
+        }
+      );
+
+      return { previousData, queryKey };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(context.queryKey, context.previousData);
+      }
     },
   });
 };
@@ -92,17 +147,41 @@ export const useApproveContent = () => {
 export const useApproveContents = () => {
   return useMutation({
     mutationFn: (payload: ApproveContentBatchPayload) => contentService.approveContents(payload),
-    onSuccess: (_) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
-    },
-  });
-};
+    onMutate: async (payload) => {
+      const updates = payload.reel_ids.map(async (reel) => {
+        const detailQueryKey = queryClient.getQueryCache().find({
+          queryKey: queryKeys.content.details(reel.reel_id, ContentStatus.PENDING_REVIEW),
+        })?.queryKey;
 
-export const useRejectContent = () => {
-  return useMutation({
-    mutationFn: (payload: ApproveContentPayload) => contentService.rejectContent(payload),
+        if (!detailQueryKey) return null;
+
+        await queryClient.cancelQueries({ queryKey: detailQueryKey });
+        const previousData = queryClient.getQueryData(detailQueryKey);
+
+        queryClient.setQueriesData({ queryKey: detailQueryKey }, (old: Reel | undefined) => {
+          if (!old) return old;
+          const updated = { ...old, is_pending: true };
+          return transformReelContent(updated);
+        });
+
+        return { queryKey: detailQueryKey, previousData };
+      });
+
+      const previousDataArray = await Promise.all(updates);
+
+      return { previousDataArray: previousDataArray.filter(Boolean) };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousDataArray) {
+        context.previousDataArray.forEach((item: any) => {
+          if (item?.queryKey && item?.previousData) {
+            queryClient.setQueryData(item.queryKey, item.previousData);
+          }
+        });
+      }
     },
   });
 };
@@ -110,8 +189,41 @@ export const useRejectContent = () => {
 export const useRejectContents = () => {
   return useMutation({
     mutationFn: (payload: RejectContentBatchPayload) => contentService.rejectContents(payload),
+    onMutate: async (payload) => {
+      const updates = payload.reel_ids.map(async (reelId) => {
+        const detailQueryKey = queryClient.getQueryCache().find({
+          queryKey: queryKeys.content.details(reelId, ContentStatus.PENDING_REVIEW),
+        })?.queryKey;
+
+        if (!detailQueryKey) return null;
+
+        await queryClient.cancelQueries({ queryKey: detailQueryKey });
+        const previousData = queryClient.getQueryData(detailQueryKey);
+
+        queryClient.setQueryData(detailQueryKey, (old: Reel | undefined) => {
+          if (!old) return old;
+          const updated = { ...old, is_pending: true };
+          return transformReelContent(updated);
+        });
+
+        return { queryKey: detailQueryKey, previousData };
+      });
+
+      const previousDataArray = await Promise.all(updates);
+
+      return { previousDataArray: previousDataArray.filter(Boolean) };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousDataArray) {
+        context.previousDataArray.forEach((item: any) => {
+          if (item?.queryKey && item?.previousData) {
+            queryClient.setQueryData(item.queryKey, item.previousData);
+          }
+        });
+      }
     },
   });
 };
@@ -119,8 +231,43 @@ export const useRejectContents = () => {
 export const usePublishContent = () => {
   return useMutation({
     mutationFn: (payload: PublishContentPayload) => contentService.publishContent(payload),
+    onMutate: async (payload) => {
+      const updates = payload.reel_ids.map(async (reelId) => {
+        const detailQueryKey = queryClient
+          .getQueryCache()
+          .findAll({ queryKey: queryKeys.content.details(reelId, ContentStatus.APPROVED) })
+          .map((query) => query.queryKey)[0];
+
+        if (!detailQueryKey) return null;
+
+        await queryClient.cancelQueries({ queryKey: detailQueryKey });
+
+        const previousData = queryClient.getQueryData(detailQueryKey);
+
+        queryClient.setQueryData(detailQueryKey, (old: Reel | undefined) => {
+          if (!old) return old;
+          const updated = { ...old, is_pending: true };
+          return transformReelContent(updated);
+        });
+
+        return { previousData, queryKey: detailQueryKey };
+      });
+
+      const previousDataArray = await Promise.all(updates);
+
+      return { previousDataArray: previousDataArray.filter(Boolean) };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousDataArray) {
+        context.previousDataArray.forEach((item: any) => {
+          if (item?.queryKey && item?.previousData) {
+            queryClient.setQueryData(item.queryKey, item.previousData);
+          }
+        });
+      }
     },
   });
 };

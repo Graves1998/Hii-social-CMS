@@ -4,7 +4,8 @@ import { usePermission } from '@/shared/hooks/use-permission';
 import { ContentStatus } from '@/shared/types';
 import { Badge, Button, Textarea, Typography } from '@/shared/ui';
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
-import { AlertTriangle, Globe, X } from 'lucide-react';
+import { formatDate } from 'date-fns';
+import { AlertTriangle, Clock, Globe, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import useInfiniteScroll from 'react-infinite-scroll-hook';
@@ -47,9 +48,9 @@ function DetailPageComponent() {
   });
 
   // Mutate
-  const { mutate: rejectContents, isPending: isRejectingBatch } = useRejectContents();
-  const { mutate: scheduleContent, isPending: isSchedulingContent } = useScheduleContent();
-  const { mutate: publishContent, isPending: isPublishingContent } = usePublishContent();
+  const { mutate: rejectContents } = useRejectContents();
+  const { mutate: scheduleContent } = useScheduleContent();
+  const { mutate: publishContent } = usePublishContent();
   const { mutate: approveContent, isPending: isApprovingContent } = useApproveContent();
   // Store
   const { selectedIds, setSelectedIds } = useContentStore((state) => state);
@@ -105,7 +106,7 @@ function DetailPageComponent() {
   const {
     register,
     handleSubmit,
-    formState: { isDirty, dirtyFields },
+    formState: { dirtyFields },
     watch,
     setValue,
   } = useForm<UpdateReelSchema>({
@@ -129,6 +130,7 @@ function DetailPageComponent() {
   const watchTags = useMemo(() => {
     return detectTags(watchTitle);
   }, [watchTitle]);
+  const [scheduleAt, setScheduleAt] = useState<string | null>(item?.scheduled_at || null);
 
   const handleChangeMetadata = (key: 'platforms' | 'categories', value: any) => {
     const isExits = watch(key)?.includes(value);
@@ -309,6 +311,7 @@ function DetailPageComponent() {
     if (!item) return;
 
     const toastId = toast.loading('ĐANG_LÊN_LỊCH...');
+    setScheduleAt(scheduledTime);
 
     scheduleContent(
       {
@@ -534,57 +537,67 @@ function DetailPageComponent() {
         />
 
         {/* ACTIONS */}
-        <div className="mt-auto flex gap-2">
-          {canEdit && (
-            <PermissionGate permission={Permission.REELS_REJECT}>
-              <Button
-                variant="destructive"
-                onClick={() => handleUpdateStatus(ContentStatus.REJECTED)}
-                disabled={isRejected || isRejectingBatch}
-                className="flex-1"
-              >
-                TỪ CHỐI
-              </Button>
-            </PermissionGate>
+        <div className="mt-auto flex flex-col gap-3">
+          {scheduleAt && (
+            <div className="flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 p-2 text-pretty">
+              <Clock size={16} />
+              <Typography variant="small">
+                Nội dung sẽ được đăng vào lúc: {formatDate(scheduleAt, 'dd/MM/yyyy HH:mm')}
+              </Typography>
+            </div>
           )}
-          {item.status !== ContentStatus.PENDING_REVIEW &&
-            item.status !== ContentStatus.REJECTED && (
+          <div className="flex flex-wrap gap-2">
+            {canEdit && (
+              <PermissionGate permission={Permission.REELS_REJECT}>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleUpdateStatus(ContentStatus.REJECTED)}
+                  isLoading={item.is_pending}
+                  className="flex-1"
+                >
+                  TỪ CHỐI
+                </Button>
+              </PermissionGate>
+            )}
+            {(item.status === ContentStatus.APPROVED ||
+              item.status === ContentStatus.SCHEDULED) && (
               <PermissionGate permission={Permission.REELS_SCHEDULE}>
                 <Button
                   variant="outline"
                   onClick={() => setIsScheduleModalOpen(true)}
-                  disabled={item.status === ContentStatus.PUBLISHED || isSchedulingContent}
+                  isLoading={item.is_pending}
                   className="flex-1 border-white/20 text-white hover:bg-white/10"
                 >
-                  LÊN LỊCH
+                  {item.status === ContentStatus.SCHEDULED ? 'Cập nhật lịch' : 'Lên lịch'}
                 </Button>
               </PermissionGate>
             )}
-          {item.status !== ContentStatus.PENDING_REVIEW &&
-            item.status !== ContentStatus.REJECTED && (
+            {(item.status === ContentStatus.APPROVED ||
+              item.status === ContentStatus.SCHEDULED) && (
               <PermissionGate permission={Permission.REELS_PUBLISH}>
                 <Button
                   variant="default"
                   className="flex-1"
                   onClick={() => handleUpdateStatus(ContentStatus.PUBLISHED)}
-                  disabled={isPublishingContent || item.status === ContentStatus.PUBLISHED}
+                  disabled={item.is_pending}
                 >
                   Đăng ngay
                 </Button>
               </PermissionGate>
             )}
-          {canEdit && (
-            <PermissionGate permission={Permission.REELS_APPROVE}>
-              <Button
-                variant="default"
-                type="submit"
-                disabled={isApprovingContent}
-                className="flex-1"
-              >
-                {isApprovingContent ? 'ĐANG DUYỆT...' : 'DUYỆT'}
-              </Button>
-            </PermissionGate>
-          )}
+            {canEdit && (
+              <PermissionGate permission={Permission.REELS_APPROVE}>
+                <Button
+                  variant="default"
+                  type="submit"
+                  disabled={item.is_pending}
+                  className="flex-1"
+                >
+                  {isApprovingContent ? 'ĐANG DUYỆT...' : 'DUYỆT'}
+                </Button>
+              </PermissionGate>
+            )}
+          </div>
         </div>
       </form>
 

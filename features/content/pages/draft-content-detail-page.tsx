@@ -284,8 +284,8 @@ function DetailPageComponent() {
               {categories.map((cat) => (
                 <Badge
                   key={cat.id}
-                  variant={watchCategories?.includes(cat.name) ? 'default' : 'outline'}
-                  onClick={() => handleUpdateMetadata('categories', cat.name)}
+                  variant={watchCategories?.includes(cat.slug) ? 'default' : 'outline'}
+                  onClick={() => handleUpdateMetadata('categories', cat.slug)}
                   className="cursor-pointer transition-colors"
                 >
                   {cat.name}
@@ -314,13 +314,8 @@ function DetailPageComponent() {
             className="flex-1"
             type="submit"
             variant="default"
-            isLoading={isPendingCreateContent}
-            disabled={
-              contentDetails.status === ContentStatus.APPROVED ||
-              contentDetails.status === ContentStatus.PUBLISHED ||
-              !watchPlatforms?.length ||
-              !watchCategories?.length
-            }
+            isLoading={contentDetails.is_pending}
+            disabled={!watchPlatforms?.length || !watchCategories?.length}
           >
             DUYỆT
           </Button>

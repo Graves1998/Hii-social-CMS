@@ -45,7 +45,7 @@ function WorkflowSteps({ isRejected, item, workflowSteps, activeIndex }: Workflo
                   } ${stateClass.split(' ')[1]}`}
                 />
                 <span
-                  className={`text-xs font-bold tracking-widest transition-colors duration-500 ${
+                  className={`text-xs tracking-widest transition-colors duration-500 ${
                     index <= activeIndex
                       ? isRejected && index === activeIndex
                         ? 'text-red-500'

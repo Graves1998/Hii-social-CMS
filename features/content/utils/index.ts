@@ -11,8 +11,8 @@ import { Reel, Video } from '../types';
 export const transformCrawlContent = (content: Video): ContentItem => {
   return {
     id: content.id.toString(),
-    title: content.video_metadata.title,
-    short_description: content.video_metadata.description,
+    title: content.video_metadata?.title,
+    short_description: content.video_metadata?.description,
     thumbnail_url: content.thumbnail_url,
     content_id: content.video_id,
     media_type: MediaType.VIDEO,
@@ -22,14 +22,15 @@ export const transformCrawlContent = (content: Video): ContentItem => {
     target_platforms: [SourcePlatform.LALALA, SourcePlatform.VOTEME, SourcePlatform.BOOKING],
     original_source_url: content.original_url,
     created_at: content.created_at,
-    created_by: content.publish_metadata.data.updated_by,
+    created_by: content.publish_metadata?.data?.updated_by,
     status: ContentStatus.DRAFT as ContentStatus,
     category: '',
-    tags: content.publish_metadata.data.tags || [],
+    tags: content.publish_metadata?.data?.tags || [],
     visibility: 'public',
     moderation_notes: '',
     details_link: `/draft/detail`,
     categories: [],
+    is_pending: content.is_pending || false,
   };
 };
 
@@ -38,7 +39,7 @@ export const transformReelContent = (content: Reel): ContentItem => {
     id: content.id,
     title: content.title,
     short_description: content.description,
-    thumbnail_url: content.thumbnail.url,
+    thumbnail_url: content.thumbnail?.url,
     content_id: content.id,
     media_type: content.type as MediaType,
     media_url: content.media?.[0].url,
@@ -53,11 +54,12 @@ export const transformReelContent = (content: Reel): ContentItem => {
     category: content.type,
     tags: content.tags || [],
     visibility: 'public',
-    moderation_notes: '',
+    moderation_notes: content.reason,
     details_link: `/content/detail`,
     scheduled_at: content.scheduled_at,
     categories: content.categories || [],
     media: content.media || [],
+    is_pending: content.is_pending || false,
   };
 };
 

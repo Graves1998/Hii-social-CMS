@@ -52,6 +52,8 @@ export interface Reel {
   liked: boolean;
   platforms: string[];
   categories: string[];
+  reason: string;
+  is_pending: boolean;
 }
 
 export interface PublishContentPayload {
