@@ -53,7 +53,7 @@ export const transformReelContent = (content: Reel): ContentItem => {
     category: content.type,
     tags: content.tags || [],
     visibility: 'public',
-    moderation_notes: '',
+    moderation_notes: content.reason,
     details_link: `/content/detail`,
     scheduled_at: content.scheduled_at,
     categories: content.categories || [],

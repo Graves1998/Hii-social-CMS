@@ -547,32 +547,30 @@ function DetailPageComponent() {
               </Button>
             </PermissionGate>
           )}
-          {item.status !== ContentStatus.PENDING_REVIEW &&
-            item.status !== ContentStatus.REJECTED && (
-              <PermissionGate permission={Permission.REELS_SCHEDULE}>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsScheduleModalOpen(true)}
-                  disabled={item.status === ContentStatus.PUBLISHED || isSchedulingContent}
-                  className="flex-1 border-white/20 text-white hover:bg-white/10"
-                >
-                  LÊN LỊCH
-                </Button>
-              </PermissionGate>
-            )}
-          {item.status !== ContentStatus.PENDING_REVIEW &&
-            item.status !== ContentStatus.REJECTED && (
-              <PermissionGate permission={Permission.REELS_PUBLISH}>
-                <Button
-                  variant="default"
-                  className="flex-1"
-                  onClick={() => handleUpdateStatus(ContentStatus.PUBLISHED)}
-                  disabled={isPublishingContent || item.status === ContentStatus.PUBLISHED}
-                >
-                  Đăng ngay
-                </Button>
-              </PermissionGate>
-            )}
+          {item.status === ContentStatus.APPROVED && (
+            <PermissionGate permission={Permission.REELS_SCHEDULE}>
+              <Button
+                variant="outline"
+                onClick={() => setIsScheduleModalOpen(true)}
+                disabled={isSchedulingContent}
+                className="flex-1 border-white/20 text-white hover:bg-white/10"
+              >
+                LÊN LỊCH
+              </Button>
+            </PermissionGate>
+          )}
+          {item.status === ContentStatus.APPROVED && (
+            <PermissionGate permission={Permission.REELS_PUBLISH}>
+              <Button
+                variant="default"
+                className="flex-1"
+                onClick={() => handleUpdateStatus(ContentStatus.PUBLISHED)}
+                disabled={isPublishingContent}
+              >
+                Đăng ngay
+              </Button>
+            </PermissionGate>
+          )}
           {canEdit && (
             <PermissionGate permission={Permission.REELS_APPROVE}>
               <Button

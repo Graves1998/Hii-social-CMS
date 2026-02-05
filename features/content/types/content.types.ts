@@ -52,6 +52,7 @@ export interface Reel {
   liked: boolean;
   platforms: string[];
   categories: string[];
+  reason: string;
 }
 
 export interface PublishContentPayload {
