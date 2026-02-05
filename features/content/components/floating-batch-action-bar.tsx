@@ -7,20 +7,28 @@ export interface FloatingBatchActionBarProps {
   selectedCount: number;
   approveCount?: number;
   rejectCount?: number;
+  publishCount?: number;
+  scheduleCount?: number;
 
   // Loading states
   isApproving?: boolean;
   isRejecting?: boolean;
+  isPublishing?: boolean;
+  isScheduling?: boolean;
 
   // Actions
   onApprove: () => void;
   onReject: () => void;
+  onPublish?: () => void;
+  onSchedule?: () => void;
   onCancel: () => void;
   onAddToPlaylist?: () => void; // NEW: Add to playlist action
 
   // Customization
   approveLabel?: string;
   rejectLabel?: string;
+  publishLabel?: string;
+  scheduleLabel?: string;
   cancelLabel?: string;
   addToPlaylistLabel?: string;
 }
@@ -47,14 +55,22 @@ export function FloatingBatchActionBar({
   selectedCount,
   approveCount,
   rejectCount,
+  publishCount,
+  scheduleCount,
   isApproving = false,
   isRejecting = false,
+  isPublishing = false,
+  isScheduling = false,
   onApprove,
   onReject,
+  onPublish,
+  onSchedule,
   onCancel,
   onAddToPlaylist,
   approveLabel = 'DUYỆT',
   rejectLabel = 'TỪ CHỐI',
+  publishLabel = 'ĐĂNG',
+  scheduleLabel = 'LÊN LỊCH',
   cancelLabel = 'HỦY',
   addToPlaylistLabel = 'THÊM VÀO PLAYLIST',
 }: FloatingBatchActionBarProps) {
@@ -113,6 +129,34 @@ export function FloatingBatchActionBar({
         </PermissionGate>
       )}
 
+      {/* Publish Button */}
+      {publishCount !== undefined && onPublish && (
+        <PermissionGate permission={Permission.REELS_PUBLISH}>
+          <Button
+            variant="default"
+            onClick={onPublish}
+            disabled={publishCount === 0 || isPublishing}
+            className="border-green-500 bg-green-600 text-white hover:bg-green-700"
+          >
+            {isPublishing ? `ĐANG ${publishLabel}...` : `${publishLabel} (${publishCount || 0})`}
+          </Button>
+        </PermissionGate>
+      )}
+
+      {/* Schedule Button */}
+      {scheduleCount !== undefined && onSchedule && (
+        <PermissionGate permission={Permission.REELS_PUBLISH}>
+          <Button
+            variant="default"
+            onClick={onSchedule}
+            disabled={scheduleCount === 0 || isScheduling}
+            className="border-blue-500 bg-blue-600 text-white hover:bg-blue-700"
+          >
+            {isScheduling ? `ĐANG ${scheduleLabel}...` : `${scheduleLabel} (${scheduleCount || 0})`}
+          </Button>
+        </PermissionGate>
+      )}
+
       {/* Add to Playlist Button */}
       {onAddToPlaylist && (
         // <PermissionGate permission={Permission.REELS_ADD_TO_PLAYLIST}>
@@ -126,9 +170,9 @@ export function FloatingBatchActionBar({
         // </PermissionGate>
       )}
 
-      {/* Cancel Button */}
       <div className="h-4 w-[1px] bg-white/20" />
       <Button
+        disabled={isApproving || isRejecting || isPublishing || isScheduling}
         variant="ghost"
         className="text-zinc-400 hover:text-white"
         onClick={() => {

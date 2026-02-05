@@ -39,7 +39,7 @@ export const RolesPage = () => {
   };
 
   return (
-    <div className="container mx-auto space-y-6 p-8">
+    <div className="animate-in fade-in space-y-8 p-4 duration-700 sm:p-10">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

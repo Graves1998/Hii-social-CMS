@@ -2,23 +2,23 @@
 
 import {
   Button,
-  Checkbox,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
   Label,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
   Textarea,
 } from '@/shared/ui';
+import FormField from '@/shared/ui/form-field';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { PERMISSION_GROUPS } from '../constants';
 import { useCreateRole, useUpdateRole } from '../hooks';
 import { createRoleSchema, CreateRoleSchema } from '../schemas';
 import { Role } from '../types';
+import { PermissionsTable } from './permissions-table';
 
 interface RoleFormModalProps {
   isOpen: boolean;
@@ -38,6 +38,7 @@ export const RoleFormModal = ({ isOpen, onClose, mode, role }: RoleFormModalProp
     reset,
     watch,
     setValue,
+    control,
   } = useForm<CreateRoleSchema>({
     resolver: zodResolver(createRoleSchema),
     defaultValues: {
@@ -118,107 +119,90 @@ export const RoleFormModal = ({ isOpen, onClose, mode, role }: RoleFormModalProp
   const isLoading = createRoleMutation.isPending || updateRoleMutation.isPending;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !isLoading && !open && onClose()}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{mode === 'create' ? 'Tạo vai trò mới' : 'Chỉnh sửa vai trò'}</DialogTitle>
-        </DialogHeader>
+    <Sheet open={isOpen} onOpenChange={(open) => !isLoading && !open && onClose()}>
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col border-white/10 duration-700 sm:max-w-4xl!"
+      >
+        <SheetHeader>
+          <SheetTitle>{mode === 'create' ? 'Tạo vai trò mới' : 'Chỉnh sửa vai trò'}</SheetTitle>
+          <SheetDescription>
+            {mode === 'create'
+              ? 'Điền thông tin để tạo vai trò mới cho hệ thống'
+              : 'Cập nhật thông tin vai trò'}
+          </SheetDescription>
+        </SheetHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4 py-4">
-            {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Tên vai trò</Label>
-              <Input id="name" {...register('name')} placeholder="Nhập tên vai trò" />
-              {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
-            </div>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-1 flex-col gap-4 overflow-y-auto p-4"
+          id="role-form"
+        >
+          {/* Name */}
+          <FormField
+            {...register('name')}
+            control={control}
+            label="Tên vai trò"
+            placeholder="Nhập tên vai trò"
+            type="text"
+          />
 
-            {/* Slug */}
-            <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
-              <Input id="slug" {...register('slug')} placeholder="vi-du: admin, editor" />
-              {errors.slug && <p className="text-sm text-red-600">{errors.slug.message}</p>}
-              <p className="text-sm text-gray-500">
-                Slug chỉ được chứa chữ thường, số và dấu gạch ngang
-              </p>
-            </div>
+          {/* Slug */}
+          <FormField
+            {...register('slug')}
+            control={control}
+            label="Slug"
+            placeholder="Nhập slug"
+            type="text"
+            description="Slug chỉ được chứa chữ thường, số và dấu gạch ngang"
+          />
 
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Mô tả</Label>
-              <Textarea
-                id="description"
-                {...register('description')}
-                placeholder="Nhập mô tả vai trò"
-                rows={3}
-              />
-              {errors.description && (
-                <p className="text-sm text-red-600">{errors.description.message}</p>
-              )}
-            </div>
-
-            {/* Permissions */}
-            <div className="space-y-2">
-              <Label>Quyền hạn</Label>
-              <div className="max-h-96 space-y-4 overflow-y-auto rounded-md border p-4">
-                {PERMISSION_GROUPS.map((group) => {
-                  const groupPermissionValues = group.permissions.map((p) => p.value);
-                  const allSelected = groupPermissionValues.every((p) =>
-                    selectedPermissions?.includes(p)
-                  );
-
-                  return (
-                    <div key={group.label} className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`group-${group.label}`}
-                          checked={allSelected}
-                          onCheckedChange={() => handleGroupToggle(groupPermissionValues)}
-                        />
-                        <Label
-                          htmlFor={`group-${group.label}`}
-                          className="cursor-pointer font-semibold"
-                        >
-                          {group.label}
-                        </Label>
-                      </div>
-                      <div className="ml-6 space-y-2">
-                        {group.permissions.map((permission) => (
-                          <div key={permission.value} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={permission.value}
-                              checked={selectedPermissions?.includes(permission.value)}
-                              onCheckedChange={() => handlePermissionToggle(permission.value)}
-                            />
-                            <Label htmlFor={permission.value} className="cursor-pointer">
-                              {permission.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {errors.permissions && (
-                <p className="text-sm text-red-600">{errors.permissions.message}</p>
-              )}
-            </div>
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Mô tả</Label>
+            <Textarea
+              id="description"
+              {...register('description')}
+              onChange={(e) => setValue('description', e.target.value)}
+              placeholder="Nhập mô tả vai trò"
+              rows={3}
+            />
+            {errors.description && (
+              <p className="text-sm text-red-500">{errors.description.message}</p>
+            )}
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-              Hủy
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && (
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              )}
-              {mode === 'create' ? 'Tạo vai trò' : 'Cập nhật'}
-            </Button>
-          </DialogFooter>
+          {/* Permissions */}
+          <div className="flex flex-1 flex-col gap-2">
+            <Label>Quyền hạn</Label>
+            <PermissionsTable
+              selectedPermissions={selectedPermissions || []}
+              onPermissionToggle={handlePermissionToggle}
+              onGroupToggle={handleGroupToggle}
+            />
+            {errors.permissions && (
+              <p className="text-sm text-red-500">{errors.permissions.message}</p>
+            )}
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+        <SheetFooter className="mt-6 shrink-0 flex-row gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isLoading}
+            className="flex-1"
+          >
+            Hủy
+          </Button>
+          <Button type="submit" disabled={isLoading} form="role-form" className="flex-1">
+            {isLoading && (
+              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            )}
+            {mode === 'create' ? 'Tạo vai trò' : 'Cập nhật'}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 };

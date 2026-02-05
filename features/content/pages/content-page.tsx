@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import ContentTable from '@/features/content/components/content-table';
 import { ConfirmMergeModal } from '@/features/playlist/components';
@@ -11,12 +11,19 @@ import useInfiniteScroll from 'react-infinite-scroll-hook';
 import { toast } from 'sonner';
 import {
   AddToPlaylistModal,
+  BatchScheduleModal,
   ContentHeader,
   FloatingBatchActionBar,
   RejectConfirmationModal,
 } from '../components';
 import Media from '../components/media';
-import { useApproveContents, useContent, useRejectContents } from '../hooks/useContent';
+import {
+  useApproveContents,
+  useContent,
+  usePublishContent,
+  useRejectContents,
+} from '../hooks/useContent';
+import { useScheduleContent } from '../hooks/useSchedule';
 import { ContentSearchSchema } from '../schemas';
 import { useContentStore } from '../stores/useContentStore';
 import { ApproveContentBatchPayload } from '../types';
@@ -51,6 +58,7 @@ function ContentPageComponent() {
   const [isBatchRejectModalOpen, setIsBatchRejectModalOpen] = useState(false);
   const [isAddToPlaylistModalOpen, setIsAddToPlaylistModalOpen] = useState(false);
   const [isConfirmAddToPlaylistModalOpen, setIsConfirmAddToPlaylistModalOpen] = useState(false);
+  const [isBatchScheduleModalOpen, setIsBatchScheduleModalOpen] = useState(false);
 
   // Infinite scroll for Grid view
   const [loadMoreRef] = useInfiniteScroll({
@@ -62,6 +70,8 @@ function ContentPageComponent() {
   // Batch mutations
   const { mutate: approveContents, isPending: isApprovingBatch } = useApproveContents();
   const { mutate: rejectContents, isPending: isRejectingBatch } = useRejectContents();
+  const { mutate: publishContents, isPending: isPublishingBatch } = usePublishContent();
+  const { mutate: scheduleContents, isPending: isSchedulingBatch } = useScheduleContent();
   const { mutate: addVideosToPlaylists } = useAddVideosToPlaylists();
   const { mutate: createPlaylist } = useCreatePlaylist();
 
@@ -184,6 +194,85 @@ function ContentPageComponent() {
     );
   };
 
+  const handleBatchPublish = () => {
+    const eligiblePublish = items?.filter(
+      (item: ContentItem) =>
+        selectedIds.includes(item.id) && item.approving_status === ContentStatus.APPROVED
+    );
+
+    if (!eligiblePublish || eligiblePublish.length === 0) {
+      toast.error('KHÔNG CÓ NỘI DUNG HỢP LỆ', {
+        description: 'Chỉ có thể đăng nội dung ở trạng thái ĐÃ DUYỆT',
+      });
+      return;
+    }
+
+    const toastId = toast.loading(`Đang đăng ${eligiblePublish.length} nội dung...`);
+
+    publishContents(
+      {
+        reel_ids: eligiblePublish.map((item) => item.id),
+      },
+      {
+        onSuccess: () => {
+          toast.dismiss(toastId);
+          toast.success('ĐĂNG THÀNH CÔNG', {
+            description: `Đã đăng ${eligiblePublish.length} nội dung`,
+          });
+          setSelectedIds([]);
+        },
+        onError: () => {
+          toast.dismiss(toastId);
+          toast.error('ĐĂNG THẤT BẠI', {
+            description: 'Không thể đăng nội dung. Vui lòng thử lại.',
+          });
+        },
+      }
+    );
+  };
+
+  const handleBatchSchedule = (scheduledTime: string) => {
+    const eligibleSchedule = items?.filter(
+      (item: ContentItem) =>
+        selectedIds.includes(item.id) && item.approving_status === ContentStatus.APPROVED
+    );
+
+    if (!eligibleSchedule || eligibleSchedule.length === 0) {
+      toast.error('KHÔNG CÓ NỘI DUNG HỢP LỆ', {
+        description: 'Chỉ có thể lên lịch nội dung ở trạng thái ĐÃ DUYỆT',
+      });
+      return;
+    }
+
+    const toastId = toast.loading(`Đang lên lịch ${eligibleSchedule.length} nội dung...`);
+
+    scheduleContents(
+      {
+        schedules: eligibleSchedule.map((item) => ({
+          reel_id: item.id,
+          scheduled_at: scheduledTime,
+        })),
+        approving_status: filters.approving_status || ContentStatus.APPROVED,
+      },
+      {
+        onSuccess: () => {
+          toast.dismiss(toastId);
+          toast.success('LÊN LỊCH THÀNH CÔNG', {
+            description: `Đã lên lịch ${eligibleSchedule.length} nội dung`,
+          });
+          setSelectedIds([]);
+          setIsBatchScheduleModalOpen(false);
+        },
+        onError: () => {
+          toast.dismiss(toastId);
+          toast.error('LÊN LỊCH THẤT BẠI', {
+            description: 'Không thể lên lịch nội dung. Vui lòng thử lại.',
+          });
+        },
+      }
+    );
+  };
+
   // Count items eligible for approve (PENDING_REVIEW)
   const batchApproveCount = items?.filter(
     (i: ContentItem) => selectedIds.includes(i.id) && i.status === ContentStatus.PENDING_REVIEW
@@ -192,6 +281,16 @@ function ContentPageComponent() {
   // Count items eligible for reject (PENDING_REVIEW)
   const batchRejectCount = items?.filter(
     (i: ContentItem) => selectedIds.includes(i.id) && i.status === ContentStatus.PENDING_REVIEW
+  ).length;
+
+  // Count items eligible for publish (APPROVED)
+  const batchPublishCount = items?.filter(
+    (i: ContentItem) => selectedIds.includes(i.id) && i.approving_status === ContentStatus.APPROVED
+  ).length;
+
+  // Count items eligible for schedule (APPROVED)
+  const batchScheduleCount = items?.filter(
+    (i: ContentItem) => selectedIds.includes(i.id) && i.approving_status === ContentStatus.APPROVED
   ).length;
 
   // Add to Playlist handlers
@@ -296,6 +395,14 @@ function ContentPageComponent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const canSelect = useMemo(() => {
+    return (
+      filters.approving_status === ContentStatus.PENDING_REVIEW ||
+      filters.approving_status === ContentStatus.APPROVED ||
+      filters.approving_status === ContentStatus.PUBLISHED
+    );
+  }, [filters.approving_status]);
+
   return (
     <div className="relative flex h-full flex-col space-y-8 p-4 sm:p-10">
       <ContentHeader totalItems={totalItems} />
@@ -307,18 +414,8 @@ function ContentPageComponent() {
           items={items || []}
           onView={handleNavigateToDetail}
           selectedIds={selectedIds}
-          onToggleSelect={
-            filters.approving_status === ContentStatus.PENDING_REVIEW ||
-            filters.approving_status === ContentStatus.PUBLISHED
-              ? handleToggleSelect
-              : undefined
-          }
-          onToggleAll={
-            filters.approving_status === ContentStatus.PENDING_REVIEW ||
-            filters.approving_status === ContentStatus.PUBLISHED
-              ? () => handleSelectAll(items || [])
-              : undefined
-          }
+          onToggleSelect={canSelect ? handleToggleSelect : undefined}
+          onToggleAll={canSelect ? () => handleSelectAll(items || []) : undefined}
           hasNextPage={hasNextPage}
           isFetchingNextPage={isFetchingNextPage}
           loadMoreRef={loadMoreRef}
@@ -335,10 +432,6 @@ function ContentPageComponent() {
           isPlaceholderData={isPlaceholderData}
         >
           {items?.map((item: ContentItem) => {
-            const canSelect =
-              filters.approving_status === ContentStatus.PUBLISHED ||
-              filters.approving_status === ContentStatus.PENDING_REVIEW;
-
             return (
               <Media
                 item={item}
@@ -364,10 +457,20 @@ function ContentPageComponent() {
           rejectCount={
             filters.approving_status === ContentStatus.PENDING_REVIEW ? batchRejectCount : undefined
           }
+          publishCount={
+            filters.approving_status === ContentStatus.APPROVED ? batchPublishCount : undefined
+          }
+          scheduleCount={
+            filters.approving_status === ContentStatus.APPROVED ? batchScheduleCount : undefined
+          }
           isApproving={isApprovingBatch}
           isRejecting={isRejectingBatch}
+          isPublishing={isPublishingBatch}
+          isScheduling={isSchedulingBatch}
           onApprove={handleBatchApprove}
           onReject={handleBatchReject}
+          onPublish={handleBatchPublish}
+          onSchedule={() => setIsBatchScheduleModalOpen(true)}
           onCancel={() => {
             setSelectedIds([]);
           }}
@@ -404,6 +507,14 @@ function ContentPageComponent() {
         isOpen={isConfirmAddToPlaylistModalOpen}
         onClose={() => setIsConfirmAddToPlaylistModalOpen(false)}
         onConfirm={handleConfirmAddToPlaylist}
+      />
+
+      {/* Batch Schedule Modal */}
+      <BatchScheduleModal
+        isOpen={isBatchScheduleModalOpen}
+        onClose={() => setIsBatchScheduleModalOpen(false)}
+        onConfirm={handleBatchSchedule}
+        selectedCount={batchScheduleCount || 0}
       />
     </div>
   );

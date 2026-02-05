@@ -10,7 +10,7 @@ import {
   PublishContentPayload,
   Reel,
   RejectContentBatchPayload,
-  ScheduleContentPayload,
+  ScheduleContentBatchPayload,
 } from '../types';
 
 class ContentService {
@@ -39,8 +39,8 @@ class ContentService {
     return data;
   }
 
-  async scheduleContent(payload: ScheduleContentPayload) {
-    const data = await api.post(`${this.baseUrl}/schedules`, payload);
+  async scheduleContent(payload: ScheduleContentBatchPayload) {
+    const data = await api.post(`${this.baseUrl}/schedules/batch`, payload);
     return data;
   }
 

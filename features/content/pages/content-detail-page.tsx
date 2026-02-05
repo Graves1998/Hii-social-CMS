@@ -315,8 +315,12 @@ function DetailPageComponent() {
 
     scheduleContent(
       {
-        reel_id: item.id,
-        scheduled_at: scheduledTime,
+        schedules: [
+          {
+            reel_id: item.id,
+            scheduled_at: scheduledTime,
+          },
+        ],
         approving_status: searchParams?.approving_status as string,
       },
       {

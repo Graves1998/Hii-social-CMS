@@ -1,13 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../query-keys';
 import { contentService } from '../services/content-service';
-import { Reel } from '../types';
+import { Reel, ScheduleContentBatchPayload } from '../types';
 import { transformReelContent } from '../utils';
-
-interface ScheduleContentPayload {
-  reel_id: string;
-  scheduled_at: string;
-}
 
 /**
  * Hook để schedule content publish
@@ -16,38 +11,47 @@ export const useScheduleContent = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      reel_id,
-      scheduled_at,
-    }: ScheduleContentPayload & { approving_status: string }) =>
-      contentService.scheduleContent({ reel_id, scheduled_at }),
+    mutationFn: ({ schedules }: ScheduleContentBatchPayload & { approving_status: string }) =>
+      contentService.scheduleContent({ schedules }),
     onMutate: async (variables) => {
-      const detailQueryKey = queryClient.getQueryCache().find({
-        queryKey: queryKeys.content.details(variables.reel_id, variables.approving_status),
-      })?.queryKey;
+      const updates = variables.schedules.map(async (reel) => {
+        const detailQueryKey = queryClient.getQueryCache().find({
+          queryKey: queryKeys.content.details(reel.reel_id, variables.approving_status),
+        })?.queryKey;
 
-      if (!detailQueryKey) return null;
+        if (!detailQueryKey) return null;
 
-      await queryClient.cancelQueries({ queryKey: detailQueryKey });
-      const previousData = queryClient.getQueryData(detailQueryKey);
+        await queryClient.cancelQueries({ queryKey: detailQueryKey });
+        const previousData = queryClient.getQueryData(detailQueryKey);
 
-      queryClient.setQueriesData({ queryKey: detailQueryKey }, (old: Reel | undefined) => {
-        if (!old) return old;
-        const updated = { ...old, is_pending: true };
-        return transformReelContent(updated);
+        queryClient.setQueriesData({ queryKey: detailQueryKey }, (old: Reel | undefined) => {
+          if (!old) return old;
+          const updated = { ...old, is_pending: true };
+          return transformReelContent(updated);
+        });
+
+        return { queryKey: detailQueryKey, previousData };
       });
 
-      return { queryKey: detailQueryKey, previousData };
+      const previousDataArray = await Promise.all(updates);
+
+      return { previousDataArray: previousDataArray.filter(Boolean) };
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.content.all });
-      queryClient.invalidateQueries({
-        queryKey: [queryKeys.content.details, variables.reel_id, variables.approving_status],
+      variables.schedules.forEach((reel) => {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.content.details(reel.reel_id, variables.approving_status),
+        });
       });
     },
     onError: (_err, _variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(context.queryKey, context.previousData);
+      if (context?.previousDataArray) {
+        context.previousDataArray.forEach((item) => {
+          if (item?.queryKey && item?.previousData) {
+            queryClient.setQueryData(item.queryKey, item.previousData);
+          }
+        });
       }
     },
   });

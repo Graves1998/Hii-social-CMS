@@ -1,6 +1,6 @@
 import { useAuthStore, useUser } from '@/features/auth/stores/useAuthStore';
 import { cn } from '@/lib';
-import { UserRole } from '@/shared';
+import { Button, UserRole } from '@/shared';
 import { UserProfile } from '@/shared/components/user-profile';
 import { useSidebarStore } from '@/shared/stores/use-sidebar-store';
 import { Link, useRouterState } from '@tanstack/react-router';
@@ -39,7 +39,7 @@ function Sidebar() {
     { id: 'playlists', path: '/playlists', label: 'Danh sách phát' },
     { id: 'report', path: '/report', label: 'Báo Cáo Vi Phạm' },
     { id: 'audit', path: '/audit', label: 'Nhật Ký Hệ Thống' },
-    // { id: 'roles', path: '/roles', label: 'Quản Lý Vai Trò' },
+    { id: 'roles', path: '/roles', label: 'Quản Lý Vai Trò' },
   ];
 
   const roles: UserRole[] = [UserRole.REVIEWER, UserRole.ADMIN];
@@ -65,15 +65,15 @@ function Sidebar() {
             </Link>
           </div>
         )}
-        <button
+
+        <Button
           onClick={toggleSidebar}
-          className={cn(
-            'flex h-8 w-8 items-center justify-center rounded-md border border-white/10 text-zinc-400 transition-colors hover:border-white hover:text-white',
-            isCollapsed && 'mb-16'
-          )}
+          variant="ghost"
+          size="icon"
+          className={cn(isCollapsed && 'mb-16')}
         >
           <PanelLeft size={18} />
-        </button>
+        </Button>
       </div>
 
       <nav className="flex flex-1 flex-col">
