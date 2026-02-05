@@ -95,3 +95,10 @@ export interface RejectContentBatchPayload {
   reason: string;
   reel_ids: string[];
 }
+
+export interface ScheduleContentBatchPayload {
+  schedules: {
+    reel_id: string;
+    scheduled_at: string;
+  }[];
+}
