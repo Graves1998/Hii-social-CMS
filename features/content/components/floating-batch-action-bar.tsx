@@ -7,20 +7,24 @@ export interface FloatingBatchActionBarProps {
   selectedCount: number;
   approveCount?: number;
   rejectCount?: number;
+  publishCount?: number;
 
   // Loading states
   isApproving?: boolean;
   isRejecting?: boolean;
+  isPublishing?: boolean;
 
   // Actions
   onApprove: () => void;
   onReject: () => void;
+  onPublish?: () => void;
   onCancel: () => void;
   onAddToPlaylist?: () => void; // NEW: Add to playlist action
 
   // Customization
   approveLabel?: string;
   rejectLabel?: string;
+  publishLabel?: string;
   cancelLabel?: string;
   addToPlaylistLabel?: string;
 }
@@ -47,14 +51,18 @@ export function FloatingBatchActionBar({
   selectedCount,
   approveCount,
   rejectCount,
+  publishCount,
   isApproving = false,
   isRejecting = false,
+  isPublishing = false,
   onApprove,
   onReject,
+  onPublish,
   onCancel,
   onAddToPlaylist,
   approveLabel = 'DUYỆT',
   rejectLabel = 'TỪ CHỐI',
+  publishLabel = 'ĐĂNG',
   cancelLabel = 'HỦY',
   addToPlaylistLabel = 'THÊM VÀO PLAYLIST',
 }: FloatingBatchActionBarProps) {
@@ -113,6 +121,20 @@ export function FloatingBatchActionBar({
         </PermissionGate>
       )}
 
+      {/* Publish Button */}
+      {publishCount !== undefined && onPublish && (
+        <PermissionGate permission={Permission.REELS_PUBLISH}>
+          <Button
+            variant="default"
+            onClick={onPublish}
+            disabled={publishCount === 0 || isPublishing}
+            className="border-green-500 bg-green-600 text-white hover:bg-green-700"
+          >
+            {isPublishing ? `ĐANG ${publishLabel}...` : `${publishLabel} (${publishCount || 0})`}
+          </Button>
+        </PermissionGate>
+      )}
+
       {/* Add to Playlist Button */}
       {onAddToPlaylist && (
         // <PermissionGate permission={Permission.REELS_ADD_TO_PLAYLIST}>
@@ -129,6 +151,7 @@ export function FloatingBatchActionBar({
       {/* Cancel Button */}
       <div className="h-4 w-[1px] bg-white/20" />
       <Button
+        disabled={isApproving || isRejecting || isPublishing}
         variant="ghost"
         className="text-zinc-400 hover:text-white"
         onClick={() => {
