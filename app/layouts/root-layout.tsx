@@ -17,6 +17,7 @@ import {
   reportDetailRoute,
   reportRoute,
   rolesRoute,
+  usersRoute,
 } from '../routes';
 import { mainLayoutRoute } from '../routes/_main';
 import { rootRoute, type RouterContext } from '../routes/_root';
@@ -51,6 +52,7 @@ const routeTree = rootRoute.addChildren([
     playlistDetailRoute,
     auditDetailRoute,
     rolesRoute,
+    usersRoute,
   ]),
 ]);
 

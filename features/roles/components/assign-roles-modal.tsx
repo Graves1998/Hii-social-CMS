@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from '@/lib';
 import {
   Badge,
   Button,
@@ -10,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   Label,
+  Typography,
 } from '@/shared/ui';
 import { useEffect, useState } from 'react';
 import { useAssignRolesToUser, useGetRoles } from '../hooks';
@@ -27,34 +29,32 @@ export const AssignRolesModal = ({
   userId,
   currentRoleIds,
 }: AssignRolesModalProps) => {
-  const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
+  const [selectedRoleId, setSelectedRoleId] = useState<string>('');
   const { data: rolesData, isLoading } = useGetRoles();
   const assignRolesMutation = useAssignRolesToUser();
 
   useEffect(() => {
     if (isOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSelectedRoleIds([]);
+      setSelectedRoleId('');
     }
   }, [isOpen]);
 
   const handleToggleRole = (roleId: string) => {
-    setSelectedRoleIds((prev) =>
-      prev.includes(roleId) ? prev.filter((id) => id !== roleId) : [...prev, roleId]
-    );
+    setSelectedRoleId(roleId);
   };
 
   const handleAssign = () => {
-    if (selectedRoleIds.length === 0) return;
+    if (!selectedRoleId) return;
 
     assignRolesMutation.mutate(
       {
         userId,
-        payload: { role_ids: selectedRoleIds },
+        payload: { role_id: selectedRoleId },
       },
       {
         onSuccess: () => {
-          setSelectedRoleIds([]);
+          setSelectedRoleId('');
           onClose();
         },
       }
@@ -70,43 +70,49 @@ export const AssignRolesModal = ({
       open={isOpen}
       onOpenChange={(open) => !assignRolesMutation.isPending && !open && onClose()}
     >
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl!">
         <DialogHeader>
           <DialogTitle>Gán vai trò cho người dùng</DialogTitle>
         </DialogHeader>
 
         <div className="py-4">
-          {isLoading ? (
+          {isLoading && (
             <div className="flex justify-center py-4">
               <div className="border-primary h-6 w-6 animate-spin rounded-full border-4 border-t-transparent" />
             </div>
-          ) : availableRoles.length > 0 ? (
+          )}
+
+          {!isLoading && availableRoles.length > 0 && (
             <div className="max-h-96 space-y-3 overflow-y-auto">
               {availableRoles.map((role) => (
-                <div
+                <button
                   key={role.id}
-                  className={`cursor-pointer rounded-md border p-3 transition-colors ${
-                    selectedRoleIds.includes(role.id)
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'hover:bg-gray-50'
-                  }`}
+                  className={cn(
+                    `flex w-full cursor-pointer items-center gap-3 rounded-md border p-3 transition-colors`,
+                    selectedRoleId === role.id
+                      ? 'border-white/10 bg-white/5'
+                      : 'hover:bg-gray border-white/10 bg-black/10'
+                  )}
                   onClick={() => handleToggleRole(role.id)}
+                  type="button"
                 >
                   <div className="flex items-start gap-3">
                     <Checkbox
                       id={role.id}
-                      checked={selectedRoleIds.includes(role.id)}
+                      checked={selectedRoleId === role.id}
                       onCheckedChange={() => handleToggleRole(role.id)}
                       className="mt-1"
                     />
-                    <div className="flex-1">
-                      <div className="mb-1 flex items-center gap-2">
+                    <div className="flex flex-1 flex-col items-start gap-1.5">
+                      <div className="flex items-center gap-2">
                         <Label htmlFor={role.id} className="cursor-pointer font-medium">
                           {role.name}
                         </Label>
                         <Badge variant="outline">{role.slug}</Badge>
                       </div>
-                      <p className="mb-2 text-sm text-gray-600">{role.description}</p>
+                      <Typography variant="small" className="text-zinc-500">
+                        {role.description}
+                      </Typography>
                       <div className="flex flex-wrap gap-1">
                         {role.permissions.slice(0, 5).map((permission) => (
                           <Badge key={permission} variant="secondary">
@@ -119,10 +125,12 @@ export const AssignRolesModal = ({
                       </div>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
-          ) : (
+          )}
+
+          {!isLoading && availableRoles.length === 0 && (
             <p className="py-4 text-center text-gray-500">Không có vai trò nào để gán</p>
           )}
         </div>
@@ -133,12 +141,10 @@ export const AssignRolesModal = ({
           </Button>
           <Button
             onClick={handleAssign}
-            disabled={assignRolesMutation.isPending || selectedRoleIds.length === 0}
+            disabled={!selectedRoleId}
+            isLoading={assignRolesMutation.isPending}
           >
-            {assignRolesMutation.isPending && (
-              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            )}
-            Gán {selectedRoleIds.length > 0 && `(${selectedRoleIds.length})`}
+            Gán {availableRoles.find((r) => r.id === selectedRoleId)?.name || ''}
           </Button>
         </DialogFooter>
       </DialogContent>
