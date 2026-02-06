@@ -13,6 +13,7 @@ import {
   PieChart,
   Shield,
   SquarePen,
+  Users,
 } from 'lucide-react';
 
 const ICONS: Record<string, React.ReactNode> = {
@@ -23,6 +24,7 @@ const ICONS: Record<string, React.ReactNode> = {
   report: <Flag size={20} />,
   audit: <History size={20} />,
   roles: <Shield size={20} />,
+  users: <Users size={20} />,
 };
 
 function Sidebar() {
@@ -40,6 +42,7 @@ function Sidebar() {
     { id: 'report', path: '/report', label: 'Báo Cáo Vi Phạm' },
     { id: 'audit', path: '/audit', label: 'Nhật Ký Hệ Thống' },
     { id: 'roles', path: '/roles', label: 'Quản Lý Vai Trò' },
+    { id: 'users', path: '/users', label: 'Người Dùng' },
   ];
 
   const roles: UserRole[] = [UserRole.REVIEWER, UserRole.ADMIN];

@@ -12,4 +12,5 @@ export { default as DisplayError } from './display-error';
 // Skeleton components
 export * from './skeletons';
 
+export { ConfirmationModal } from './confirmation-modal';
 export { default as PermissionGate } from './permission-gate';

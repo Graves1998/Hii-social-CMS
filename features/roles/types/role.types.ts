@@ -50,10 +50,10 @@ export interface UserRole {
 
 // API Request for assigning roles to user
 export interface AssignRolesToUserPayload {
-  role_ids: string[];
+  role_id: string;
 }
 
 // API Response for getting user roles
 export interface GetUserRolesResponse {
-  roles: UserRole[];
+  data: UserRole[];
 }
