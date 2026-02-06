@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import ContentTable from '@/features/content/components/content-table';
 import { ConfirmMergeModal } from '@/features/playlist/components';
@@ -395,13 +395,7 @@ function ContentPageComponent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const canSelect = useMemo(() => {
-    return (
-      filters.approving_status === ContentStatus.PENDING_REVIEW ||
-      filters.approving_status === ContentStatus.APPROVED ||
-      filters.approving_status === ContentStatus.PUBLISHED
-    );
-  }, [filters.approving_status]);
+  const canSelect = filters.approving_status !== '';
 
   return (
     <div className="relative flex h-full flex-col space-y-8 p-4 sm:p-10">
@@ -448,21 +442,8 @@ function ContentPageComponent() {
       {/* Floating Batch Action Bar */}
       {selectedIds.length > 0 && (
         <FloatingBatchActionBar
+          approvingStatus={filters.approving_status as ContentStatus}
           selectedCount={selectedIds.length}
-          approveCount={
-            filters.approving_status === ContentStatus.PENDING_REVIEW
-              ? batchApproveCount
-              : undefined
-          }
-          rejectCount={
-            filters.approving_status === ContentStatus.PENDING_REVIEW ? batchRejectCount : undefined
-          }
-          publishCount={
-            filters.approving_status === ContentStatus.APPROVED ? batchPublishCount : undefined
-          }
-          scheduleCount={
-            filters.approving_status === ContentStatus.APPROVED ? batchScheduleCount : undefined
-          }
           isApproving={isApprovingBatch}
           isRejecting={isRejectingBatch}
           isPublishing={isPublishingBatch}
@@ -514,7 +495,8 @@ function ContentPageComponent() {
         isOpen={isBatchScheduleModalOpen}
         onClose={() => setIsBatchScheduleModalOpen(false)}
         onConfirm={handleBatchSchedule}
-        selectedCount={batchScheduleCount || 0}
+        selectedCount={selectedIds.length}
+        defaultDate={items?.find((item) => selectedIds.includes(item.id))?.scheduled_at}
       />
     </div>
   );

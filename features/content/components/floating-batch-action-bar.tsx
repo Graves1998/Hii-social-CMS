@@ -1,14 +1,11 @@
-import { Permission, PermissionGate } from '@/shared';
+import { ContentStatus, Permission, PermissionGate } from '@/shared';
 import { Button } from '@/shared/ui';
 import { useEffect, useRef, useState } from 'react';
 
 export interface FloatingBatchActionBarProps {
   // Selection state
   selectedCount: number;
-  approveCount?: number;
-  rejectCount?: number;
-  publishCount?: number;
-  scheduleCount?: number;
+  approvingStatus: ContentStatus;
 
   // Loading states
   isApproving?: boolean;
@@ -53,10 +50,7 @@ export interface FloatingBatchActionBarProps {
  */
 export function FloatingBatchActionBar({
   selectedCount,
-  approveCount,
-  rejectCount,
-  publishCount,
-  scheduleCount,
+  approvingStatus,
   isApproving = false,
   isRejecting = false,
   isPublishing = false,
@@ -69,8 +63,8 @@ export function FloatingBatchActionBar({
   onAddToPlaylist,
   approveLabel = 'DUYỆT',
   rejectLabel = 'TỪ CHỐI',
-  publishLabel = 'ĐĂNG',
-  scheduleLabel = 'LÊN LỊCH',
+  publishLabel = 'ĐĂNG NGAY',
+  scheduleLabel = 'CẬP NHẬT LỊCH',
   cancelLabel = 'HỦY',
   addToPlaylistLabel = 'THÊM VÀO PLAYLIST',
 }: FloatingBatchActionBarProps) {
@@ -104,58 +98,65 @@ export function FloatingBatchActionBar({
       <div className="h-4 w-[1px] bg-white/20" />
 
       {/* Approve Button */}
-      {approveCount !== undefined && (
+      {(approvingStatus === ContentStatus.PENDING_REVIEW ||
+        approvingStatus === ContentStatus.REJECTED) && (
         <PermissionGate permission={Permission.REELS_APPROVE}>
           <Button
             variant="default"
             onClick={onApprove}
-            disabled={approveCount === 0 || isApproving}
+            disabled={selectedCount === 0 || isApproving}
           >
-            {isApproving ? `ĐANG ${approveLabel}...` : `${approveLabel} (${approveCount || 0})`}
+            {isApproving ? `ĐANG ${approveLabel}...` : `${approveLabel} (${selectedCount || 0})`}
           </Button>
         </PermissionGate>
       )}
 
       {/* Reject Button */}
-      {rejectCount !== undefined && (
+      {approvingStatus === ContentStatus.PENDING_REVIEW && (
         <PermissionGate permission={Permission.REELS_REJECT}>
           <Button
             variant="destructive"
             onClick={onReject}
-            disabled={rejectCount === 0 || isRejecting}
+            disabled={selectedCount === 0 || isRejecting}
           >
-            {isRejecting ? `ĐANG ${rejectLabel}...` : `${rejectLabel} (${rejectCount || 0})`}
+            {isRejecting ? `ĐANG ${rejectLabel}...` : `${rejectLabel} (${selectedCount || 0})`}
           </Button>
         </PermissionGate>
       )}
 
       {/* Publish Button */}
-      {publishCount !== undefined && onPublish && (
-        <PermissionGate permission={Permission.REELS_PUBLISH}>
-          <Button
-            variant="default"
-            onClick={onPublish}
-            disabled={publishCount === 0 || isPublishing}
-            className="border-green-500 bg-green-600 text-white hover:bg-green-700"
-          >
-            {isPublishing ? `ĐANG ${publishLabel}...` : `${publishLabel} (${publishCount || 0})`}
-          </Button>
-        </PermissionGate>
-      )}
+      {(approvingStatus === ContentStatus.APPROVED ||
+        approvingStatus === ContentStatus.SCHEDULED) &&
+        onPublish && (
+          <PermissionGate permission={Permission.REELS_PUBLISH}>
+            <Button
+              variant="default"
+              onClick={onPublish}
+              disabled={selectedCount === 0 || isPublishing}
+              className="border-green-500 bg-green-600 text-white hover:bg-green-700"
+            >
+              {isPublishing ? `ĐANG ${publishLabel}...` : `${publishLabel} (${selectedCount || 0})`}
+            </Button>
+          </PermissionGate>
+        )}
 
       {/* Schedule Button */}
-      {scheduleCount !== undefined && onSchedule && (
-        <PermissionGate permission={Permission.REELS_PUBLISH}>
-          <Button
-            variant="default"
-            onClick={onSchedule}
-            disabled={scheduleCount === 0 || isScheduling}
-            className="border-blue-500 bg-blue-600 text-white hover:bg-blue-700"
-          >
-            {isScheduling ? `ĐANG ${scheduleLabel}...` : `${scheduleLabel} (${scheduleCount || 0})`}
-          </Button>
-        </PermissionGate>
-      )}
+      {(approvingStatus === ContentStatus.APPROVED ||
+        approvingStatus === ContentStatus.SCHEDULED) &&
+        onSchedule && (
+          <PermissionGate permission={Permission.REELS_SCHEDULE}>
+            <Button
+              variant="default"
+              onClick={onSchedule}
+              disabled={selectedCount === 0 || isScheduling}
+              className="border-blue-500 bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {isScheduling
+                ? `ĐANG ${scheduleLabel}...`
+                : `${scheduleLabel} (${selectedCount || 0})`}
+            </Button>
+          </PermissionGate>
+        )}
 
       {/* Add to Playlist Button */}
       {onAddToPlaylist && (

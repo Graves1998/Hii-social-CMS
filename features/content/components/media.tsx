@@ -36,6 +36,9 @@ function Media({ item, onView, isSelected, onToggleSelect }: MediaProps) {
   const permission = useMemo(() => {
     if (approvingStatus === ContentStatus.PENDING_REVIEW) return Permission.REELS_APPROVE;
     if (approvingStatus === ContentStatus.APPROVED) return Permission.REELS_PUBLISH;
+    if (approvingStatus === ContentStatus.REJECTED) return Permission.REELS_APPROVE;
+    if (approvingStatus === ContentStatus.SCHEDULED) return Permission.REELS_PUBLISH;
+    if (approvingStatus === ContentStatus.PUBLISHED) return Permission.REELS_PUBLISH;
 
     return Permission.NONE;
   }, [approvingStatus]);
