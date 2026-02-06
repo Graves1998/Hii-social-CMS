@@ -130,7 +130,12 @@ function DetailPageComponent() {
   const watchTags = useMemo(() => {
     return detectTags(watchTitle);
   }, [watchTitle]);
-  const [scheduleAt, setScheduleAt] = useState<string | null>(item?.scheduled_at || null);
+  const [scheduleAt, setScheduleAt] = useState<string | null>();
+
+  useEffect(() => {
+    if (!item?.scheduled_at) return;
+    setScheduleAt(item.scheduled_at);
+  }, [item]);
 
   const handleChangeMetadata = (key: 'platforms' | 'categories', value: any) => {
     const isExits = watch(key)?.includes(value);
@@ -557,6 +562,7 @@ function DetailPageComponent() {
                   variant="destructive"
                   onClick={() => handleUpdateStatus(ContentStatus.REJECTED)}
                   isLoading={item.is_pending}
+                  disabled={isRejected}
                   className="flex-1"
                 >
                   TỪ CHỐI

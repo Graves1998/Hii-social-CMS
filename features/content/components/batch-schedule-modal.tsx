@@ -11,13 +11,14 @@ import {
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { CalendarIcon, Clock, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface BatchScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (scheduledTime: string) => void;
   selectedCount: number;
+  defaultDate?: string;
 }
 
 /**
@@ -31,9 +32,18 @@ export function BatchScheduleModal({
   onClose,
   onConfirm,
   selectedCount,
+  defaultDate,
 }: BatchScheduleModalProps) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState('');
+
+  useEffect(() => {
+    if (defaultDate) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedDate(new Date(defaultDate));
+      setSelectedTime(format(defaultDate, 'HH:mm'));
+    }
+  }, [defaultDate]);
 
   if (!isOpen) return null;
 
