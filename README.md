@@ -1,6 +1,6 @@
 # Hii Social CMS
 
-Content Management System cho Hii Social với TanStack Router và chuẩn code Airbnb.
+Content Management System cho Hii Social với TanStack Router và chuẩn code Airbnb..
 
 ## 🚀 Quick Start
 
